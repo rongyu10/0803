@@ -8,16 +8,19 @@ for carid = 1:nr_cars
     if carid <= 10
        laneidx= 1;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       x = (carid-1)*20*10^3;
+       x = (carid-5)*20*10^3;
        y = tmppos(2);
        carpos = [x y 0];
+       othercars.car{carid}.tolllane = randi(5);
     else
        laneidx= 3;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       x = (carid-11)*20*10^3;
+       x = (carid-15)*20*10^3;
        y = tmppos(2);
        carpos = [x y 0];
+       othercars.car{carid}.tolllane = randi(5) + 10;
     end
+    othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
     segidx = 1;
     othercars = add_othercars(othercars, carpos, [30000 0], 'normal',1, laneidx, segidx); % 10000 mm/s = 36 km/h
 end

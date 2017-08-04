@@ -15,7 +15,7 @@ nr_cars    = 20;  % 11
 othercars  = addcars2_tollplaza(othercars, road.track{1}, nr_cars);
 %---------------
 %--- set mycar--
-ini_vel    = [20000 0];
+ini_vel    = [30000 0];
 mycar      = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 %---------------
@@ -90,15 +90,12 @@ while sim.flag && ishandle(fig)
             
             othercars  = respawn_othercars_tollplaza(othercars,road,sim); % added by kumano
             % Intelligent Driver Model
-            othercars = intelligentDriverModel2(othercars,mycar,myinfo,road,sim);
-            othercars  = update_othercars(othercars, sim);
+            %othercars = intelligentDriverModel2(othercars,mycar,myinfo,road,sim);
+            %othercars  = update_othercars(othercars, sim);
+            othercars  = update_control_othercars(othercars, sim);
             
-            if FLAG_LANECHANGE ==1  % added by kumano
-              mycar    = update_control_mycar(mycar, sim, othercars,laneChangePathTranslated,ratioSpeed);              
-            else
-              mycar    = update_mycar(mycar, sim, othercars);
-            end
-
+            mycar    = update_control_mycar(mycar, sim, othercars);
+            
             myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
             ms_update  = etime(clock, clk_update)*1000;
             titlecol = 'w';

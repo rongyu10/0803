@@ -16,4 +16,8 @@ mycar.nr_rfs    = 25;      % 25
 mycar.rfs_degs  = linspace(-mycar.rfs_deg/2, mycar.rfs_deg/2, mycar.nr_rfs);
 mycar.rfs_dists = mycar.rfs_dist*ones(1, mycar.nr_rfs);
 
+% SETTING OF TOLL ENTERING
+mycar.flgPlaza = 0;
+mycar.tolllane = 6;
+
 
