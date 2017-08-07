@@ -50,7 +50,7 @@ FLAG_LANECHANGE  = false;
 dx = 175*10^3/3; % x-cood.interval of control points for bezier curve
 for i = 1:15 % i:target gate j:start lane (until plaza)
     for j = 1:3
-        ctlPt = [100*10^3 12250 - 3500 * j; 100*10^3 + dx 12250 - 3500 * j; 100*10^3 + 2*dx 77.5*10^3 - 5*10^3*i; 100*10^3 + 3*dx 77.5*10^3 - 5*10^3*i];
+        ctlPt = [100*10^3 12250 - 3500 * j; 100*10^3 + dx 12250 - 3500 * j; 2*dx 77.5*10^3 - 1750 - 5*10^3*i - 3500 * (3-j); 3*dx 77.5*10^3 - 1750 - 5*10^3*i - 3500 * (3-j)];
         [laneChangePath{i,j}, lengthP{i,j}] = bezierCurve(ctlPt);
     end
     

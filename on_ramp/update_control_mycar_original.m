@@ -1,4 +1,4 @@
-function mycar = update_control_mycar(mycar, sim, othercars,pathTranslated,ratioSpeed)
+function mycar = update_control_mycar_original(mycar, sim, othercars,pathTranslated,ratioSpeed)
 % UPDATE MY CAR INFORMATION
 persistent first_flag1 first_flag2 save_path
 

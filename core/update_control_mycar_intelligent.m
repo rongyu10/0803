@@ -1,4 +1,4 @@
-function mycar = update_control_mycar(mycar, sim, othercars, laneChangePath, lengthP)
+function mycar = update_control_mycar(mycar, sim, othercars)
 % UPDATE MY CAR INFORMATION
 if mycar.flgPlaza == 0
         mycar.pos ...
@@ -9,9 +9,12 @@ if mycar.flgPlaza == 0
         if mycar.pos(1) > 100*10^3 && mycar.pos(1) < 275*10^3
             mycar.flgPlaza = 1;
             
-            ratioSpeed = lengthP{mycar.tolllane, 2}/(175*10^3)*1.1;
-            mycar.vel(1) = mycar.vel(1)*ratioSpeed;
-            mycar.pathTranslated = laneChangePath{mycar.tolllane, 2};
+            dx = 175*10^3/3; % x-cood.interval of control points for bezier curve
+            ctlPt = [0 0; dx 0; 2*dx 77.5*10^3 - mycar.pos(2) - 5*10^3*mycar.tolllane; 3*dx 77.5*10^3 - mycar.pos(2) - 5*10^3*mycar.tolllane];
+            [laneChangePath, lengthP] = bezierCurve(ctlPt);
+            ratioSpeed = lengthP/(175*10^3)*1.1;
+            %mycar.vel(1) = mycar.vel(1)*ratioSpeed;
+            mycar.pathTranslated = update_laneChangePath(mycar,laneChangePath);
             
         end
     elseif mycar.flgPlaza == 1

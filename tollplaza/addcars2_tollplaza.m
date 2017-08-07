@@ -5,20 +5,34 @@ VERBOSE = 0;
 
 
 for carid = 1:nr_cars
-    if carid <= 10
+    if carid <= othercars.npl
        laneidx= 1;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       x = (carid-5)*20*10^3;
+       x = (carid - othercars.npl + 5)*10*10^3;
        y = tmppos(2);
        carpos = [x y 0];
-       othercars.car{carid}.tolllane = randi(5);
+       othercars.car{carid}.tolllane = 7;
+       %othercars.car{carid}.tolllane = randi(2) + 4;
+    elseif carid <= 2 * othercars.npl - 3
+       laneidx= 2;
+       tmppos = get_posintrack(track, 1, 0, laneidx, 0);
+       if carid <= othercars.npl * 2 - 6
+           x = (carid - othercars.npl*2 + 5)*10*10^3;
+       else
+           x = (carid - othercars.npl*2 + 8)*10*10^3;
+       end
+       y = tmppos(2);
+       carpos = [x y 0];
+       othercars.car{carid}.tolllane = 8;
+       %othercars.car{carid}.tolllane = randi(3) + 6; 
     else
        laneidx= 3;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       x = (carid-15)*20*10^3;
+       x = (carid - othercars.npl * 3 + 8)*10*10^3;
        y = tmppos(2);
        carpos = [x y 0];
-       othercars.car{carid}.tolllane = randi(5) + 10;
+       othercars.car{carid}.tolllane = 9;
+       %othercars.car{carid}.tolllane = randi(2) + 9;
     end
     othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
     segidx = 1;
