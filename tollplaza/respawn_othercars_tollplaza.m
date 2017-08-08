@@ -18,7 +18,7 @@ for i = 1:othercars.n
         laneidx = othercars.car{i}.save.lane_idx;  
         othercars.car{i}.pos = get_posintrack(road.track{1}, 1, 0, laneidx, 0); % respawn from 2nd lane (no offset)
         %othercars.car{i}.vel = othercars.car{i}.save.vel;  
-        othercars.car{i}.vel = [20000 0];
+        othercars.car{i}.vel = [30000 0];
     end
 end
 %----------------------------

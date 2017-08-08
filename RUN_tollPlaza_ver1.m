@@ -1,18 +1,18 @@
  ccc
 %% MANUALLY COLLECT DRIVING DEMONSTRATIONS
 ccc;
-addpath(genpath('.core'))
-addpath(genpath('.tollplaza'))
-addpath(genpath('.bezier'))
-addpath(genpath('.intelligentDriverModel'))
+addpath(genpath('./core'))
+addpath(genpath('./tollplaza'))
+addpath(genpath('./bezier'))
+addpath(genpath('./intelligentDriverModel'))
 %--- set simulation
 road      = init_road_tollplaza();
 sim       = init_sim(0.02); % dt = 0.02 [sec]
 %------------------
 %--- set othercars
 othercars  = init_othercars();
-nr_cars    = 42;
-othercars.npl = 15;
+nr_cars    = 27;
+othercars.npl = 10;
 othercars  = addcars2_tollplaza(othercars, road.track{1}, nr_cars);
 target_lane = 8;
 %---------------
@@ -55,6 +55,8 @@ for i = 1:15 % i:target gate j:start lane (until plaza)
     end
     
 end
+
+
 
 % RUN
 % INITIALIZE SAVER
@@ -113,13 +115,9 @@ while sim.flag && ishandle(fig)
             % Intelligent Driver Model
             %othercars = intelligentDriverModel2(othercars,mycar,myinfo,road,sim);
             %othercars  = update_othercars(othercars, sim);
-            othercars  = update_control_othercars_mycar_intelligent(othercars, sim, mycar, idm, laneChangePath, lengthP);
             
-            if FLAG_LANECHANGE == 0
-                mycar    = update_control_mycar(mycar, sim, othercars, laneChangePath, lengthP);
-            elseif FLAG_LANECHANGE == 1
-                mycar    = update_control_mycar_merge(mycar, sim, othercars, laneChangePath, lengthP, target_lane);
-            end
+            mycar = update_control_mycar_merge_intelligent(mycar, sim, othercars, laneChangePath, lengthP, target_lane, FLAG_LANECHANGE);
+            othercars  = update_control_othercars_mycar_intelligent(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
             
             myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
             ms_update  = etime(clock, clk_update)*1000;

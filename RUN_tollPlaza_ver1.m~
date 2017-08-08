@@ -1,18 +1,18 @@
  ccc
 %% MANUALLY COLLECT DRIVING DEMONSTRATIONS
 ccc;
-addpath(genpath('.core'))
-addpath(genpath('.tollplaza'))
-addpath(genpath('.bezier'))
-addpath(genpath('.intelligentDriverModel'))
+addpath(genpath('./core'))
+addpath(genpath('./tollplaza'))
+addpath(genpath('./bezier'))
+addpath(genpath('./intelligentDriverModel'))
 %--- set simulation
 road      = init_road_tollplaza();
 sim       = init_sim(0.02); % dt = 0.02 [sec]
 %------------------
 %--- set othercars
 othercars  = init_othercars();
-nr_cars    = 42;
-othercars.npl = 15;
+nr_cars    = 27;
+othercars.npl = 10;
 othercars  = addcars2_tollplaza(othercars, road.track{1}, nr_cars);
 target_lane = 8;
 %---------------
@@ -50,11 +50,13 @@ FLAG_LANECHANGE  = false;
 dx = 175*10^3/3; % x-cood.interval of control points for bezier curve
 for i = 1:15 % i:target gate j:start lane (until plaza)
     for j = 1:3
-        ctlPt = [100*10^3 12250 - 3500 * j; 100*10^3 + dx 12250 - 3500 * j; 2*dx 77.5*10^3 - 1750 - 5*10^3*i - 3500 * (3-j); 3*dx 77.5*10^3 - 1750 - 5*10^3*i - 3500 * (3-j)];
+        ctlPt = [100*10^3 12250 - 3500 * j; 100*10^3 + dx 12250 - 3500 * j; 100*10^3 + 2*dx 77.5*10^3 - 5*10^3*i; 100*10^3 + 3*dx 77.5*10^3 - 5*10^3*i];
         [laneChangePath{i,j}, lengthP{i,j}] = bezierCurve(ctlPt);
     end
     
 end
+
+car_nr = 
 
 % RUN
 % INITIALIZE SAVER
@@ -113,13 +115,9 @@ while sim.flag && ishandle(fig)
             % Intelligent Driver Model
             %othercars = intelligentDriverModel2(othercars,mycar,myinfo,road,sim);
             %othercars  = update_othercars(othercars, sim);
-            othercars  = update_control_othercars_mycar_intelligent(othercars, sim, mycar, idm, laneChangePath, lengthP);
             
-            if FLAG_LANECHANGE == 0
-                mycar    = update_control_mycar(mycar, sim, othercars, laneChangePath, lengthP);
-            elseif FLAG_LANECHANGE == 1
-                mycar    = update_control_mycar_merge(mycar, sim, othercars, laneChangePath, lengthP, target_lane);
-            end
+            mycar    = update_control_mycar_merge_intelligent(mycar, sim, othercars, laneChangePath, lengthP, target_lane, FLAG_LANECHANGE);
+            othercars  = update_control_othercars_mycar_intelligent(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
             
             myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
             ms_update  = etime(clock, clk_update)*1000;

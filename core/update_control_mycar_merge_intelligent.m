@@ -1,33 +1,45 @@
-function mycar = update_control_mycar_merge(mycar, sim, othercars, laneChangePath, lengthP, target_lane)
+function mycar = update_control_mycar_merge_intelligent(mycar, sim, othercars, laneChangePath, lengthP, target_lane, FLAG_LANECHANGE)
 % UPDATE MY CAR INFORMATION
 
-persistent first_flag
+persistent first_flag h
 if isempty(first_flag)
     first_flag = true;
 end
 
-if first_flag
+if first_flag && FLAG_LANECHANGE == 1
+    
+    % IDM following mycar
     first_flag = false;
     
     % calculate path after merging
-    ratioSpeed_tar = lengthP{target_lane, 1}/(175*10^3)*1.1;
+    h.ratioSpeed_tar = lengthP{target_lane, 1}/(175*10^3)*1.1;
     
-    afterPath = laneChangePath{target_lane, 1};
+    h.afterPath = laneChangePath{target_lane, 1};
     
-    dist=bsxfun(@hypot,afterPath(:,1)-mycar.pos(1), afterPath(:,2)-mycar.pos(2));
+    dist=bsxfun(@hypot,h.afterPath(:,1)-mycar.pos(1), h.afterPath(:,2)-mycar.pos(2));
     [~,idx]=min(dist);
-    targetPos = [afterPath(idx + 10,1) afterPath(idx + 10,2)];
-    [theta,rho] = cart2pol(targetPos(1) - mycar.pos(1), targetPos(2) - mycar.pos(2)); % degree and distance from mycar to targetpoint
-    theta = theta - mycar.pos(3);
-    ctlPt = [mycar.pos(1) mycar.pos(2); mycar.pos(1) + 1/3 * cos(rho * cos(theta)) mycar.pos(2) + 1/3 * sin(rho * cos(theta)); targetPos(1) - 1/3 * cos(rho * cos(theta)) targetPos(2) - 1/3 * sin(rho * cos(theta)); targetPos(1) targetPos(2)];
-    [mergingPath, merginglengthP] = bezierCurve(ctlPt);
-    mycar.vel(1) = mycar.vel(1)*merginglengthP;
+    h.targetPos = [h.afterPath(idx + 10,1) h.afterPath(idx + 10,2)];
+    [theta,rho] = cart2pol(h.targetPos(1) - mycar.pos(1), h.targetPos(2) - mycar.pos(2)); % degree and distance from mycar to targetpoint
+    theta = theta - deg2rad(mycar.pos(3));
+    ctlPt = [mycar.pos(1) mycar.pos(2); mycar.pos(1) + 1/3 * cos(rho * cos(theta)) mycar.pos(2) + 1/3 * sin(rho * cos(theta)); h.targetPos(1) - 1/3 * cos(rho * cos(theta)) h.targetPos(2) - 1/3 * sin(rho * cos(theta)); h.targetPos(1) h.targetPos(2)];
+    [h.mergingPath, h.merginglengthP] = bezierCurve(ctlPt);
+    %mycar.vel(1) = mycar.vel(1)*h.merginglengthP;
+    
+    % detect the car number of front/rear car on the target lane 
+    for i = 1:nnz(othercars.car_nr(target_lane,:))
+        if  othercars.car{othercars.car_nr(target_lane,i)}.pos(1) - h.afterPath(idx,1) < 0
+            mycar.front_nr = othercars.car_nr(target_lane,i + 1);
+            mycar.rear_nr = othercars.car_nr(target_lane,i);
+            break;
+        end
+    end
+    
 end
 
     
 %---- Control angular velocity: vel(2) --------
 pos = predict_pos(mycar.pos, mycar.vel, sim.T);
-[targetDegree,~] = get_tatgetTheta(pos,mergingPath);
+[targetDegree,~] = get_tatgetTheta(pos,h.mergingPath);
 
 if targetDegree - mycar.pos(3) > 10
     mycar.vel(2) = mycar.vel(2) + 10/sim.T;

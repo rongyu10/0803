@@ -1,4 +1,11 @@
-function othercars = update_control_othercars_mycar_intelligent(othercars, sim, mycar, idm, laneChangePath, lengthP)
+function othercars = update_control_othercars_mycar_intelligent(othercars, sim, idm, mycar, laneChangePath, lengthP, FLAG_LANECHANGE)
+
+% persistent first_flag
+% if isempty(first_flag)
+%     first_flag = true;
+% end
+
+
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -11,6 +18,33 @@ l = idm.l; % vehicle length
 %============================================================
 
 for i = 1:othercars.n
+    
+    
+%     if first_flag
+%         %---- Control angular velocity: vel(2) --------
+%         ratioSpeed = lengthP{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx}/(175*10^3);
+%         othercars.car{i}.vel(1) = othercars.car{i}.vel(1)*ratioSpeed;
+%         othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx};
+%     end
+%     
+%     pos = predict_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
+%     targetDegree = get_tatgetTheta(pos,othercars.car{i}.pathTranslated);
+%     if targetDegree - othercars.car{i}.pos(3) > 10
+%         othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + 10/sim.T;
+%     elseif targetDegree - othercars.car{i}.pos(3) < -10
+%         othercars.car{i}.vel(2) = othercars.car{i}.vel(2) - 10/sim.T;
+%     else
+%         othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + (targetDegree - othercars.car{i}.pos(3))/sim.T;
+%     end
+%     %----------------------------------------------
+%     
+%     othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
+%     othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);
+%     
+%     if othercars.car{i}.pos(1) > 275*10^3 && othercars.car{i}.vel(1) > 10000
+%         othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 200;
+%     end
+    
     if othercars.car{i}.flgPlaza == 0
         othercars.car{i}.pos ...
             = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
@@ -25,6 +59,8 @@ for i = 1:othercars.n
             %othercars.car{i}.pathTranslated = update_laneChangePath(othercars.car{i},laneChangePath);
             %othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane};
             othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx};
+            idx_nr = find(othercars.car_nr(othercars.car{i}.tolllane,:), 1, 'last') + 1;
+            othercars.car_nr(othercars.car{i}.tolllane, idx_nr) = i;
         end
     elseif othercars.car{i}.flgPlaza == 1
         
@@ -41,29 +77,10 @@ for i = 1:othercars.n
         end
         %----------------------------------------------
         
-%         if mod(i, othercars.npl) ~= 0
-%             front_num = i + 1;
-%             if mod(front_num, othercars.npl) == 1
-%                 front_num = front_num - othercars.npl;
-%             end
-%             
-%             if othercars.car{front_num}.pos(1) - othercars.car{i}.pos(1) < 0 % if there is no other car front of this car
-%                 A3 = track.xmax - othercars.car{i}.pos(1) + othercars.car{front_num}.pos(1) - l;
-%             else
-%                 A3 = othercars.car{front_num}.pos(1) - othercars.car{i}.pos(1) - l;
-%             end
-%             A1 = othercars.car{i}.vel(1)/v0;
-%             A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{front_num}.vel(1))/2/sqrt(a*b))/A3;
-%             othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
-%             
-%             if othercars.car{i}.vel(1) < 0
-%                 othercars.car{i}.vel(1) = 0;
-%             end
-%         end
-    
+        if FLAG_LANECHANGE == 1
+            % IDM following mycar
+        end
         
-        
-        % fprintf(1, 'mycar.pos(3) = [%4d] targetDegree = [%4d] mycar.vel(2) = [%4d] (targetDegree - pos(3))/sim.T = [%4d]\n', mycar.pos(3), targetDegree, mycar.vel(2), (targetDegree - pos(3))/sim.T);
         othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
         othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);
         
@@ -73,6 +90,10 @@ for i = 1:othercars.n
         
     end
 end
+
+% if first_flag
+%     first_flag = false;
+% end
 
 end
 
