@@ -12,6 +12,7 @@ sim       = init_sim(0.02); % dt = 0.02 [sec]
 %--- set othercars
 othercars  = init_othercars();
 nr_cars    = 20;  % 11
+othercars.npl = 10;
 othercars  = addcars2_tollplaza(othercars, road.track{1}, nr_cars);
 %---------------
 %--- set mycar--

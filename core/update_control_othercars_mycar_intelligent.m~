@@ -1,4 +1,4 @@
-function othercars = update_control_othercars_mycar_intelligent(othercars, sim, idm, mycar, laneChangePath, lengthP, FLAG_LANECHANGE)
+function othercars = update_control_othercars_mycar_intelligent(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
 
 % persistent first_flag
 % if isempty(first_flag)
@@ -59,7 +59,11 @@ for i = 1:othercars.n
             %othercars.car{i}.pathTranslated = update_laneChangePath(othercars.car{i},laneChangePath);
             %othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane};
             othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx};
-            idx_nr = find(othercars.car_nr(othercars.car{i}.tolllane,:), 1, 'last') + 1;
+            if isempty(find(othercars.car_nr(othercars.car{i}.tolllane,:), 1, 'last'))
+                idx_nr = 1;
+            else
+                idx_nr = find(othercars.car_nr(othercars.car{i}.tolllane,:), 1, 'last') + 1;
+            end
             othercars.car_nr(othercars.car{i}.tolllane, idx_nr) = i;
         end
     elseif othercars.car{i}.flgPlaza == 1
@@ -77,9 +81,7 @@ for i = 1:othercars.n
         end
         %----------------------------------------------
         
-        if FLAG_LANECHANGE == 1
-            % IDM following mycar
-        end
+
         
         othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
         othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);

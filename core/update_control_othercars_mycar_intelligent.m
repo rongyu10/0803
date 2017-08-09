@@ -1,11 +1,11 @@
-function othercars = update_control_othercars_mycar_intelligent(othercars, sim, idm, mycar, laneChangePath, lengthP, FLAG_LANECHANGE)
+function othercars = update_control_othercars_mycar_intelligent(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
 
 % persistent first_flag
 % if isempty(first_flag)
 %     first_flag = true;
 % end
 
-
+target_lane = mycar.target_lane;
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -16,6 +16,28 @@ delta = idm.delta; %acceleration exponent
 s0 = idm.s0; % minimum distance
 l = idm.l; % vehicle length
 %============================================================
+
+if FLAG_LANECHANGE == 1
+    
+    for j = mycar.rear_nr:nnz(othercars.car_nr(target_lane,:))
+        
+        if j == mycar.rear_nr % IDM following mycar
+            A3 = mycar.pos(1) - othercars.car{othercars.car_nr(target_lane,j)}.pos(1) - l;
+            A1 = othercars.car{othercars.car_nr(target_lane,j)}.vel(1)/v0;
+            A2 = (s0 + othercars.car{othercars.car_nr(target_lane,j)}.vel(1)*T + othercars.car{othercars.car_nr(target_lane,j)}.vel(1) * (othercars.car{othercars.car_nr(target_lane,j)}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
+        else % IDM following frontcar
+            A3 = othercars.car{othercars.car_nr(target_lane,j-1)}.pos(1) - othercars.car{othercars.car_nr(target_lane,j)}.pos(1) - l;
+            A1 = othercars.car{othercars.car_nr(target_lane,j)}.vel(1)/v0;
+            A2 = (s0 + othercars.car{othercars.car_nr(target_lane,j)}.vel(1)*T + othercars.car{othercars.car_nr(target_lane,j)}.vel(1) * (othercars.car{othercars.car_nr(target_lane,j)}.vel(1) - othercars.car{othercars.car_nr(target_lane,j-1)}.vel(1))/2/sqrt(a*b))/A3;
+        end
+        
+        othercars.car{othercars.car_nr(target_lane,j)}.vel(1) = othercars.car{othercars.car_nr(target_lane,j)}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
+        
+        if othercars.car{othercars.car_nr(target_lane,j)}.vel(1) < 0
+            othercars.car{othercars.car_nr(target_lane,j)}.vel(1) = 0;
+        end
+    end
+end
 
 for i = 1:othercars.n
     
@@ -59,7 +81,11 @@ for i = 1:othercars.n
             %othercars.car{i}.pathTranslated = update_laneChangePath(othercars.car{i},laneChangePath);
             %othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane};
             othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx};
-            idx_nr = find(othercars.car_nr(othercars.car{i}.tolllane,:), 1, 'last') + 1;
+            if isempty(find(othercars.car_nr(othercars.car{i}.tolllane,:), 1, 'last'))
+                idx_nr = 1;
+            else
+                idx_nr = find(othercars.car_nr(othercars.car{i}.tolllane,:), 1, 'last') + 1;
+            end
             othercars.car_nr(othercars.car{i}.tolllane, idx_nr) = i;
         end
     elseif othercars.car{i}.flgPlaza == 1
@@ -76,17 +102,17 @@ for i = 1:othercars.n
             othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + (targetDegree - othercars.car{i}.pos(3))/sim.T;
         end
         %----------------------------------------------
-        
-        if FLAG_LANECHANGE == 1
-            % IDM following mycar
-        end
-        
-        othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
-        othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);
+
+
         
         if othercars.car{i}.pos(1) > 275*10^3 && othercars.car{i}.vel(1) > 10000
             othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 200;
         end
+        
+                
+        othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
+        othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);
+        
         
     end
 end

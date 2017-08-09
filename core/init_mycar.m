@@ -19,5 +19,6 @@ mycar.rfs_dists = mycar.rfs_dist*ones(1, mycar.nr_rfs);
 % SETTING OF TOLL ENTERING
 mycar.flgPlaza = 0;
 mycar.tolllane = 8;
+mycar.target_lane = 8;
 
 

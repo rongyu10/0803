@@ -14,22 +14,23 @@ othercars  = init_othercars();
 nr_cars    = 27;
 othercars.npl = 10;
 othercars  = addcars2_tollplaza(othercars, road.track{1}, nr_cars);
-target_lane = 8;
+
 %---------------
 %--- set mycar--
 ini_vel    = [30000 0];
 ini_pos    = [10000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
+mycar.target_lane = 8;
 %---------------
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
 idm.v0 = 10000; % desired velocity
 idm.T = 1.0; % Safe time headway
-idm.a = 4000; % maximum acceleration
-idm.b = 6000; %desired deceleration
+idm.a = 2000; % maximum acceleration
+idm.b = 3000; %desired deceleration
 idm.delta = 4; %acceleration exponent
-idm.s0 = 2500; % minimum distance
+idm.s0 = 1000; % minimum distance
 idm.l = 2500; % vehicle length
 %============================================================
 
@@ -56,7 +57,7 @@ for i = 1:15 % i:target gate j:start lane (until plaza)
     
 end
 
-car_nr = 
+
 
 % RUN
 % INITIALIZE SAVER
@@ -71,10 +72,10 @@ while sim.flag && ishandle(fig)
             %mycar.vel(2) = mycar.vel(2)-20;
         case {'uparrow', 'leftbracket'}
             %mycar.vel(1) = mycar.vel(1)+5000; % 10000 mm/s = 36 km/h
-            target_lane = mycar.tolllane - 1;
+            mycar.target_lane = mycar.tolllane - 1;
         case {'downarrow', 'slash'}
             %mycar.vel(1) = mycar.vel(1)-5000; % 10000 mm/s = 36 km/h
-            target_lane = mycar.tolllane + 1;
+            mycar.target_lane = mycar.tolllane + 1;
         case 'space'
             mycar.vel = [0 0];
         case {'1', '2', '3', '4', '5', '6'}
@@ -116,7 +117,7 @@ while sim.flag && ishandle(fig)
             %othercars = intelligentDriverModel2(othercars,mycar,myinfo,road,sim);
             %othercars  = update_othercars(othercars, sim);
             
-            mycar    = update_control_mycar_merge_intelligent(mycar, sim, othercars, laneChangePath, lengthP, target_lane, FLAG_LANECHANGE);
+            mycar = update_control_mycar_merge_intelligent(mycar, sim, othercars, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
             othercars  = update_control_othercars_mycar_intelligent(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
             
             myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
@@ -173,7 +174,7 @@ while sim.flag && ishandle(fig)
     
     axisinfo = plot_track_tollplaza(road, FILL_LANES);
     plot_axisinfo_tollplaza(axisinfo);
-    plot_othercars_lanechange(othercars, SIMPLECARSHAPE, REALCARSHAPE, target_lane);
+    plot_othercars_lanechange(othercars, SIMPLECARSHAPE, REALCARSHAPE, mycar.target_lane);
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
     %plot_traj(traj);
     %----

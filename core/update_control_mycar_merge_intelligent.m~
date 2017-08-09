@@ -1,4 +1,4 @@
-function mycar = update_control_mycar_merge_intelligent(mycar, sim, othercars, laneChangePath, lengthP, target_lane, FLAG_LANECHANGE)
+function mycar = update_control_mycar_merge_intelligent(mycar, sim, othercars, idm, laneChangePath, lengthP, target_lane, FLAG_LANECHANGE)
 % UPDATE MY CAR INFORMATION
 
 persistent first_flag h
@@ -7,8 +7,18 @@ if isempty(first_flag)
 end
 
 if first_flag && FLAG_LANECHANGE == 1
-            % IDM following mycar
-        end
+    
+    % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
+    v0 = idm.v0; % desired velocity
+    T = idm.T; % Safe time headway
+    a = idm.a; % maximum acceleration
+    b = idm.b; %desired deceleration
+    delta = idm.delta; %acceleration exponent
+    s0 = idm.s0; % minimum distance
+    l = idm.l; % vehicle length
+    %============================================================
+    
+    % IDM following mycar
     first_flag = false;
     
     % calculate path after merging
@@ -25,43 +35,67 @@ if first_flag && FLAG_LANECHANGE == 1
     [h.mergingPath, h.merginglengthP] = bezierCurve(ctlPt);
     %mycar.vel(1) = mycar.vel(1)*h.merginglengthP;
     
+    % detect the car number of front/rear car on the target lane 
     for i = 1:nnz(othercars.car_nr(target_lane,:))
-    
-        if  othercars.car{i}.pos(1) - h.afterPath(idx,1) < 0
-            mycar.front_nr = i;
-            mycar.rear_nr = i - 1;
+        if  othercars.car{othercars.car_nr(target_lane,i)}.pos(1) - h.afterPath(idx,1) < 0
+            mycar.front_nr = othercars.car_nr(target_lane,i + 1);
+            mycar.rear_nr = othercars.car_nr(target_lane,i);
             break;
         end
-
-%     dist = bsxfun(@hypot, h.afterPath(idx,1)-othercars.car{:}.pos(1), h.afterPath(idx,2)-othercars.car{:}.pos(2));
-%     [~,idx2] = min(dist);
-%     if h.afterPath(idx,1) - othercars.car{idx2}.pos(1) > 0
-%         front_
-        
-        
+    end
+end
+    
+if FLAG_LANECHANGE == 1
+    %---- Control angular velocity: vel(2) --------
+    pos = predict_pos(mycar.pos, mycar.vel, sim.T);
+    [targetDegree,~] = get_tatgetTheta(pos,h.mergingPath);
+    
+    if targetDegree - mycar.pos(3) > 10
+        mycar.vel(2) = mycar.vel(2) + 10/sim.T;
+    elseif targetDegree - mycar.pos(3) < -10
+        mycar.vel(2) = mycar.vel(2) - 10/sim.T;
+    else
+        mycar.vel(2) = mycar.vel(2) + (targetDegree - mycar.pos(3))/sim.T;
+    end
+    %----------------------------------------------
+    
+    % control mycar.vel(1) according to IDM
+    A3 = othercars.car{mycar.front_nr}.pos(1) - mycar.pos(1) - l;
+    A1 = mycar.vel(1)/v0;
+    A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{mycar.front_nr}.vel(1))/2/sqrt(a*b))/A3;
+    mycar.vel(1) = mycar.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
+    
+    if mycar.vel(1) < 0
+        mycar.vel(1) = 0;
+    end
+    
+elseif FLAG_LANECHANGE == 0
+    %---- Control angular velocity: vel(2) --------
+    pos = predict_pos(mycar.pos, mycar.vel, sim.T);
+    [targetDegree,~] = get_tatgetTheta(pos,laneChangePath{mycar.tolllane, 2});
+    
+    if targetDegree - mycar.pos(3) > 10
+        mycar.vel(2) = mycar.vel(2) + 10/sim.T;
+    elseif targetDegree - mycar.pos(3) < -10
+        mycar.vel(2) = mycar.vel(2) - 10/sim.T;
+    else
+        mycar.vel(2) = mycar.vel(2) + (targetDegree - mycar.pos(3))/sim.T;
+    end
+    %----------------------------------------------
 end
 
     
-%---- Control angular velocity: vel(2) --------
-pos = predict_pos(mycar.pos, mycar.vel, sim.T);
-[targetDegree,~] = get_tatgetTheta(pos,h.mergingPath);
 
-if targetDegree - mycar.pos(3) > 10
-    mycar.vel(2) = mycar.vel(2) + 10/sim.T;
-elseif targetDegree - mycar.pos(3) < -10
-    mycar.vel(2) = mycar.vel(2) - 10/sim.T;
-else
-    mycar.vel(2) = mycar.vel(2) + (targetDegree - mycar.pos(3))/sim.T;
+
+
+if mycar.pos(1) > 275*10^3 && mycar.vel(1) > 10000
+    mycar.vel(1) = mycar.vel(1) - 200;
 end
-%----------------------------------------------
 
 % fprintf(1, 'mycar.pos(3) = [%4d] targetDegree = [%4d] mycar.vel(2) = [%4d] (targetDegree - pos(3))/sim.T = [%4d]\n', mycar.pos(3), targetDegree, mycar.vel(2), (targetDegree - pos(3))/sim.T);
 mycar.pos = update_pos(mycar.pos, mycar.vel, sim.T);
 mycar.bd  = get_carshape(mycar.pos, mycar.W, mycar.H);
 
-if mycar.pos(1) > 275*10^3 && mycar.vel(1) > 10000
-    mycar.vel(1) = mycar.vel(1) - 200;
-end
 
 mycar = update_rfs(mycar, othercars);
 
