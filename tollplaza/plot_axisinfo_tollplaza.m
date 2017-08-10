@@ -4,7 +4,7 @@ if isempty(first_flag)
     first_flag = true;
 end
 
-SHOW_AXIS = 1;
+SHOW_AXIS = 0;
 
 com = computer;
 if isequal(com(1:3), 'MAC')

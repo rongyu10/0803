@@ -17,55 +17,35 @@ s0 = idm.s0; % minimum distance
 l = idm.l; % vehicle length
 %============================================================
 
-if FLAG_LANECHANGE == 1
-    
-    for j = mycar.rear_nr:nnz(othercars.car_nr(target_lane,:))
-        
-        if j == mycar.rear_nr % IDM following mycar
-            A3 = mycar.pos(1) - othercars.car{othercars.car_nr(target_lane,j)}.pos(1) - l;
-            A1 = othercars.car{othercars.car_nr(target_lane,j)}.vel(1)/v0;
-            A2 = (s0 + othercars.car{othercars.car_nr(target_lane,j)}.vel(1)*T + othercars.car{othercars.car_nr(target_lane,j)}.vel(1) * (othercars.car{othercars.car_nr(target_lane,j)}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
-        else % IDM following frontcar
-            A3 = othercars.car{othercars.car_nr(target_lane,j-1)}.pos(1) - othercars.car{othercars.car_nr(target_lane,j)}.pos(1) - l;
-            A1 = othercars.car{othercars.car_nr(target_lane,j)}.vel(1)/v0;
-            A2 = (s0 + othercars.car{othercars.car_nr(target_lane,j)}.vel(1)*T + othercars.car{othercars.car_nr(target_lane,j)}.vel(1) * (othercars.car{othercars.car_nr(target_lane,j)}.vel(1) - othercars.car{othercars.car_nr(target_lane,j-1)}.vel(1))/2/sqrt(a*b))/A3;
-        end
-        
-        othercars.car{othercars.car_nr(target_lane,j)}.vel(1) = othercars.car{othercars.car_nr(target_lane,j)}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
-        
-        if othercars.car{othercars.car_nr(target_lane,j)}.vel(1) < 0
-            othercars.car{othercars.car_nr(target_lane,j)}.vel(1) = 0;
-        end
-    end
-end
+
 
 for i = 1:othercars.n
     
     
-%     if first_flag
-%         %---- Control angular velocity: vel(2) --------
-%         ratioSpeed = lengthP{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx}/(175*10^3);
-%         othercars.car{i}.vel(1) = othercars.car{i}.vel(1)*ratioSpeed;
-%         othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx};
-%     end
-%     
-%     pos = predict_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
-%     targetDegree = get_tatgetTheta(pos,othercars.car{i}.pathTranslated);
-%     if targetDegree - othercars.car{i}.pos(3) > 10
-%         othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + 10/sim.T;
-%     elseif targetDegree - othercars.car{i}.pos(3) < -10
-%         othercars.car{i}.vel(2) = othercars.car{i}.vel(2) - 10/sim.T;
-%     else
-%         othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + (targetDegree - othercars.car{i}.pos(3))/sim.T;
-%     end
-%     %----------------------------------------------
-%     
-%     othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
-%     othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);
-%     
-%     if othercars.car{i}.pos(1) > 275*10^3 && othercars.car{i}.vel(1) > 10000
-%         othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 200;
-%     end
+    %     if first_flag
+    %         %---- Control angular velocity: vel(2) --------
+    %         ratioSpeed = lengthP{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx}/(175*10^3);
+    %         othercars.car{i}.vel(1) = othercars.car{i}.vel(1)*ratioSpeed;
+    %         othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx};
+    %     end
+    %
+    %     pos = predict_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
+    %     targetDegree = get_tatgetTheta(pos,othercars.car{i}.pathTranslated);
+    %     if targetDegree - othercars.car{i}.pos(3) > 10
+    %         othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + 10/sim.T;
+    %     elseif targetDegree - othercars.car{i}.pos(3) < -10
+    %         othercars.car{i}.vel(2) = othercars.car{i}.vel(2) - 10/sim.T;
+    %     else
+    %         othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + (targetDegree - othercars.car{i}.pos(3))/sim.T;
+    %     end
+    %     %----------------------------------------------
+    %
+    %     othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
+    %     othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);
+    %
+    %     if othercars.car{i}.pos(1) > 275*10^3 && othercars.car{i}.vel(1) > 10000
+    %         othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 200;
+    %     end
     
     if othercars.car{i}.flgPlaza == 0
         othercars.car{i}.pos ...
@@ -76,7 +56,7 @@ for i = 1:othercars.n
         if othercars.car{i}.pos(1) > 100*10^3 && othercars.car{i}.pos(1) < 275*10^3
             othercars.car{i}.flgPlaza = 1;
             
-            ratioSpeed = lengthP{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx}/(175*10^3)*1.1;
+            ratioSpeed = lengthP{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx}/(175*10^3);
             othercars.car{i}.vel(1) = othercars.car{i}.vel(1)*ratioSpeed;
             %othercars.car{i}.pathTranslated = update_laneChangePath(othercars.car{i},laneChangePath);
             %othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane};
@@ -94,27 +74,46 @@ for i = 1:othercars.n
         %---- Control angular velocity: vel(2) --------
         pos = predict_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
         targetDegree = get_tatgetTheta(pos,othercars.car{i}.pathTranslated);
-        if targetDegree - othercars.car{i}.pos(3) > 10
-            othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + 10/sim.T;
-        elseif targetDegree - othercars.car{i}.pos(3) < -10
-            othercars.car{i}.vel(2) = othercars.car{i}.vel(2) - 10/sim.T;
+        if targetDegree - othercars.car{i}.pos(3) > 5
+            othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + 5/sim.T*0.01;
+        elseif targetDegree - othercars.car{i}.pos(3) < -5
+            othercars.car{i}.vel(2) = othercars.car{i}.vel(2) - 5/sim.T*0.01;
         else
-            othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + (targetDegree - othercars.car{i}.pos(3))/sim.T;
+            othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + (targetDegree - othercars.car{i}.pos(3))/sim.T*0.01;
         end
         %----------------------------------------------
-
-
         
-        if othercars.car{i}.pos(1) > 275*10^3 && othercars.car{i}.vel(1) > 10000
-            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 200;
+        
+        
+        if FLAG_LANECHANGE == 1 && i == othercars.car_nr(target_lane, mycar.rear_nr) % IDM following mycar
+            
+            A3 = mycar.pos(1) - othercars.car{i}.pos(1) - l;
+            A1 = othercars.car{i}.vel(1)/v0;
+            A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
+            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
+        elseif i ~= othercars.car_nr(othercars.car{i}.tolllane,1) % IDM following frontcar
+            other_front_nr = find(othercars.car_nr(othercars.car{i}.tolllane,:) == i) - 1;
+            A3 = othercars.car{othercars.car_nr(othercars.car{i}.tolllane,other_front_nr)}.pos(1) - othercars.car{i}.pos(1) - l;
+            A1 = othercars.car{i}.vel(1)/v0;
+            A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{othercars.car_nr(othercars.car{i}.tolllane,other_front_nr)}.vel(1))/2/sqrt(a*b))/A3;
+            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
         end
         
-                
+        
+        if othercars.car{i}.vel(1) < 0
+            othercars.car{i}.vel(1) = 0;
+        end
+        if othercars.car{i}.pos(1) > 275*10^3 && othercars.car{i}.vel(1) > 5000
+            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 30000 * sim.T;
+        end
+        
         othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
         othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);
         
-        
     end
+    
+    
+    
 end
 
 % if first_flag
