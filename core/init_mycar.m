@@ -20,5 +20,7 @@ mycar.rfs_dists = mycar.rfs_dist*ones(1, mycar.nr_rfs);
 mycar.flgPlaza = 0;
 mycar.tolllane = 8;
 mycar.target_lane = 8;
+mycar.front_nr = 0;
+mycar.rear_nr = 33;
 
 

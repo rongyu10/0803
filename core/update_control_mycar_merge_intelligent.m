@@ -61,10 +61,18 @@ if first_flag1 && FLAG_LANECHANGE == 1
     % detect the car number of front/rear car on the target lane 
     for i = 1:nnz(othercars.car_nr(target_lane,:))
         if  othercars.car{othercars.car_nr(target_lane,i)}.pos(1) - h.afterPath(idx,1) < 0
-            mycar.front_nr = othercars.car_nr(target_lane,i - 1);
-            %mycar.rear_nr = othercars.car_nr(target_lane,i);
-            mycar.rear_nr = i;
+            if i == 1
+                mycar.front_nr = 0;
+                mycar.rear_nr = othercars.car_nr(target_lane,i);
+            else
+                mycar.front_nr = othercars.car_nr(target_lane,i - 1);
+                mycar.rear_nr = othercars.car_nr(target_lane,i);
+            end
             break;
+        end
+        if i == nnz(othercars.car_nr(target_lane,:))
+            mycar.front_nr = othercars.car_nr(target_lane,i);
+            mycar.rear_nr = 0;
         end
     end
     fprintf(2, 'LANECHANGE START');
@@ -79,17 +87,18 @@ if FLAG_LANECHANGE == 1 % && mycar.rear_nr ~= nnz(othercars.car_nr(target_lane,:
     if mycar.pos(1) < h.targetPos(1)
         [targetDegree,~] = get_tatgetTheta(pos,h.mergingPath);
         
-        if targetDegree - mycar.pos(3) > 5
-            mycar.vel(2) = mycar.vel(2) + 5/sim.T;
-        elseif targetDegree - mycar.pos(3) < -5
-            mycar.vel(2) = mycar.vel(2) - 5/sim.T;
-        else
-            if (targetDegree - mycar.pos(3)) * mycar.vel(2) > 0
-                mycar.vel(2) = mycar.vel(2) + (targetDegree - mycar.pos(3))/sim.T*0.05;
-            else
-                mycar.vel(2) = mycar.vel(2) + (targetDegree - mycar.pos(3))/sim.T*0.5;
-            end
-        end
+        mycar.pos(3) = targetDegree;
+%         if targetDegree - mycar.pos(3) > 5
+%             mycar.vel(2) = mycar.vel(2) + 5/sim.T;
+%         elseif targetDegree - mycar.pos(3) < -5
+%             mycar.vel(2) = mycar.vel(2) - 5/sim.T;
+%         else
+%             if (targetDegree - mycar.pos(3)) * mycar.vel(2) > 0
+%                 mycar.vel(2) = mycar.vel(2) + (targetDegree - mycar.pos(3))/sim.T*0.05;
+%             else
+%                 mycar.vel(2) = mycar.vel(2) + (targetDegree - mycar.pos(3))/sim.T*0.5;
+%             end
+%         end
 % 
 % if targetDegree - mycar.pos(3) > 5
 %     mycar.vel(2) = mycar.vel(2) + 5;
@@ -101,9 +110,13 @@ if FLAG_LANECHANGE == 1 % && mycar.rear_nr ~= nnz(othercars.car_nr(target_lane,:
         %----------------------------------------------
         
         % control mycar.vel(1) according to IDM
-        A3 = othercars.car{mycar.front_nr}.pos(1) - mycar.pos(1) - l;
         A1 = mycar.vel(1)/v0;
-        A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{mycar.front_nr}.vel(1))/2/sqrt(a*b))/A3;
+        if mycar.front_nr == 0
+            A2 = 0;
+        else
+            A3 = othercars.car{mycar.front_nr}.pos(1) - mycar.pos(1) - l;
+            A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{mycar.front_nr}.vel(1))/2/sqrt(a*b))/A3;
+        end
 
         mycar.vel(1) = mycar.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
         fprintf(1, 'mycar.pos(1) =  [%.4d], targetDegree =  [%.4d], mycar.pos(3) =  [%.4d], difference = [%.4d], mycar.vel(1) = [%.4d]\n', mycar.pos(1), targetDegree, mycar.pos(3), (targetDegree - mycar.pos(3))/sim.T, mycar.vel(1));
@@ -154,15 +167,18 @@ elseif FLAG_LANECHANGE == 0
     %---- Control angular velocity: vel(2) --------
     pos = predict_pos(mycar.pos, mycar.vel, sim.T);
     [targetDegree,~] = get_tatgetTheta(pos,laneChangePath{mycar.tolllane, 2});
-    
-    if targetDegree - mycar.pos(3) > 5
-        mycar.vel(2) = mycar.vel(2) + 5/sim.T*0.01;
-    elseif targetDegree - mycar.pos(3) < -5
-        mycar.vel(2) = mycar.vel(2) - 5/sim.T*0.01;
-    else
-        mycar.vel(2) = mycar.vel(2) + (targetDegree - mycar.pos(3))/sim.T*0.01;
-        fprintf(1, 'mycar.pos(1) =  [%.4d], targetDegree =  [%.4d], mycar.pos(3) =  [%.4d], difference = [%.4d] \n', mycar.pos(1), targetDegree, mycar.pos(3), (targetDegree - mycar.pos(3))/sim.T);
+    if mycar.pos(1) < 100*10^3
+        targetDegree = 0;
     end
+    mycar.pos(3) = targetDegree;
+%     if targetDegree - mycar.pos(3) > 5
+%         mycar.vel(2) = mycar.vel(2) + 5/sim.T*0.01;
+%     elseif targetDegree - mycar.pos(3) < -5
+%         mycar.vel(2) = mycar.vel(2) - 5/sim.T*0.01;
+%     else
+%         mycar.vel(2) = mycar.vel(2) + (targetDegree - mycar.pos(3))/sim.T*0.01;
+%         fprintf(1, 'mycar.pos(1) =  [%.4d], targetDegree =  [%.4d], mycar.pos(3) =  [%.4d], difference = [%.4d] \n', mycar.pos(1), targetDegree, mycar.pos(3), (targetDegree - mycar.pos(3))/sim.T);
+%     end
     %----------------------------------------------
 end
 

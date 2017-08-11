@@ -1,4 +1,4 @@
-function othercars = respawn_othercars_tollplaza(othercars,road, sim)
+function othercars = delete_othercars_tollplaza(othercars,road, sim)
 % RESPAWN OTHERCARS outside the course 
 % made by kumano
 
@@ -22,12 +22,12 @@ for i = 1:othercars.n
                 othercars.car_nr(othercars.car{i}.tolllane, j) = 0;
             end
         end
-        othercars.car{i}.flgPlaza = 0;
+        clear othercars.car{i}
+%         othercars.car{i}.flgPlaza = 0;
 %         laneidx = othercars.car{i}.save.lane_idx;  
 %         othercars.car{i}.pos = get_posintrack(road.track{1}, 1, 0, laneidx, 0); % respawn from 2nd lane (no offset)
-%         %othercars.car{i}.vel = othercars.car{i}.save.vel; 
-        othercars.car{i}.pos(1) = -10000;
-        othercars.car{i}.vel = [0 0];
+%         %othercars.car{i}.vel = othercars.car{i}.save.vel;  
+%         othercars.car{i}.vel = [20000 0];
     end
 end
 %----------------------------

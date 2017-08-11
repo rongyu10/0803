@@ -74,28 +74,33 @@ for i = 1:othercars.n
         %---- Control angular velocity: vel(2) --------
         pos = predict_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
         targetDegree = get_tatgetTheta(pos,othercars.car{i}.pathTranslated);
-        if targetDegree - othercars.car{i}.pos(3) > 5
-            othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + 5/sim.T*0.01;
-        elseif targetDegree - othercars.car{i}.pos(3) < -5
-            othercars.car{i}.vel(2) = othercars.car{i}.vel(2) - 5/sim.T*0.01;
-        else
-            othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + (targetDegree - othercars.car{i}.pos(3))/sim.T*0.01;
-        end
+        othercars.car{i}.pos(3) = targetDegree;
+%         if targetDegree - othercars.car{i}.pos(3) > 5
+%             othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + 5/sim.T*0.01;
+%         elseif targetDegree - othercars.car{i}.pos(3) < -5
+%             othercars.car{i}.vel(2) = othercars.car{i}.vel(2) - 5/sim.T*0.01;
+%         else
+%             othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + (targetDegree - othercars.car{i}.pos(3))/sim.T*0.01;
+%         end
         %----------------------------------------------
         
         
         
-        if FLAG_LANECHANGE == 1 && i == othercars.car_nr(target_lane, mycar.rear_nr) % IDM following mycar
-            
+        if i == mycar.rear_nr % IDM following mycar
             A3 = mycar.pos(1) - othercars.car{i}.pos(1) - l;
             A1 = othercars.car{i}.vel(1)/v0;
             A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
             othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
-        elseif i ~= othercars.car_nr(othercars.car{i}.tolllane,1) % IDM following frontcar
+        else 
             other_front_nr = find(othercars.car_nr(othercars.car{i}.tolllane,:) == i) - 1;
-            A3 = othercars.car{othercars.car_nr(othercars.car{i}.tolllane,other_front_nr)}.pos(1) - othercars.car{i}.pos(1) - l;
+            
+            if i ~= othercars.car_nr(othercars.car{i}.tolllane,1) % IDM following frontcar
+                A3 = othercars.car{othercars.car_nr(othercars.car{i}.tolllane,other_front_nr)}.pos(1) - othercars.car{i}.pos(1) - l;
+                A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{othercars.car_nr(othercars.car{i}.tolllane,other_front_nr)}.vel(1))/2/sqrt(a*b))/A3;
+            else
+                A2 = 0;
+            end
             A1 = othercars.car{i}.vel(1)/v0;
-            A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{othercars.car_nr(othercars.car{i}.tolllane,other_front_nr)}.vel(1))/2/sqrt(a*b))/A3;
             othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
         end
         
@@ -104,7 +109,7 @@ for i = 1:othercars.n
             othercars.car{i}.vel(1) = 0;
         end
         if othercars.car{i}.pos(1) > 275*10^3 && othercars.car{i}.vel(1) > 5000
-            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 30000 * sim.T;
+            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 4000 * sim.T;
         end
         
         othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);

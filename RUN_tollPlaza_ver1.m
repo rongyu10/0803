@@ -7,7 +7,7 @@ addpath(genpath('./bezier'))
 addpath(genpath('./intelligentDriverModel'))
 %--- set simulation
 road      = init_road_tollplaza();
-sim       = init_sim(0.02); % dt = 0.02 [sec]
+sim       = init_sim(0.05); % dt = 0.02 [sec]
 %------------------
 %--- set othercars
 othercars  = init_othercars();
@@ -18,7 +18,7 @@ othercars  = addcars2_tollplaza(othercars, road.track{1}, nr_cars);
 %---------------
 %--- set mycar--
 ini_vel    = [20000 0];
-ini_pos    = [-160000 5250 0];
+ini_pos    = [-385000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 
@@ -30,7 +30,7 @@ idm.T = 0.7; % Safe time headway
 idm.a = 1000; % maximum acceleration
 idm.b = 2000; %desired deceleration
 idm.delta = 4; %acceleration exponent
-idm.s0 = 1000; % minimum distance
+idm.s0 = 2000; % minimum distance
 idm.l = 2500; % vehicle length
 %============================================================
 
@@ -124,7 +124,7 @@ while sim.flag && ishandle(fig)
             ms_update  = etime(clock, clk_update)*1000;
             titlecol = 'w';
             
-            % SAVE TRAJ
+            % SAVE TRAJppp
             %traj = add_traj(traj, mycar, myinfo);
                         
             % TERMINATE CONDITIONS        
@@ -140,6 +140,7 @@ while sim.flag && ishandle(fig)
 %             end
             if mycar.pos(1) > 320*10^3
                 fprintf(1, 'SUCCEEDED!! \n');
+                key_pressed = 'p';
                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
                 FLAG_LANECHANGE = false;
                 clear update_control_mycar_merge_intelligent
@@ -166,19 +167,19 @@ while sim.flag && ishandle(fig)
     PLOT_FUTURE_CARPOSES = 0; % 1
     PLOT_CAR_PATHS       = 0; % 1
     PLOT_RFS             = 0; % 1
-%     strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ' ...
-%         '[VEL: %.1fKM/H %.1fDEG/S] \n' ...
-%         '[%dSEG-%dLANE] / [LANE-DEV DIST:%.1fMM DEG:%.1fDEG] \n' ...
-%         '[LEFT:%.2fM-CENTER:%.2fM-RIGHT:%.2fM]\n' ...
-%         '[#SAVE: %d]'];
-%     titlestr = sprintf(pstrtemp, sim.sec, ms_update, ms_plot ...
-%         , mycar.vel(1)/10000*36, mycar.vel(2) ...
-%         , myinfo.seg_idx, myinfo.lane_idx, myinfo.lane_dev, myinfo.deg ...
-%         , myinfo.left_fb_dists(1)/1000, myinfo.center_fb_dists(1)/1000 ...
-%         , myinfo.right_fb_dists(1)/1000 ...
-%         , traj.data.n);
-    strtemp = '[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ';
-    titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot);
+    strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ' ...
+        '[VEL: %.1fKM/H %.1fDEG/S] \n' ...
+        '[%dSEG-%dLANE] / [LANE-DEV DIST:%.1fMM DEG:%.1fDEG] \n' ...
+        '[LEFT:%.2fM-CENTER:%.2fM-RIGHT:%.2fM]\n' ...
+        '[#SAVE: %d]'];
+    titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot ...
+        , mycar.vel(1)/10000*36, mycar.vel(2) ...
+        , myinfo.seg_idx, myinfo.lane_idx, myinfo.lane_dev, myinfo.deg ...
+        , myinfo.left_fb_dists(1)/1000, myinfo.center_fb_dists(1)/1000 ...
+        , myinfo.right_fb_dists(1)/1000 ...
+        , traj.data.n);
+%     strtemp = '[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ';
+%     titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot);
     titlefontsize = get_fontsize();
     
     axisinfo = plot_track_tollplaza(road, FILL_LANES);
