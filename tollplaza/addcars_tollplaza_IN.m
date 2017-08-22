@@ -1,4 +1,4 @@
-function othercars = addcars2_tollplaza(othercars, track, nr_cars)
+function othercars = addcars_tollplaza_IN(othercars, track, nr_cars)
 % ADD CARS IN RANDOM POSTIONS
 VERBOSE = 0;
 
@@ -8,54 +8,32 @@ for carid = 1:nr_cars
     if carid <= othercars.npl
        laneidx= 1;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       %x = (carid - othercars.npl + 5)*10*10^3;
        x = (135-carid*40)*10^3;
        y = tmppos(2);
        carpos = [x y 0];
-       othercars.car{carid}.tolllane = randi(2) + 5;
-       %othercars.car{carid}.tolllane = 7;
-    elseif carid <= 2 * othercars.npl - 3
+       othercars.car{carid}.goallane = randi(2) + 5;
+    elseif carid <= othercars.npl + 6
        laneidx= 2;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       %x = (carid - othercars.npl*2 + 8)*10*10^3;
-       if carid <= othercars.npl + 12
+       if carid <= othercars.npl + 6
            x = (135-(carid-othercars.npl)*40)*10^3;
-       else
-           x = (135-(carid-othercars.npl+3)*40)*10^3;
        end
        y = tmppos(2);
        carpos = [x y 0];
-       othercars.car{carid}.tolllane = 8;
+       othercars.car{carid}.goallane = 8;
     else
        laneidx= 3;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       %x = (carid - othercars.npl * 3 + 8)*10*10^3;
-       x = (135-(carid-(othercars.npl*2-3))*40)*10^3;
+       x = (135-(carid-(othercars.npl + 6))*40)*10^3;
        y = tmppos(2);
        carpos = [x y 0];
-       othercars.car{carid}.tolllane = randi(2) + 8;
-       %othercars.car{carid}.tolllane = 9;
+       othercars.car{carid}.goallane = randi(2) + 8;
     end
     othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
+    othercars.car{carid}.angry = 0;
     segidx = 1;
     othercars = add_othercars(othercars, carpos, [20000 0], 'normal',1, laneidx, segidx); % 10000 mm/s = 36 km/h
 end
-
-
-%---- setting for extra cars
-%{
-for carid = nr_cars+1:othercars.MAX_NRCAR
-    tmp = mod(carid,2);
-    if tmp == 0
-       laneidx= 1;
-    else
-       laneidx= 3;
-    end
-    carpos = get_posintrack(track, 1, 0, laneidx, 0);
-    othercars = add_othercars(othercars, carpos, [30000 0], 'normal',1, laneidx, 1); % 10000 mm/s = 36 km/h
-end
-othercars.n = nr_cars;
-%}
 
 end
 

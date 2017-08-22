@@ -1,11 +1,9 @@
-function othercars = update_control_othercars_mycar_intelligent(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
+function othercars = update_control_othercars_mycar_intelligent_OUT(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
 
 % persistent first_flag
 % if isempty(first_flag)
 %     first_flag = true;
 % end
-
-target_lane = mycar.target_lane;
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -24,9 +22,9 @@ for i = 1:othercars.n
     
     %     if first_flag
     %         %---- Control angular velocity: vel(2) --------
-    %         ratioSpeed = lengthP{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx}/(175*10^3);
+    %         ratioSpeed = lengthP{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx}/(175*10^3);
     %         othercars.car{i}.vel(1) = othercars.car{i}.vel(1)*ratioSpeed;
-    %         othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx};
+    %         othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx};
     %     end
     %
     %     pos = predict_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
@@ -53,20 +51,23 @@ for i = 1:othercars.n
         othercars.car{i}.bd ...
             = get_carshape(othercars.car{i}.pos ...
             , othercars.car{i}.W, othercars.car{i}.H);
-        if othercars.car{i}.pos(1) > 100*10^3 && othercars.car{i}.pos(1) < 275*10^3
+        if othercars.car{i}.pos(1) > 0
+            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + 1000 * sim.T;
+        end
+        if othercars.car{i}.pos(1) > 45*10^3 && othercars.car{i}.pos(1) < 270*10^3
             othercars.car{i}.flgPlaza = 1;
             
-            ratioSpeed = lengthP{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx}/(175*10^3);
+            ratioSpeed = lengthP{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx}/(225*10^3);
             othercars.car{i}.vel(1) = othercars.car{i}.vel(1)*ratioSpeed;
             %othercars.car{i}.pathTranslated = update_laneChangePath(othercars.car{i},laneChangePath);
-            %othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane};
-            othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.tolllane, othercars.car{i}.save.lane_idx};
-            if isempty(find(othercars.car_nr(othercars.car{i}.tolllane,:), 1, 'last'))
+            %othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.goallane};
+            othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx};
+            if isempty(find(othercars.car_nr(othercars.car{i}.goallane,:), 1, 'last'))
                 idx_nr = 1;
             else
-                idx_nr = find(othercars.car_nr(othercars.car{i}.tolllane,:), 1, 'last') + 1;
+                idx_nr = find(othercars.car_nr(othercars.car{i}.goallane,:), 1, 'last') + 1;
             end
-            othercars.car_nr(othercars.car{i}.tolllane, idx_nr) = i;
+            othercars.car_nr(othercars.car{i}.goallane, idx_nr) = i;
         end
     elseif othercars.car{i}.flgPlaza == 1
         
@@ -90,23 +91,36 @@ for i = 1:othercars.n
             A3 = mycar.pos(1) - othercars.car{i}.pos(1) - l;
             A1 = othercars.car{i}.vel(1)/v0;
             A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
+            
+            if FLAG_LANECHANGE == 1
+                fprintf(1, 'acceleration = [%4d] \n', a*(1 - A1^delta - A2^2));
+                if a*(1 - A1^delta - A2^2) < - 1470
+                    othercars.car{i}.angry = 1;
+                else
+                    othercars.car{i}.angry = 0;
+                end
+            end
+            
             othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
-        elseif i ~= othercars.car_nr(othercars.car{i}.tolllane,1) % IDM following frontcar
-            other_front_nr = find(othercars.car_nr(othercars.car{i}.tolllane,:) == i) - 1;
-            fprintf(1, "othercars.car{i}.tolllane = [%d] other_front_nr = [%d] othercars.car_nr(othercars.car{i}.tolllane,other_front_nr) = [%d]\n", othercars.car{i}.tolllane, other_front_nr, othercars.car_nr(othercars.car{i}.tolllane,other_front_nr));
-            A3 = othercars.car{othercars.car_nr(othercars.car{i}.tolllane,other_front_nr)}.pos(1) - othercars.car{i}.pos(1) - l;
+        else 
+            other_front_nr = find(othercars.car_nr(othercars.car{i}.goallane,:) == i) - 1;
+            
+            if i ~= othercars.car_nr(othercars.car{i}.goallane,1) % IDM following frontcar
+                A3 = othercars.car{othercars.car_nr(othercars.car{i}.goallane,other_front_nr)}.pos(1) - othercars.car{i}.pos(1) - l;
+                A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{othercars.car_nr(othercars.car{i}.goallane,other_front_nr)}.vel(1))/2/sqrt(a*b))/A3;
+            else
+                A2 = 0;
+            end
             A1 = othercars.car{i}.vel(1)/v0;
-            A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{othercars.car_nr(othercars.car{i}.tolllane,other_front_nr)}.vel(1))/2/sqrt(a*b))/A3;
             othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
         end
         
         
-        if othercars.car{i}.vel(1) < 0
-            othercars.car{i}.vel(1) = 0;
+        if othercars.car{i}.vel(1) < 10000
+            othercars.car{i}.vel(1) = 10000;
         end
-        if othercars.car{i}.pos(1) > 275*10^3 && othercars.car{i}.vel(1) > 5000
-            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 3000 * sim.T;
-        end
+        
+        
         
         othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
         othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);

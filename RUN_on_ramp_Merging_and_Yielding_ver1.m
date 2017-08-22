@@ -17,7 +17,7 @@ track      = init_track(NR_LANE, LANE_WIDTH, TRACK_TYPE);
 sim        = init_sim(0.05); % dt = 0.02 [sec]
 othercars  = init_othercars();
 desired_velocity = 12500;
-ratio_polite_driver = 0.3;
+ratio_polite_driver = 0.4;
 othercars  = init_othercars_IDM(othercars,desired_velocity,ratio_polite_driver);
 %nr_cars    = randi([++1 4]);
 nr_cars    = 11;  % 11

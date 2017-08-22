@@ -61,14 +61,18 @@ else
     %for i = 1:othercars.MAX_NRCAR
         if SIMPLECARSHAPE
             h.carsfill{i}.Vertices = othercars.car{i}.bd;
-            if othercars.car{i}.tolllane == target_lane
-                % h.carsfill{i}.FaceColor = [0.9 0.9 0.0];
+            if othercars.car{i}.goallane == target_lane
                 h.carsbd{i}.Color = [0.9 0.9 0.0];
             else
-                %h.carsfill{i}.FaceColor = [0.9 0.2 0.6];
                 h.carsbd{i}.Color = 'k';
             end
             
+            if othercars.car{i}.angry == 0
+                h.carsfill{i}.FaceColor = [0.9 0.2 0.6];
+            elseif othercars.car{i}.angry == 1
+                h.carsfill{i}.FaceColor = [0.9 0.9 0.0];
+            end
+                
             h.carsbd{i}.XData = othercars.car{i}.bd(:, 1);
             h.carsbd{i}.YData = othercars.car{i}.bd(:, 2);
             

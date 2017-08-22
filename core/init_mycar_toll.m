@@ -1,4 +1,4 @@
-function mycar = init_mycar(pos,vel)
+function mycar = init_mycar_toll(pos,vel,tolllane,targetlane)
 % INITIALIZE MY CAR
 mycar.pos = pos;
 %mycar.vel = [5000 0];
@@ -16,5 +16,11 @@ mycar.nr_rfs    = 25;      % 25
 mycar.rfs_degs  = linspace(-mycar.rfs_deg/2, mycar.rfs_deg/2, mycar.nr_rfs);
 mycar.rfs_dists = mycar.rfs_dist*ones(1, mycar.nr_rfs);
 
+% SETTING OF TOLL ENTERING
+mycar.flgPlaza = 0;
+mycar.tolllane = tolllane;
+mycar.target_lane = targetlane;
+mycar.front_nr = 0;
+mycar.rear_nr = 0;
 
 

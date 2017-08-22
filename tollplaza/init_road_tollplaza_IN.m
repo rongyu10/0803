@@ -1,4 +1,4 @@
-function road      = init_road_tollplaza()
+function road      = init_road_tollplaza_IN()
 
 %========== Simulator Settings ================================ 
 % INITIALIZE ENVIRONMENT
