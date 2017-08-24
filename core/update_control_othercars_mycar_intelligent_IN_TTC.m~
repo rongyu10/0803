@@ -112,13 +112,9 @@ for i = 1:othercars.n
             if ~isempty(idx_crashcar)
                 nr_crashcar = length(idx_crashcar);
                 for j = 1:nr_crashcar
-                    if (othercars.car{i}.crossflg == 1 && othercars.car{j}.crossflg == 1) || (othercars.car{i}.crossflg == 0 && othercars.car{j}.crossflg == 0)
-                        if othercars.car{i}.pos(1) < othercars.car{idx_crashcar(nr_crashcar)}.pos(1)
-                            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 5000*t*sim.T;
-                            break;
-                        end
-                    elseif othercars.car{i}.crossflg == 1
-                        othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 20000*t*sim.T;
+                    if othercars.car{i}.crossflg == 1 &&
+                    if othercars.car{i}.pos(1) < othercars.car{idx_crashcar(nr_crashcar)}.pos(1)
+                        othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 5000*t*sim.T;
                         break;
                     end
                 end

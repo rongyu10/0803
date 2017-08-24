@@ -1,75 +1,27 @@
-function idx_crashcar = is_carcrashed_TTC(othercars, idx, t)
-%
-%  USAGE
-%--- Crash by othercars ----
-%   if is_carcrashed3(mycar,othercars)    
-%       fprintf(2, 'COLLISION OCCURRED. \n');
-%       mycar.vel = [0 0];
-%       mycar = init_mycar(get_posintrack(track, 2, 0, 1, 0),ini_vel);
-%       myinfo= get_trackinfo(track, mycar.pos, othercars);
-%       FLAG_LANECHANGE = 0;
-%   end
-%-----------------------------
-%--- Crash by othercars and pedestrians ----
-%   if is_carcrashed3(mycar,othercars,pedestrians)
-%       fprintf(2, 'COLLISION OCCURRED. \n');
-%       mycar.vel = [0 0];
-%       mycar = init_mycar(get_posintrack(track, 1, 0, 1, 0),ini_vel);
-%       pedestrians = reset_pedestrians(pedestrians, track);
-%       othercars = reset_othercars2(othercars,track);
-%   end
-%-------------------------------------------
+function idx_crashcar= is_carcrashed_TTC(othercars, idx, t)
 
-if nargin==2
-    %---- Crash by othercars -----
-    idx_nearCar = get_nearCar(othercars,idx,t);
-    if isempty(idx_nearCar)
-       %flag = 0;
-       return
-    else    
-       othercarBD = get_othercarBD(othercars,idx_nearCar,t);
-       obstableBD = othercarBD;
+idx_nearCar = get_nearCar(othercars,idx,t);
+mycarBD    = get_carLineData(othercars.car{idx}.est{t}.bd);
+if isempty(idx_nearCar)
+    return
+else
+    nr_cars = length(idx_nearCar);
+    for i = 1:nr_cars
+        othercarBD = get_othercarBD(othercars,idx_nearCar(i),t);
+    P = InterX(mycarBD, othercarBD);
     end
     
-elseif nargin==3
-    %---- Crash by othercars and pedestrians -----
-    pedestrians =varargin{1};
-    idx_nearPerson = get_nearPerson(mycar,pedestrians);
-    idx_nearCar    = get_nearCar(mycar,othercars);
-    
-    if isempty(idx_nearCar)&&isempty(idx_nearPerson)
-       flag = 0;
-       return
-    elseif isempty(idx_nearCar)&&(~isempty(idx_nearPerson))
-        pedestrianBD = get_pedestrianBD(pedestrians,idx_nearPerson);
-        obstableBD   = pedestrianBD;
-    elseif (~isempty(idx_nearCar))&&(isempty(idx_nearPerson))
-        othercarBD = get_othercarBD(othercars,idx_nearCar);
-        obstableBD   = othercarBD;
-    else
-        pedestrianBD = get_pedestrianBD(pedestrians,idx_nearPerson);
-        othercarBD = get_othercarBD(othercars,idx_nearCar);
-        obstableBD   = [pedestrianBD,othercarBD];
-    end
 end
 
-mycarBD    = get_carLineData(othercars.car{idx}.est{t}.bd);
-P = InterX(mycarBD, obstableBD);
+
+
 
 %----
 if isempty(P)
     %flag = 0;
     return
 else
-    nr_cars = length(idx_nearCar);
     
-    
-    for i = 1:nr_cars
-        lineData = get_carLineData(othercars.car{idx_nearCar(i)}.est{t}.bd);
-        tmpBD = [lineData [NaN ; NaN]];
-        othercarBD(:,nr_bd+1: nr_bd+nr_curr_bd) = tmpBD;
-        nr_bd = nr_bd + nr_curr_bd;
-    end
     return
 end
 %----
@@ -117,20 +69,16 @@ end
 
 end
 
-function othercarBD = get_othercarBD(othercars,idx_nearCar,t)
-
-nr_cars = length(idx_nearCar);
+function othercarBD = get_othercarBD(othercars,i,t)
 
 othercarBD = zeros(2, 1E3);
 nr_bd      = 0;
 nr_curr_bd = 7;
 
-for i = 1:nr_cars
-    lineData = get_carLineData(othercars.car{idx_nearCar(i)}.est{t}.bd);
-    tmpBD = [lineData [NaN ; NaN]];
-    othercarBD(:,nr_bd+1: nr_bd+nr_curr_bd) = tmpBD;
-    nr_bd = nr_bd + nr_curr_bd;
-end
+lineData = get_carLineData(othercars.car{i}.est{t}.bd);
+tmpBD = [lineData [NaN ; NaN]];
+othercarBD(:,nr_bd+1: nr_bd+nr_curr_bd) = tmpBD;
+nr_bd = nr_bd + nr_curr_bd;
 
 othercarBD = othercarBD(:,1:nr_bd);
 

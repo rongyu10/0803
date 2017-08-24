@@ -13,7 +13,7 @@ for carid = 1:nr_cars
        carpos = [x y 0];
        %othercars.car{carid}.goallane = randi(2) + 5;
        othercars.car{carid}.goallane = randi(6);
-       if othercars.car{carid}.goallane <= 5
+       if othercars.car{carid}.goallane >= 5
            othercars.car{carid}.crossflg = 0;
        else
            othercars.car{carid}.crossflg = 1;
@@ -27,11 +27,6 @@ for carid = 1:nr_cars
        y = tmppos(2);
        carpos = [x y 0];
        othercars.car{carid}.goallane = 8;
-       if othercars.car{carid}.goallane >= 6 && othercars.car{carid}.goallane <= 10
-           othercars.car{carid}.crossflg = 0;
-       else
-           othercars.car{carid}.crossflg = 1;
-       end 
     else
        laneidx= 3;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
@@ -40,11 +35,6 @@ for carid = 1:nr_cars
        carpos = [x y 0];
        othercars.car{carid}.goallane = 1;
        %othercars.car{carid}.goallane = randi(7) + 8;
-       if othercars.car{carid}.goallane >= 11
-           othercars.car{carid}.crossflg = 0;
-       else
-           othercars.car{carid}.crossflg = 1;
-       end
     end
     if carid >=10 && carid <= 12
         othercars.car{carid}.goallane = 7;

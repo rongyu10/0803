@@ -34,7 +34,7 @@ mycar.rear_nr = 0; % carID behind mycar
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
 idm.v0 = 20000; % desired velocity
 idm.T = 0.7; % Safe time headway
-idm.a = 1000; % maximum acceleration
+idm.a = 6000; % maximum acceleration
 idm.b = 2000; %desired deceleration
 idm.delta = 4; %acceleration exponent
 idm.s0 = 2000; % minimum distance
