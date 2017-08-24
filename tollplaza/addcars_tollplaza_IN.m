@@ -11,7 +11,8 @@ for carid = 1:nr_cars
        x = (135-carid*40)*10^3;
        y = tmppos(2);
        carpos = [x y 0];
-       othercars.car{carid}.goallane = randi(2) + 5;
+       %othercars.car{carid}.goallane = randi(2) + 5;
+       othercars.car{carid}.goallane = randi(6);
     elseif carid <= othercars.npl + 6
        laneidx= 2;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
@@ -27,8 +28,13 @@ for carid = 1:nr_cars
        x = (135-(carid-(othercars.npl + 6))*40)*10^3;
        y = tmppos(2);
        carpos = [x y 0];
-       othercars.car{carid}.goallane = randi(2) + 8;
+       %othercars.car{carid}.goallane = randi(2) + 8;
+       othercars.car{carid}.goallane = randi(7) + 8;
     end
+    if carid >=10 && carid <= 12
+        othercars.car{carid}.goallane = 7;
+    end
+    
     othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
     othercars.car{carid}.angry = 0;
     segidx = 1;

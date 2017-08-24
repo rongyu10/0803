@@ -1,4 +1,4 @@
-function othercars = update_control_othercars_mycar_intelligent_IN_ShiftFrontcar(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
+function othercars = update_control_othercars_mycar_intelligent_IN_TTC(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -11,9 +11,13 @@ l = idm.l; % vehicle length
 %============================================================
 
 for i = 1:othercars.n
-    othercars.car{i}.posEst(:,1) = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 1);
-    othercars.car{i}.posEst(:,2) = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 2);
-    othercars.car{i}.posEst(:,3) = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 3);
+    othercars.car{i}.est{1}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 1);
+    othercars.car{i}.est{2}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 2);
+    othercars.car{i}.est{3}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 3);
+    
+    othercars.car{i}.est{1}.bd  = get_carshape(othercars.car{i}.est{1}.pos, othercars.car{i}.W, othercars.car{i}.H);
+    othercars.car{i}.est{2}.bd  = get_carshape(othercars.car{i}.est{2}.pos, othercars.car{i}.W, othercars.car{i}.H);
+    othercars.car{i}.est{3}.bd  = get_carshape(othercars.car{i}.est{3}.pos, othercars.car{i}.W, othercars.car{i}.H);
 end
 
 for i = 1:othercars.n
@@ -85,12 +89,13 @@ for i = 1:othercars.n
             othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
         end
         
-        
-        % predict collision by TTC (after 1,2,3(s))
-        for i = 1:3
-        if is_carcrashed3(othercars.car{i}.posEst(:,i), othercars.car
-        
-        
+        for T = 1:3
+            idx_crashcar = is_carcrashed_TTC(othercars, i, t);
+            % predict collision by TTC (after 1,2,3(s))
+            if ~isempty(idx_crashcar)
+                break;
+            end
+        end
         
         
         if othercars.car{i}.vel(1) < 0

@@ -152,6 +152,20 @@ elseif FLAG_LANECHANGE == 0
         targetDegree = 0;
     end
     mycar.pos(3) = targetDegree;
+    
+    if mycar.pos(1) > 45*10^3 % if mycar enters the plaza
+        % control mycar.vel(1) according to IDM
+        A1 = mycar.vel(1)/v0;
+        if mycar.front_nr == 0
+            A2 = 0;
+        else
+            A3 = othercars.car{mycar.front_nr}.pos(1) - mycar.pos(1) - l;
+            A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{mycar.front_nr}.vel(1))/2/sqrt(a*b))/A3;
+        end
+        
+        mycar.vel(1) = mycar.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
+    end
+    
 %         if targetDegree - mycar.pos(3) > 5
 %             mycar.vel(2) = mycar.vel(2) + 5/sim.T;
 %         elseif targetDegree - mycar.pos(3) < -5

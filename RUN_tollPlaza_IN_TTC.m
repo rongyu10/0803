@@ -127,7 +127,7 @@ while sim.flag && ishandle(fig)
             mycar = update_control_mycar_merge_intelligent_IN(mycar, sim, othercars, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
             
             % update speed and position of othercars (included merging and IDM)
-            othercars  = update_control_othercars_mycar_intelligent_IN_ShiftFrontcar(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
+            othercars  = update_control_othercars_mycar_intelligent_IN_TTC(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
             
             %myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
             ms_update  = etime(clock, clk_update)*1000;
