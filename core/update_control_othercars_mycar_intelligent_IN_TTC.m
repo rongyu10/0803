@@ -11,6 +11,7 @@ l = idm.l; % vehicle length
 %============================================================
 
 for i = 1:othercars.n
+    
     othercars.car{i}.est{1}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 1);
     othercars.car{i}.est{2}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 2);
     othercars.car{i}.est{3}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 3);
@@ -18,9 +19,6 @@ for i = 1:othercars.n
     othercars.car{i}.est{1}.bd  = get_carshape(othercars.car{i}.est{1}.pos, othercars.car{i}.W, othercars.car{i}.H);
     othercars.car{i}.est{2}.bd  = get_carshape(othercars.car{i}.est{2}.pos, othercars.car{i}.W, othercars.car{i}.H);
     othercars.car{i}.est{3}.bd  = get_carshape(othercars.car{i}.est{3}.pos, othercars.car{i}.W, othercars.car{i}.H);
-end
-
-for i = 1:othercars.n
     
     if othercars.car{i}.flgPlaza == 0 % before entering plaza
         othercars.car{i}.pos ...
@@ -110,15 +108,16 @@ for i = 1:othercars.n
             idx_crashcar = is_carcrashed_TTC(othercars, i, t);
             % predict collision by TTC (after 1,2,3(s))
             if ~isempty(idx_crashcar)
+                fprintf(1, 'after [%d] seconds, [%d] and [%d] collide\n',t,i,idx_crashcar);
                 nr_crashcar = length(idx_crashcar);
                 for j = 1:nr_crashcar
                     if (othercars.car{i}.crossflg == 1 && othercars.car{j}.crossflg == 1) || (othercars.car{i}.crossflg == 0 && othercars.car{j}.crossflg == 0)
                         if othercars.car{i}.pos(1) < othercars.car{idx_crashcar(nr_crashcar)}.pos(1)
-                            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 5000*t*sim.T;
+                            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 5000*(4-t)*sim.T;
                             break;
                         end
                     elseif othercars.car{i}.crossflg == 1
-                        othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 20000*t*sim.T;
+                        othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 15000*(4-t)*sim.T;
                         break;
                     end
                 end

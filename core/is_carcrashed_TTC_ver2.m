@@ -1,6 +1,7 @@
 function idx_crashcar= is_carcrashed_TTC(othercars, idx, t)
 
 idx_nearCar = get_nearCar(othercars,idx,t);
+idx_crashcar = [];
 mycarBD    = get_carLineData(othercars.car{idx}.est{t}.bd);
 if isempty(idx_nearCar)
     return
@@ -8,23 +9,16 @@ else
     nr_cars = length(idx_nearCar);
     for i = 1:nr_cars
         othercarBD = get_othercarBD(othercars,idx_nearCar(i),t);
-    P = InterX(mycarBD, othercarBD);
-    end
-    
+        P = InterX(mycarBD, othercarBD);
+        %----
+        if ~isempty(P)
+            idx_crashcar = [idx_crashcar;idx_nearCar(i)];
+        end
+        %----
+
+    end    
 end
 
-
-
-
-%----
-if isempty(P)
-    %flag = 0;
-    return
-else
-    
-    return
-end
-%----
    
 
 end
