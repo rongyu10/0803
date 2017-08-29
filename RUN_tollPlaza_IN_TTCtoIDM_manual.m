@@ -18,8 +18,8 @@ othercars  = addcars_tollplaza_IN(othercars, road.track{1}, nr_cars);
 
 %---------------
 %--- set mycar--
-ini_vel    = [0 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-350000 5250 0];
+ini_vel    = [20000 0]; % 20000 mm/s = 72 km/h
+ini_pos    = [-120000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 % SETTING OF TOLL ENTERING
@@ -34,7 +34,7 @@ mycar.rear_nr = 0; % carID behind mycar
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
 idm.v0 = 20000; % desired velocity
 idm.T = 0.7; % Safe time headway
-idm.a = 6000; % maximum acceleration
+idm.a = 10000; % maximum acceleration
 idm.b = 2000; %desired deceleration
 idm.delta = 4; %acceleration exponent
 idm.s0 = 2000; % minimum distance
@@ -48,6 +48,7 @@ axespos   = [0.03, 0.02, 0.95, 0.84];
 fig       = get_fig(figsz, figtitle, axespos);
 set(gcf,'Color', [0.1, 0.25, 0.2] ); hold on;
 ms_update = 0; ms_plot = 0;
+
 
 %-- FLAG INTERACTION ---------
 FLAG_INTERACTION = true;
@@ -73,15 +74,15 @@ while sim.flag && ishandle(fig)
     switch key_pressed 
         case ''
         case {'leftarrow', 'semicolon'}
-            mycar.vel(1) = mycar.vel(1)-2000;
+            mycar.vel(2) = mycar.vel(2)+10;
         case {'rightarrow', 'quote'}
-            mycar.vel(1) = mycar.vel(1)+2000;
+            mycar.vel(2) = mycar.vel(2)-10;
         case {'uparrow', 'leftbracket'}
             % change the goal(target) lane
-            mycar.selectlane = mycar.goallane - 1;
+            mycar.vel(1) = mycar.vel(1)+5000;
         case {'downarrow', 'slash'}
             % change the goal(target) lane
-            mycar.selectlane = mycar.goallane + 1;
+            mycar.vel(1) = mycar.vel(1)-5000;
         case 'space'
             mycar.vel = [0 0];
         case {'1', '2', '3', '4', '5', '6'}
@@ -124,10 +125,10 @@ while sim.flag && ishandle(fig)
             %othercars  = update_othercars(othercars, sim);
             
             % update speed and position of mycar (included merging and IDM)
-            mycar = update_control_mycar_merge_intelligent_IN_TTCtoIDM_ver2(mycar, sim, othercars, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
+            mycar = update_mycar(mycar, sim, othercars);
             
             % update speed and position of othercars (included merging and IDM)
-            othercars  = update_control_othercars_mycar_intelligent_IN_TTCtoIDM_ver2(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
+            othercars  = update_control_othercars_mycar_intelligent_IN_TTCtoIDM_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
             
             %myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
             ms_update  = etime(clock, clk_update)*1000;
@@ -142,11 +143,11 @@ while sim.flag && ishandle(fig)
 %                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
 %                 FLAG_LANECHANGE = false;
 %              end
-%             if is_insidetrack(myinfo) == 0
-%                 fprintf(2, 'OUTSIDE THE TRACK. \n');
-%                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
-%                 FLAG_LANECHANGE = false;
-%             end
+            if is_insidetrack(myinfo) == 0 && (mycar.pos(2) < 0 || mycar.pos(2) > 10500) 
+                fprintf(2, 'OUTSIDE THE TRACK. \n');
+                mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
+                FLAG_LANECHANGE = false;
+            end
             if mycar.pos(1) > 320*10^3
                 fprintf(1, 'SUCCEEDED!! \n');
                 key_pressed = 'p';
@@ -185,7 +186,7 @@ while sim.flag && ishandle(fig)
     FILL_LANES           = 1; % 1
     SIMPLECARSHAPE       = 1; % 0(描画処理が重い場合は SIMPLECARSHAPE=1, REALCARSHAPE=0とする)
     REALCARSHAPE         = 0; % 1 
-    PLOT_FUTURE_CARPOSES = 0; % 1
+    PLOT_FUTURE_CARPOSES = 1; % 1
     PLOT_CAR_PATHS       = 0; % 1
     PLOT_RFS             = 0; % 1
     strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ' ...

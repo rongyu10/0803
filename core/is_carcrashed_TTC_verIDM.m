@@ -1,8 +1,9 @@
-function [idx_crashcar, t] = is_carcrashed_TTC_ver2(othercars, idx, time_TTC, step_TTC)
+function [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM(othercars, idx, time_TTC, step_TTC)
 
 idx_nearCar = get_nearCar(othercars,idx);
 idx_crashcar = [];
 t = [];
+mycar_posEst = [];
 if isempty(idx_nearCar)
     return
 else

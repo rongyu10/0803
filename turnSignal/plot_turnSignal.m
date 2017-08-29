@@ -14,7 +14,7 @@ end
 
 
 %-- blinker position -----------
-L =1500; % blinker size
+L =500; % blinker size
 %-------
 pt(1:2)  = mycar.bd(1,1:2);
 bd1 = [pt(1), pt(1)+L, pt(1)+L, pt(1), pt(1); pt(2), pt(2), pt(2)+L,  pt(2)+L, pt(2)];

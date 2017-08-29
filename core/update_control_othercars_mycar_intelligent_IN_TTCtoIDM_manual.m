@@ -1,4 +1,5 @@
-function othercars = update_control_othercars_mycar_intelligent_IN_TTCtoIDM_ver2(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
+function othercars = update_control_othercars_mycar_intelligent_IN_TTCtoIDM_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
+
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -10,15 +11,12 @@ s0 = idm.s0; % minimum distance
 l = idm.l; % vehicle length
 %============================================================
 
+% PARAMETER OF TTC-------------------------------------------
+time_TTC = 2.0;
+step_TTC = 0.1;
+
 for i = 1:othercars.n
     
-    othercars.car{i}.est{1}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 1);
-    othercars.car{i}.est{2}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 2);
-    othercars.car{i}.est{3}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, 3);
-    
-    othercars.car{i}.est{1}.bd  = get_carshape(othercars.car{i}.est{1}.pos, othercars.car{i}.W, othercars.car{i}.H);
-    othercars.car{i}.est{2}.bd  = get_carshape(othercars.car{i}.est{2}.pos, othercars.car{i}.W, othercars.car{i}.H);
-    othercars.car{i}.est{3}.bd  = get_carshape(othercars.car{i}.est{3}.pos, othercars.car{i}.W, othercars.car{i}.H);
     
     if othercars.car{i}.flgPlaza == 0 % before entering plaza
         othercars.car{i}.pos ...
@@ -52,15 +50,7 @@ for i = 1:othercars.n
             othercars.car{i}.vel(1) = othercars.car{i}.vel(1)*ratioSpeed;
             othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx};
             
-            % set the index number among the same target lane
-            if isempty(find(othercars.car_nr(othercars.car{i}.goallane,:), 1, 'last')) % if there is no othercars heading for same lane
-                idx_nr = 1;
-            else
-                idx_nr = find(othercars.car_nr(othercars.car{i}.goallane,:), 1, 'last') + 1;
-            end
             
-            % set the carID to the array
-            othercars.car_nr(othercars.car{i}.goallane, idx_nr) = i;
         end
     elseif othercars.car{i}.flgPlaza == 1 % after entering plaza
         
@@ -76,34 +66,63 @@ for i = 1:othercars.n
         %         end
         %----------------------------------------------
         if othercars.car{i}.pos(1) < 187.5*10^3
-            for t = 1:3
-                idx_crashcar = is_carcrashed_TTC(othercars, i, t);
-                % predict collision by TTC (after 1,2,3(s))
-                if ~isempty(idx_crashcar)
-                    fprintf(1, 'after [%d] seconds, [%d] and [%d] collide\n',t,i,idx_crashcar);
-                    nr_crashcar = length(idx_crashcar);
-                    for j = 1:nr_crashcar
-                        if (othercars.car{i}.crossflg == 1 && othercars.car{j}.crossflg == 1) || (othercars.car{i}.crossflg == 0 && othercars.car{j}.crossflg == 0)
-                            if othercars.car{i}.pos(1) < othercars.car{idx_crashcar(nr_crashcar)}.pos(1)
-                                othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 10000*(4-t)*sim.T;
-                                break;
-                            end
-                        elseif othercars.car{i}.crossflg == 1
-                            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 30000*(4-t)*sim.T;
-                            break;
+            
+            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM(othercars, i, time_TTC, step_TTC);
+            if ~isempty(idx_crashcar)
+                fprintf(1, 'after [%d] seconds, [%d] and [%d] collide\n',t,i,idx_crashcar);
+                nr_crashcar = length(idx_crashcar);
+                for j = 1:nr_crashcar
+%                     if (othercars.car{i}.crossflg == 1 && othercars.car{idx_crashcar(j)}.crossflg == 1) || (othercars.car{i}.crossflg == 0 && othercars.car{idx_crashcar(j)}.crossflg == 0)
+%                         if othercars.car{i}.pos(1) < othercars.car{idx_crashcar(j)}.pos(1)
+%                             othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 10000*(3-t)*sim.T;
+%                             break;
+%                         end
+%                     elseif othercars.car{i}.crossflg == 1
+%                         othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 20000*(3-t)*sim.T;
+%                         break;
+%                     end
+                    if othercars.car{i}.pos(1) < othercars.car{idx_crashcar(j)}.pos(1)
+%                           dist = norm(othercars.car{i}.pos - othercars.car{idx_crashcar(j)}.pos);
+%                           othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 50000000/dist/t*sim.T;
+                        A3 = mycar_posEst(1) - othercars.car{i}.pos(1);
+                        A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * othercars.car{i}.vel(1)/2/sqrt(a*b))/A3;
+                        A1 = othercars.car{i}.vel(1)/v0;
+                        acceleration = a*(1 - A1^delta - A2^2);
+                        if acceleration < -2940
+                            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 2940*sim.T;
+                        else
+                            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
                         end
-                        if j == nr_crashcar % if "othercars.car{i}" does not decelerate
-                            A1 = othercars.car{i}.vel(1)/v0;
-                            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta)*sim.T;
-                        end
+                        %othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
+                        break;
                     end
-                    break;
-                else
-                    A1 = othercars.car{i}.vel(1)/v0;
-                    othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta)*sim.T;
+                    if j == nr_crashcar % if "othercars.car{i}" does not decelerate
+                        A1 = othercars.car{i}.vel(1)/v0;
+                        othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta)*sim.T;
+                    end
                 end
+            else
+                A1 = othercars.car{i}.vel(1)/v0;
+                othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta)*sim.T;
             end
+            
         else
+            
+            if othercars.car{i}.flgIDM == 0
+                
+                % set the index number among the same target lane
+                if isempty(find(othercars.car_nr(othercars.car{i}.goallane,:), 1, 'last')) % if there is no othercars heading for same lane
+                    idx_nr = 1;
+                else
+                    idx_nr = find(othercars.car_nr(othercars.car{i}.goallane,:), 1, 'last') + 1;
+                end
+                
+                % set the carID to the array
+                othercars.car_nr(othercars.car{i}.goallane, idx_nr) = i;
+                
+                othercars.car{i}.flgIDM = 1;
+            end
+            
             
             if i == mycar.rear_nr % IDM following mycar
                 A3 = mycar.pos(1) - othercars.car{i}.pos(1) - l;

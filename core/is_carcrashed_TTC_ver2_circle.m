@@ -1,4 +1,4 @@
-function [idx_crashcar, t] = is_carcrashed_TTC_ver2(othercars, idx, time_TTC, step_TTC)
+function [idx_crashcar, t] = is_carcrashed_TTC_ver2_circle(othercars, idx, time_TTC, step_TTC)
 
 idx_nearCar = get_nearCar(othercars,idx);
 idx_crashcar = [];
@@ -10,15 +10,15 @@ else
     for t = step_TTC:step_TTC:time_TTC
         for i = 1:nr_cars
             mycar_posEst = update_pos(othercars.car{idx}.pos, othercars.car{idx}.vel, t);
-            mycar_bdEst = get_carshape(mycar_posEst, othercars.car{idx}.W, othercars.car{idx}.H);
-            mycarBD    = get_carLineData(mycar_bdEst);
+%             mycar_bdEst = get_carshape(mycar_posEst, othercars.car{idx}.W, othercars.car{idx}.H);
+%             mycarBD    = get_carLineData(mycar_bdEst);
             
             othercars_posEst = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
-            othercars_bdEst = get_carshape(othercars_posEst, othercars.car{idx_nearCar(i)}.W, othercars.car{idx_nearCar(i)}.H);
-            othercarBD = get_othercarBD(othercars_bdEst);
-            P = InterX(mycarBD, othercarBD);
+%             othercars_bdEst = get_carshape(othercars_posEst, othercars.car{idx_nearCar(i)}.W, othercars.car{idx_nearCar(i)}.H);
+%             othercarBD = get_othercarBD(othercars_bdEst);
+%             P = InterX(mycarBD, othercarBD);
             %----
-            if ~isempty(P)
+            if norm(mycar_posEst - othercars_posEst) < 3500 
                 idx_crashcar = [idx_crashcar;idx_nearCar(i)];
             end
             %----

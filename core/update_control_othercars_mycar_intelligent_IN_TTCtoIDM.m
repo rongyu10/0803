@@ -83,8 +83,8 @@ for i = 1:othercars.n
                     fprintf(1, 'after [%d] seconds, [%d] and [%d] collide\n',t,i,idx_crashcar);
                     nr_crashcar = length(idx_crashcar);
                     for j = 1:nr_crashcar
-                        if (othercars.car{i}.crossflg == 1 && othercars.car{j}.crossflg == 1) || (othercars.car{i}.crossflg == 0 && othercars.car{j}.crossflg == 0)
-                            if othercars.car{i}.pos(1) < othercars.car{idx_crashcar(nr_crashcar)}.pos(1)
+                        if (othercars.car{i}.crossflg == 1 && othercars.car{idx_crashcar(j)}.crossflg == 1) || (othercars.car{i}.crossflg == 0 && othercars.car{idx_crashcar(j)}.crossflg == 0)
+                            if othercars.car{i}.pos(1) < othercars.car{idx_crashcar(j)}.pos(1)
                                 othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 10000*(4-t)*sim.T;
                                 break;
                             end

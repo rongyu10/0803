@@ -1,4 +1,4 @@
-function othercars = update_control_othercars_mycar_intelligent_IN_TTCtoIDM_ver2(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
+function othercars = update_control_othercars_mycar_intelligent_IN_TTCtoIDM_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
 
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
@@ -13,7 +13,7 @@ l = idm.l; % vehicle length
 
 % PARAMETER OF TTC-------------------------------------------
 time_TTC = 2.0;
-step_TTC = 0.2;
+step_TTC = 0.1;
 
 for i = 1:othercars.n
     
@@ -67,7 +67,7 @@ for i = 1:othercars.n
         %----------------------------------------------
         if othercars.car{i}.pos(1) < 187.5*10^3
             
-            [idx_crashcar, t] = is_carcrashed_TTC_ver2(othercars, i, time_TTC, step_TTC);
+            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM(othercars, i, time_TTC, step_TTC);
             if ~isempty(idx_crashcar)
                 fprintf(1, 'after [%d] seconds, [%d] and [%d] collide\n',t,i,idx_crashcar);
                 nr_crashcar = length(idx_crashcar);
@@ -82,9 +82,19 @@ for i = 1:othercars.n
 %                         break;
 %                     end
                     if othercars.car{i}.pos(1) < othercars.car{idx_crashcar(j)}.pos(1)
-                          dist = norm(othercars.car{i}.pos - othercars.car{idx_crashcar(j)}.pos);
-                          othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 50000000/dist/t*sim.T;
-                          break;
+%                           dist = norm(othercars.car{i}.pos - othercars.car{idx_crashcar(j)}.pos);
+%                           othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 50000000/dist/t*sim.T;
+                        A3 = mycar_posEst(1) - othercars.car{i}.pos(1);
+                        A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * othercars.car{i}.vel(1)/2/sqrt(a*b))/A3;
+                        A1 = othercars.car{i}.vel(1)/v0;
+                        acceleration = a*(1 - A1^delta - A2^2);
+                        if acceleration < -2940
+                            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 2940*sim.T;
+                        else
+                            othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
+                        end
+                        %othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
+                        break;
                     end
                     if j == nr_crashcar % if "othercars.car{i}" does not decelerate
                         A1 = othercars.car{i}.vel(1)/v0;
