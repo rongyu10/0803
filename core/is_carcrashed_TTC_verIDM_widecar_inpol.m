@@ -1,4 +1,4 @@
-function [idx_crashcar, t_crashcar, mycar_posCrash] = is_carcrashed_TTC_verIDM(othercars, idx, time_TTC, step_TTC)
+function [idx_crashcar, t_crashcar, mycar_posCrash] = is_carcrashed_TTC_verIDM_widecar_inpol(othercars, idx, time_TTC, step_TTC)
 
 idx_nearCar = get_nearCar(othercars,idx);
 idx_crashcar = [];
@@ -14,15 +14,14 @@ else
                 continue
             end
             mycar_posEst = update_pos(othercars.car{idx}.pos, othercars.car{idx}.vel, t);
-            mycar_bdEst = get_carshape(mycar_posEst, othercars.car{idx}.W, othercars.car{idx}.H);
-            mycarBD    = get_carLineData(mycar_bdEst);
+            mycar_bdEst = get_carshape(mycar_posEst, othercars.car{idx}.W + 1000, othercars.car{idx}.H + 1000);
+            
             
             othercars_posEst = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
-            othercars_bdEst = get_carshape(othercars_posEst, othercars.car{idx_nearCar(i)}.W, othercars.car{idx_nearCar(i)}.H);
-            othercarBD = get_othercarBD(othercars_bdEst);
-            P = InterX(mycarBD, othercarBD);
+            othercars_bdEst = get_carshape(othercars_posEst, othercars.car{idx_nearCar(i)}.W + 1000, othercars.car{idx_nearCar(i)}.H + 1000);
+            in = inpolygon(mycar_bdEst(:,1), mycar_bdEst(:,2), othercars_bdEst(:,1), othercars_bdEst(:,2));
             %----
-            if ~isempty(P)
+            if any(in, 1)
                 idx_crashcar = [idx_crashcar;idx_nearCar(i)];
                 t_crashcar = [t_crashcar;t];
                 mycar_posCrash = [mycar_posCrash;mycar_posEst];

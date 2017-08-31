@@ -8,18 +8,18 @@ addpath(genpath('./intelligentDriverModel'))
 addpath(genpath('./turnSignal'))
 %--- set simulation
 road      = init_road_tollplaza_IN();
-sim       = init_sim(0.05); % dt = 0.02 [sec]
+sim       = init_sim(0.1); % dt = 0.02 [sec]
 %------------------
 %--- set othercars
 othercars  = init_othercars();
 nr_cars    = 46; % total number of cars (1st:20cars, 2nd:6cars, 3rd:20cars)
 othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
-othercars  = addcars_tollplaza_IN(othercars, road.track{1}, nr_cars);
+othercars  = addcars_tollplaza_IN_cross(othercars, road.track{1}, nr_cars);
 
 %---------------
 %--- set mycar--
-ini_vel    = [20000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-120000 5250 0];
+ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
+ini_pos    = [-130000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 % SETTING OF TOLL ENTERING
@@ -32,13 +32,13 @@ mycar.rear_nr = 0; % carID behind mycar
 %---------------
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
-idm.v0 = 20000; % desired velocity
-idm.T = 0.7; % Safe time headway
-idm.a = 10000; % maximum acceleration
-idm.b = 2000; %desired deceleration
+idm.v0 = 15000; % desired velocity
+idm.T = 1.5; % Safe time headway
+idm.a = 4000; % maximum acceleration
+idm.b = 6000; %desired deceleration
 idm.delta = 4; %acceleration exponent
 idm.s0 = 2000; % minimum distance
-idm.l = 2500; % vehicle length
+idm.l = 4000; % vehicle length
 %============================================================
 
 % INITIALIZE FIGURE
@@ -118,19 +118,15 @@ while sim.flag && ishandle(fig)
             % UPDATE
             clk_update = clock;
             sim        = update_sim(sim);
-            
-            othercars  = respawn_othercars_tollplaza(othercars,road,sim); % added by kumano
-            % Intelligent Driver Model
-            %othercars = intelligentDriverModel2(othercars,mycar,myinfo,road,sim);
-            %othercars  = update_othercars(othercars, sim);
+            othercars  = respawn_othercars_tollplaza(othercars,road,sim);
             
             % update speed and position of mycar (included merging and IDM)
             mycar = update_mycar(mycar, sim, othercars);
             
             % update speed and position of othercars (included merging and IDM)
-            othercars  = update_control_othercars_mycar_intelligent_IN_TTCtoIDM_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
+            othercars  = update_control_othercars_mycar_IN_TTCandIDM_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
             
-            %myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
+            myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
             ms_update  = etime(clock, clk_update)*1000;
             titlecol = 'w';
             

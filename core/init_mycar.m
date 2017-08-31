@@ -10,7 +10,7 @@ mycar.bd = get_carshape(mycar.pos, mycar.W, mycar.H);
 
 % RANGEFINDER SENSOR
 mycar.r         = 0;
-mycar.rfs_dist  = 20000;  % 20000
+mycar.rfs_dist  = 15000;  % 20000
 mycar.rfs_deg   = 360;     % 360
 mycar.nr_rfs    = 25;      % 25
 mycar.rfs_degs  = linspace(-mycar.rfs_deg/2, mycar.rfs_deg/2, mycar.nr_rfs);

@@ -4,7 +4,7 @@ function othercars = respawn_othercars_tollplaza(othercars,road, sim)
 
 %----- Reset start position--
 for i = 1:othercars.n
-    if othercars.car{i}.pos(1) > road.xmax
+    if othercars.car{i}.pos(1) > road.xmax && othercars.car{i}.pos(1) < 330
         for j=1:nnz(othercars.car_nr(othercars.car{i}.goallane,:))
             if j ~= nnz(othercars.car_nr(othercars.car{i}.goallane,:))
                 othercars.car_nr(othercars.car{i}.goallane, j) = othercars.car_nr(othercars.car{i}.goallane, j+1);
@@ -13,7 +13,7 @@ for i = 1:othercars.n
             end
         end
         othercars.car{i}.flgPlaza = 0;
-        othercars.car{i}.pos(1) = -10000;
+        othercars.car{i}.pos(1) = 340*10^3;
         othercars.car{i}.vel = [0 0];
     end
 end

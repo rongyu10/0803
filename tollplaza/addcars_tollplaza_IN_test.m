@@ -1,4 +1,4 @@
-function othercars = addcars_tollplaza_IN(othercars, track, nr_cars)
+function othercars = addcars_tollplaza_IN_test(othercars, track, nr_cars)
 % ADD CARS IN RANDOM POSTIONS
 VERBOSE = 0;
 
@@ -8,7 +8,7 @@ for carid = 1:nr_cars
     if carid <= othercars.npl
        laneidx= 1;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       x = (120-carid*40+20*rand)*10^3; 
+       x = (135-carid*40)*10^3;
        y = tmppos(2);
        carpos = [x y 0];
        othercars.car{carid}.goallane = randi(15);
@@ -22,12 +22,12 @@ for carid = 1:nr_cars
        laneidx= 2;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
        if carid <= othercars.npl + 6
-           x = (120-(carid-othercars.npl)*40+20*rand)*10^3;
+           x = (135-(carid-othercars.npl)*40)*10^3;
        end
        y = tmppos(2);
        carpos = [x y 0];
        othercars.car{carid}.goallane = randi(15);
-       %othercars.car{carid}.goallane = 8;
+       othercars.car{21}.goallane = 15;
        if othercars.car{carid}.goallane >= 6 && othercars.car{carid}.goallane <= 10
            othercars.car{carid}.crossflg = 0;
        else
@@ -36,30 +36,23 @@ for carid = 1:nr_cars
     else
        laneidx= 3;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       x = (120-(carid-(othercars.npl + 6))*40+20*rand)*10^3;
+       x = (135-(carid-(othercars.npl + 6))*40)*10^3;
        y = tmppos(2);
        carpos = [x y 0];
-       %othercars.car{carid}.goallane = 1;
        othercars.car{carid}.goallane = randi(15);
+       othercars.car{27}.goallane = 15;
        if othercars.car{carid}.goallane >= 11
            othercars.car{carid}.crossflg = 0;
        else
            othercars.car{carid}.crossflg = 1;
        end
     end
-%     if carid >=10 && carid <= 12
-%         othercars.car{carid}.goallane = 7;
-%     end
-    
-%     if carid == 36
-%         othercars.car{carid}.goallane = 1;
-%     end
     
     othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
     othercars.car{carid}.flgIDM = 0; % 0:before controlling by IDM ,1:velocity control by IDM (both are on condition in the plaza)
     othercars.car{carid}.angry = 0;
     segidx = 1;
-    othercars = add_othercars(othercars, carpos, [15000 0], 'normal',1, laneidx, segidx); % 10000 mm/s = 36 km/h
+    othercars = add_othercars(othercars, carpos, [20000 0], 'normal',1, laneidx, segidx); % 10000 mm/s = 36 km/h
 end
 
 end

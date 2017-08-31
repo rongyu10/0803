@@ -1,4 +1,4 @@
-function othercars = update_control_othercars_mycar_intelligent_IN_TTCtoIDM_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
+function othercars = update_control_othercars_mycar_IN_TTCandIDM_manual_lateral(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE)
 
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
@@ -56,6 +56,7 @@ for i = 1:othercars.n
         
         pos = predict_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
         targetDegree = get_tatgetTheta(pos,othercars.car{i}.pathTranslated);
+        currentDegree = othercars.car{i}.pos(3);
         othercars.car{i}.pos(3) = targetDegree;
         %         if targetDegree - othercars.car{i}.pos(3) > 5
         %             othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + 5/sim.T*0.01;
@@ -88,12 +89,22 @@ for i = 1:othercars.n
                         A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * othercars.car{i}.vel(1)/2/sqrt(a*b))/A3;
                         A1 = othercars.car{i}.vel(1)/v0;
                         acceleration = a*(1 - A1^delta - A2^2);
+                        fprintf(1, 'acceleration = [%d]\n',acceleration);
                         if acceleration < -2940
                             othercars.car{i}.vel(1) = othercars.car{i}.vel(1) - 2940*sim.T;
                         else
                             othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
                         end
                         %othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
+                        
+                        % control steering
+                        othercars.car{i}.pos(3) = currentDegree;
+%                         [theta, ~] = cart2pol(othercars.car{idx_crashcar(j)}.pos(1) - othercars.car{i}.pos(1), othercars.car{idx_crashcar(j)}.pos(2) - othercars.car{i}.pos(2));
+%                         if rad2deg(theta) > othercars.car{i}.pos(3)
+%                             othercars.car{i}.pos(3) = othercars.car{i}.pos(3) - 5;
+%                         else
+%                             othercars.car{i}.pos(3) = othercars.car{i}.pos(3) + 5;
+%                         end
                         break;
                     end
                     if j == nr_crashcar % if "othercars.car{i}" does not decelerate
