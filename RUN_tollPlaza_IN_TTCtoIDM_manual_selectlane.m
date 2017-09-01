@@ -74,9 +74,9 @@ while sim.flag && ishandle(fig)
     switch key_pressed 
         case ''
         case {'leftarrow', 'semicolon'}
-            mycar.vel(2) = mycar.vel(2)+10;
+            mycar.selectlane = mycar.selectlane + 1;
         case {'rightarrow', 'quote'}
-            mycar.vel(2) = mycar.vel(2)-10;
+            mycar.selectlane = mycar.selectlane - 1;
         case {'uparrow', 'leftbracket'}
             % change the goal(target) lane
             mycar.vel(1) = mycar.vel(1)+5000;
@@ -121,7 +121,7 @@ while sim.flag && ishandle(fig)
             othercars  = respawn_othercars_tollplaza(othercars,road,sim);
             
             % update speed and position of mycar (included merging and IDM)
-            mycar = update_mycar_norfs(mycar, sim, othercars);
+            mycar = update_control_mycar_IN_TTCandIDM_norfs(mycar, sim, othercars, idm);
             
             % update speed and position of othercars (included merging and IDM)
             othercars  = update_control_othercars_mycar_IN_TTCandIDM_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);

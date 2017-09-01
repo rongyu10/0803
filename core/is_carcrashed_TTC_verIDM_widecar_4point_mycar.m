@@ -1,4 +1,4 @@
-function [idx_crashcar, t_crashcar, pos_crashcar] = is_carcrashed_TTC_verIDM_widecar_inpol_mycar(othercars, idx, time_TTC, step_TTC, mycar)
+function [idx_crashcar, t_crashcar, pos_crashcar] = is_carcrashed_TTC_verIDM_widecar_4point_mycar(othercars, idx, time_TTC, step_TTC, mycar)
 
 idx_nearCar = get_nearCar(othercars,idx);
 est_mycar = get_nearMyCar(mycar.pos, othercars.car{idx}.pos);
@@ -18,13 +18,21 @@ else
                     continue
                 end
                 mycar_posEst = update_pos(othercars.car{idx}.pos, othercars.car{idx}.vel, t);
-                mycar_bdEst = get_carshape(mycar_posEst, othercars.car{idx}.W + 1000, othercars.car{idx}.H + 1000);
+                mycar_bdEst = get_car4point(mycar_posEst, othercars.car{idx}.W, othercars.car{idx}.H);
                 
                 othercars_posEst = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
-                othercars_bdEst = get_carshape(othercars_posEst, othercars.car{idx_nearCar(i)}.W + 1000, othercars.car{idx_nearCar(i)}.H + 1000);
-                in = inpolygon(mycar_bdEst(:,1), mycar_bdEst(:,2), othercars_bdEst(:,1), othercars_bdEst(:,2));
+                %othercars_bdEst = get_car4point(othercars_posEst, othercars.car{idx_nearCar(i)}.W + 1000, othercars.car{idx_nearCar(i)}.H + 1000);
+                
+                flgCollide = 0;
+                for idx_point = 1:4
+                    if norm(mycar_bdEst(idx_point,:) - othercars_posEst(1:2)) < 2500
+                        flgCollide = 1;
+                        break;
+                    end
+                end
+                %in = inpolygon(mycar_bdEst(:,1), mycar_bdEst(:,2), othercars_bdEst(:,1), othercars_bdEst(:,2));
                 %----
-                if any(in, 1) && othercars.car{idx}.pos(1) < othercars.car{idx_nearCar(i)}.pos(1)
+                if flgCollide == 1 && othercars.car{idx}.pos(1) < othercars.car{idx_nearCar(i)}.pos(1)
                     idx_crashcar = idx_nearCar(i);
                     t_crashcar = t;
                     pos_crashcar = mycar_posEst;
@@ -32,7 +40,7 @@ else
                 end
                 %----
             end
-            if any(in, 1) && othercars.car{idx}.pos(1) < othercars.car{idx_nearCar(i)}.pos(1)
+            if flgCollide == 1 && othercars.car{idx}.pos(1) < othercars.car{idx_nearCar(i)}.pos(1)
                 break;
             end
         end
@@ -88,7 +96,6 @@ for i=1:nr_cars
     if (othercars.car{idx}.pos(2) - othercars.car{i}.pos(2)) * (othercars.car{idx}.pos(3) - othercars.car{i}.pos(3)) > 0 % if both cars head to opposite direction
         continue
     end
-    
     
     pos = othercars.car{i}.pos(1:2);
     diff= pos - mycar_pos;

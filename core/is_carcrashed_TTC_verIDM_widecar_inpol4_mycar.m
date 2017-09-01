@@ -1,26 +1,29 @@
-function [idx_crashcar, t_crashcar, pos_crashcar] = is_carcrashed_TTC_verIDM_widecar_inpol_mycar(othercars, idx, time_TTC, step_TTC, mycar)
+function [idx_crashcar, t_crashcar, pos_crashcar] = is_carcrashed_TTC_verIDM_widecar_inpol4_mycar(othercars, idx, time_TTC, step_TTC, mycar)
 
 idx_nearCar = get_nearCar(othercars,idx);
 est_mycar = get_nearMyCar(mycar.pos, othercars.car{idx}.pos);
-idx_crashcar = [];
+idx_crashcar = []; % 0:mycar 1~:number of othercar
 t_crashcar = [];
 pos_crashcar = [];
 
 if isempty(idx_nearCar) && isempty(est_mycar)
     return
 else
-    nr_cars = length(idx_nearCar);
+    
     for t = 0:step_TTC:time_TTC
         if(~isempty(idx_nearCar))
+            nr_cars = length(idx_nearCar);
             for i = 1:nr_cars
                 if find(idx_crashcar == idx_nearCar(i))
                     continue
                 end
                 mycar_posEst = update_pos(othercars.car{idx}.pos, othercars.car{idx}.vel, t);
-                mycar_bdEst = get_carshape(mycar_posEst, othercars.car{idx}.W + 1000, othercars.car{idx}.H + 1000);
+                mycar_bdEst = get_car4point(mycar_posEst, othercars.car{idx}.W + 1000, othercars.car{idx}.H + 1000);
                 
                 othercars_posEst = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
-                othercars_bdEst = get_carshape(othercars_posEst, othercars.car{idx_nearCar(i)}.W + 1000, othercars.car{idx_nearCar(i)}.H + 1000);
+                othercars_bdEst = get_car4point(othercars_posEst, othercars.car{idx_nearCar(i)}.W + 1000, othercars.car{idx_nearCar(i)}.H + 1000);
+                
+                
                 in = inpolygon(mycar_bdEst(:,1), mycar_bdEst(:,2), othercars_bdEst(:,1), othercars_bdEst(:,2));
                 %----
                 if any(in, 1) && othercars.car{idx}.pos(1) < othercars.car{idx_nearCar(i)}.pos(1)
@@ -34,7 +37,9 @@ else
             if any(in, 1) && othercars.car{idx}.pos(1) < othercars.car{idx_nearCar(i)}.pos(1)
                 break;
             end
-        else
+        end
+        
+        if(~isempty(est_mycar))
             
             mycar_posEst = update_pos(othercars.car{idx}.pos, othercars.car{idx}.vel, t);
             mycar_bdEst = get_carshape(mycar_posEst, othercars.car{idx}.W + 1000, othercars.car{idx}.H + 1000);
@@ -78,9 +83,14 @@ nr_cars = othercars.n;
 
 idx_nearCar =[];
 for i=1:nr_cars
-    if i == idx
+    if i == idx % if calculation target is myself
         continue
     end
+    
+    if (othercars.car{idx}.pos(2) - othercars.car{i}.pos(2)) * (othercars.car{idx}.pos(3) - othercars.car{i}.pos(3)) > 0 % if both cars head to opposite direction
+        continue
+    end
+    
     pos = othercars.car{i}.pos(1:2);
     diff= pos - mycar_pos;
     if norm(diff) < DISTANCE

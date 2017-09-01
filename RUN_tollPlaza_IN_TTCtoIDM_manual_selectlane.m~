@@ -204,7 +204,7 @@ while sim.flag && ishandle(fig)
     plot_axisinfo_tollplaza(axisinfo);
     plot_othercars(othercars, SIMPLECARSHAPE, REALCARSHAPE);
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
-    %plot_turnSignal(mycar,sim);
+    plot_turnSignal(mycar,sim);
     
     %plot_traj(traj);
     %----

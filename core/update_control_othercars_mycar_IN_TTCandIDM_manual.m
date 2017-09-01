@@ -12,7 +12,7 @@ l = idm.l; % vehicle length
 %============================================================
 
 % PARAMETER OF TTC-------------------------------------------
-time_TTC = 3.0;
+time_TTC = 5.0;
 step_TTC = 0.1;
 
 for i = 1:othercars.n
@@ -22,7 +22,7 @@ for i = 1:othercars.n
         v0 = 15000;
         
         if othercars.car{i}.pos(1) > 0
-            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM_widecar_inpol_mycar(othercars, i, time_TTC, step_TTC, mycar);
+            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM_widecar_4point_mycar2circle(othercars, i, time_TTC, step_TTC, mycar);
         end
         
         if ~isempty(idx_crashcar)
@@ -38,8 +38,9 @@ for i = 1:othercars.n
             end
             A1 = othercars.car{i}.vel(1)/v0;
             othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
-            if othercars.car{i}.acceleration < -10000
+            if othercars.car{i}.acceleration < -30000
                 fprintf(2, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
+                othercars.car{i}.acceleration = -30000;
             else
                 fprintf(1, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
             end
@@ -53,8 +54,8 @@ for i = 1:othercars.n
         if othercars.car{i}.pos(1) > 100*10^3 && othercars.car{i}.pos(1) < 275*10^3
             othercars.car{i}.flgPlaza = 1;
             
-            ratioSpeed = lengthP{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx}/(175*10^3);
-            othercars.car{i}.vel(1) = othercars.car{i}.vel(1)*ratioSpeed;
+%             ratioSpeed = lengthP{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx}/(175*10^3);
+%             othercars.car{i}.vel(1) = othercars.car{i}.vel(1)*ratioSpeed;
             othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx};
             
         end
@@ -65,8 +66,8 @@ for i = 1:othercars.n
         othercars.car{i}.pos(3) = targetDegree;
         
         if othercars.car{i}.pos(1) < 187.5*10^3
-            v0 = 13000;
-            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM_widecar_inpol_mycar(othercars, i, time_TTC, step_TTC, mycar);
+            v0 = 12500;
+            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM_widecar_4point_mycar2circle(othercars, i, time_TTC, step_TTC, mycar);
             
             if ~isempty(idx_crashcar)
                 
@@ -82,8 +83,9 @@ for i = 1:othercars.n
                 A1 = othercars.car{i}.vel(1)/v0;
                 othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
                 
-                if othercars.car{i}.acceleration < -10000
+                if othercars.car{i}.acceleration < -30000
                     fprintf(2, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
+                    othercars.car{i}.acceleration = -30000;
                 else
                     fprintf(1, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
                 end
@@ -110,7 +112,7 @@ for i = 1:othercars.n
                 othercars.car{i}.flgIDM = 1;
             end
             
-            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM_widecar_inpol_mycar(othercars, i, time_TTC, step_TTC, mycar);
+            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM_widecar_4point_mycar2circle(othercars, i, time_TTC, step_TTC, mycar);
             if ~isempty(idx_crashcar)
                 
                 
@@ -125,8 +127,9 @@ for i = 1:othercars.n
                 end
                 A1 = othercars.car{i}.vel(1)/v0;
                 othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
-                if othercars.car{i}.acceleration < -10000
+                if othercars.car{i}.acceleration < -30000
                     fprintf(2, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
+                    othercars.car{i}.acceleration = -30000;
                 else
                     fprintf(1, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
                 end
@@ -142,12 +145,13 @@ for i = 1:othercars.n
                     end
                     
                     if FLAG_LANECHANGE == 1
-                        if othercars.car{i}.acceleration < -10000
+                        if othercars.car{i}.acceleration < -30000
                             fprintf(2, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
+                            othercars.car{i}.acceleration = -30000;
                         else
                             fprintf(1, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
                         end
-                        if othercars.car{i}.acceleration < - 1470
+                        if othercars.car{i}.acceleration < - 3920
                             othercars.car{i}.angry = 1;
                         else
                             othercars.car{i}.angry = 0;

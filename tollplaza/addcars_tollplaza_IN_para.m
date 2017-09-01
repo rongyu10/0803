@@ -1,4 +1,4 @@
-function othercars = addcars_tollplaza_IN_test(othercars, track, nr_cars)
+function othercars = addcars_tollplaza_IN_para(othercars, track, nr_cars)
 % ADD CARS IN RANDOM POSTIONS
 VERBOSE = 0;
 
