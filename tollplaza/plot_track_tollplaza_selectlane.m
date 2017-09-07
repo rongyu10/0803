@@ -1,4 +1,4 @@
-function axisinfo = plot_track_tollplaza(road, FILL_LANES)
+function axisinfo = plot_track_tollplaza_selectlane(road, FILL_LANES)
 persistent first_flag axisinfobu h
 if isempty(first_flag)
     first_flag = true;
@@ -35,6 +35,7 @@ if first_flag
             set(hfill{itrack}, 'EdgeColor', 'k', 'LineWidth', 1);
         else
             hfill{itrack} = plot(curr_bd(:, 1), curr_bd(:, 2), 'k', 'LineWidth', 1);
+            
         end
         % LANES
         nr_lane = road.track{itrack}.nr_lane;
@@ -163,8 +164,6 @@ if first_flag
   axisinfo(2) = road.xmax;
   axisinfo(3) = road.ymin;
   axisinfo(4) = road.ymax;
-  
-  %plot([187.5*10^3 187.5*10^3], [-10*10^3 80*10^3], 'r:', 'LineWidth', 1);
   
 else
     % DO NOTHING

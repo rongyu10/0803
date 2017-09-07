@@ -26,18 +26,22 @@ else
                 flgCollide = 0;
                 for idx_point = 1:4
                     if norm(mycar_bdEst(idx_point,:) - othercars_bdEst(1,:)) < 2000
-                        fprintf(1, 'Front point[%d] ', idx_point);
+                        %fprintf(1, 'Front point[%d] ', idx_point);
                         flgCollide = 1;
                         if t == 0
-                            fprintf(2, 'Collide\n');
+                            %fprintf(2, 'Collide\n');
+                            
                         end
+                        
                         break;
                     elseif norm(mycar_bdEst(idx_point,:) - othercars_bdEst(2,:)) < 2000
-                        fprintf(1, 'Front point[%d] ', idx_point);
+                        %fprintf(1, 'Front point[%d] ', idx_point);
                         flgCollide = 1;
                         if t == 0
-                            fprintf(2, 'Collide\n');
+                            %fprintf(2, 'Collide\n');
+                            
                         end
+                        
                         break;
                     end
                 end
@@ -91,7 +95,7 @@ end
 
 end
 
-function idx_nearCar = get_nearCar(othercars,idx)
+function idx_nearCar = get_nearCar(othercars,idx) % get the number of othercars in front of mycar and getting close to object car
 
 DISTANCE = 20*10^3;     % 30m
 
@@ -108,7 +112,7 @@ for i=1:nr_cars
         continue
     end
     
-    if (othercars.car{idx}.pos(2) - othercars.car{i}.pos(2)) * (othercars.car{idx}.pos(3) - othercars.car{i}.pos(3)) > 0 % if both cars head to opposite direction
+    if (othercars.car{idx}.pos(2) - othercars.car{i}.pos(2)) * (othercars.car{idx}.pos(3) - othercars.car{i}.pos(3)) > 0 && (othercars.car{idx}.goallane ~= othercars.car{i}.goallane) % if both cars head to opposite direction(eliminate same goallane)
         continue
     end
 

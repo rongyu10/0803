@@ -14,7 +14,7 @@ sim       = init_sim(0.1); % dt = 0.02 [sec]
 othercars  = init_othercars();
 nr_cars    = 46; % total number of cars (1st:20cars, 2nd:6cars, 3rd:20cars)
 othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
-othercars  = addcars_tollplaza_IN(othercars, road.track{1}, nr_cars);
+othercars  = addcars_tollplaza_IN_lower5(othercars, road.track{1}, nr_cars);
 
 %---------------
 %--- set mycar--
@@ -34,8 +34,8 @@ mycar.rear_nr = 0; % carID behind mycar
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
 idm.v0 = 15000; % desired velocity
 idm.T = 1.0; % Safe time headway
-idm.a = 4000; % maximum acceleration
-idm.b = 12000; %desired deceleration
+idm.a = 2000; % maximum acceleration
+idm.b = 10000; %desired deceleration
 idm.delta = 4; %acceleration exponent
 idm.s0 = 1000; % minimum distance
 idm.l = 4000; % vehicle length
@@ -124,7 +124,7 @@ while sim.flag && ishandle(fig)
             mycar = update_mycar_norfs(mycar, sim, othercars);
             
             % update speed and position of othercars (included merging and IDM)
-            othercars  = update_control_othercars_mycar_IN_TTCandIDM_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
+            [othercars, mycar]  = update_control_othercars_mycar_IN_TTCandIDMall_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
             
             myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
             ms_update  = etime(clock, clk_update)*1000;
@@ -139,14 +139,22 @@ while sim.flag && ishandle(fig)
 %                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
 %                 FLAG_LANECHANGE = false;
 %              end
-            if is_insidetrack(myinfo) == 0 && (mycar.pos(2) < 0 || mycar.pos(2) > 10500) 
-                fprintf(2, 'OUTSIDE THE TRACK. \n');
-                mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
-                FLAG_LANECHANGE = false;
-            end
+            
             if mycar.pos(1) > 320*10^3
                 fprintf(1, 'SUCCEEDED!! \n');
                 key_pressed = 'p';
+                mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
+                mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
+                mycar.startlane = 2;
+                mycar.goallane = 8;
+                mycar.selectlane = 8;
+                mycar.front_nr = 0; % carID in front of mycar
+                mycar.rear_nr = 0; % carID behind mycar
+                FLAG_LANECHANGE = false;
+                sim.mode = 'QUIT';
+                clear update_control_mycar_merge_intelligent
+            elseif is_insidetrack(myinfo) == 0 && (mycar.pos(2) < 0 || mycar.pos(2) > 10500) 
+                fprintf(2, 'OUTSIDE THE TRACK. \n');
                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
                 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
                 mycar.startlane = 2;
@@ -204,7 +212,7 @@ while sim.flag && ishandle(fig)
     plot_axisinfo_tollplaza(axisinfo);
     plot_othercars(othercars, SIMPLECARSHAPE, REALCARSHAPE);
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
-    %plot_turnSignal(mycar,sim);
+    
     
     %plot_traj(traj);
     %----

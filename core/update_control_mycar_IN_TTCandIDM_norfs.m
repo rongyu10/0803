@@ -1,4 +1,4 @@
-function mycar = update_control_mycar_IN_TTCandIDM_norfs(mycar, sim, othercars, idm)
+function [mycar, othercars] = update_control_mycar_IN_TTCandIDM_norfs(mycar, sim, othercars, idm, laneChangePath)
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -14,165 +14,189 @@ l = idm.l; % vehicle length
 time_TTC = 5.0;
 step_TTC = 0.1;
 
+idx_crashcar = [];
+
 
 if mycar.flgPlaza == 0 % before entering plaza
+    
+    v0 = 15000;
+    
+    if mycar.pos(1) > 0
+        [idx_crashcar, t, mycar_posEst, ~] = is_carcrashed_formycar_TTC_verIDM_widecar_inpol4_mycar(othercars, time_TTC, step_TTC, mycar);
+    end
+    
+    if ~isempty(idx_crashcar)
         
-        v0 = 15000;
+        fprintf(1, 'after [%d] seconds, mycar and [%d] collide\n', t, idx_crashcar);
         
-        if mycar.pos(1) > 0
-            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM_widecar_4point_mycar2circle(othercars, i, time_TTC, step_TTC, mycar);
+        A3 = norm(mycar_posEst(1:2) - othercars.car{idx_crashcar}.pos(1:2));
+        A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_crashcar}.vel(1))/2/sqrt(a*b))/A3;
+        A1 = mycar.vel(1)/v0;
+        mycar.acceleration = a*(1 - A1^delta - A2^2);
+        if mycar.acceleration < -30000
+            fprintf(2, 'mycar acceleration = [%4d] \n', mycar.acceleration);
+            mycar.acceleration = -30000;
+        else
+            fprintf(1, 'mycar acceleration = [%4d] \n', mycar.acceleration);
         end
+        
+    else
+        A1 = mycar.vel(1)/v0;
+        mycar.acceleration = a*(1 - A1^delta);
+    end
+    
+    % if entering the plaza
+    if mycar.pos(1) > 100*10^3 && mycar.pos(1) < 275*10^3
+        mycar.flgPlaza = 1;
+        
+        mycar.pathTranslated = laneChangePath{mycar.selectlane, mycar.save.lane_idx};
+    end
+    
+elseif mycar.flgPlaza == 1 % after entering plaza
+    
+    pos = predict_pos(mycar.pos, mycar.vel, sim.T);
+    targetDegree = get_tatgetTheta(pos,mycar.pathTranslated);
+    mycar.pos(3) = targetDegree;
+    
+    if mycar.pos(1) < 187.5*10^3
+        v0 = 12500;
+        [idx_crashcar, t, mycar_posEst, ~] = is_carcrashed_formycar_TTC_verIDM_widecar_inpol4_mycar(othercars, time_TTC, step_TTC, mycar);
         
         if ~isempty(idx_crashcar)
             
-            fprintf(1, 'after [%d] seconds, [%d] and [%d] collide\n', t, i, idx_crashcar);
+            fprintf(1, 'after [%d] seconds, mycar and [%d] collide\n', t, idx_crashcar);
             
-            A3 = norm(mycar_posEst(1:2) - othercars.car{i}.pos(1:2));
-            %A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * othercars.car{i}.vel(1)/2/sqrt(a*b))/A3;
-            if idx_crashcar > 0
-                A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{idx_crashcar}.vel(1))/2/sqrt(a*b))/A3;
+            A3 = norm(mycar_posEst(1:2) - othercars.car{idx_crashcar}.pos(1:2));
+            A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_crashcar}.vel(1))/2/sqrt(a*b))/A3;
+            A1 = mycar.vel(1)/v0;
+            mycar.acceleration = a*(1 - A1^delta - A2^2);
+            if mycar.acceleration < -30000
+                fprintf(2, 'mycar acceleration = [%4d] \n', mycar.acceleration);
+                mycar.acceleration = -30000;
             else
-                A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
-            end
-            A1 = othercars.car{i}.vel(1)/v0;
-            othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
-            if othercars.car{i}.acceleration < -30000
-                fprintf(2, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
-                othercars.car{i}.acceleration = -30000;
-            else
-                fprintf(1, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
+                fprintf(1, 'mycar acceleration = [%4d] \n', mycar.acceleration);
             end
             
         else
-            A1 = othercars.car{i}.vel(1)/v0;
-            othercars.car{i}.acceleration = a*(1 - A1^delta);
+            A1 = mycar.vel(1)/v0;
+            mycar.acceleration = a*(1 - A1^delta);
         end
         
-        % if entering the plaza
-        if othercars.car{i}.pos(1) > 100*10^3 && othercars.car{i}.pos(1) < 275*10^3
-            othercars.car{i}.flgPlaza = 1;
+    elseif mycar.pos(1) < 320*10^3
+        v0 = 10000;
+        if mycar.flgIDM == 0
             
-%             ratioSpeed = lengthP{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx}/(175*10^3);
-%             othercars.car{i}.vel(1) = othercars.car{i}.vel(1)*ratioSpeed;
-            othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx};
-            
+            % set the index number among the same target lane
+            if isempty(find(othercars.car_nr(mycar.selectlane,:), 1, 'last')) % if there is no othercars heading for same lane
+                %mycar.front_nr = 0;
+                idx_nr = 1;
+            else
+                %mycar.front_nr = othercars.car_nr(mycar.selectlane, find(othercars.car_nr(mycar.selectlane,:), 1, 'last'));
+                idx_nr = find(othercars.car_nr(mycar.selectlane,:), 1, 'last') + 1;
+            end
+            othercars.car_nr(mycar.selectlane, idx_nr) = -1;
+            mycar.flgIDM = 1;
         end
-    elseif mycar.flgPlaza == 1 % after entering plaza
         
-        pos = predict_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
-        targetDegree = get_tatgetTheta(pos,othercars.car{i}.pathTranslated);
-        othercars.car{i}.pos(3) = targetDegree;
+        [idx_crashcar, t, mycar_posEst, idx_frontCar] = is_carcrashed_formycar_TTC_verIDM_widecar_inpol4_mycar(othercars, time_TTC, step_TTC, mycar);
         
-        if othercars.car{i}.pos(1) < 187.5*10^3
-            v0 = 12500;
-            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM_widecar_4point_mycar2circle(othercars, i, time_TTC, step_TTC, mycar);
+        if ~isempty(idx_crashcar)
             
-            if ~isempty(idx_crashcar)
-                
-                fprintf(1, 'after [%d] seconds, [%d] and [%d] collide\n', t, i, idx_crashcar);
+            fprintf(1, 'after [%d] seconds, mycar and [%d] collide\n', t, idx_crashcar);
             
-                A3 = norm(mycar_posEst(1:2) - othercars.car{i}.pos(1:2));
-                %A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * othercars.car{i}.vel(1)/2/sqrt(a*b))/A3;
-                if idx_crashcar > 0
-                    A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{idx_crashcar}.vel(1))/2/sqrt(a*b))/A3;
-                else
-                    A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
-                end
-                A1 = othercars.car{i}.vel(1)/v0;
-                othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
-                
-                if othercars.car{i}.acceleration < -30000
-                    fprintf(2, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
-                    othercars.car{i}.acceleration = -30000;
-                else
-                    fprintf(1, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
-                end
-                
+            A3 = norm(mycar_posEst(1:2) - othercars.car{idx_crashcar}.pos(1:2));
+            A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_crashcar}.vel(1))/2/sqrt(a*b))/A3;
+            A1 = mycar.vel(1)/v0;
+            mycar.acceleration = a*(1 - A1^delta - A2^2);
+            if mycar.acceleration < -30000
+                fprintf(2, 'mycar acceleration = [%4d] \n', mycar.acceleration);
+                mycar.acceleration = -30000;
             else
-                A1 = othercars.car{i}.vel(1)/v0;
-                othercars.car{i}.acceleration = a*(1 - A1^delta);
+                fprintf(1, 'mycar acceleration = [%4d] \n', mycar.acceleration);
+            end
+        else
+            c = cos(mycar.pos(3)*pi/180);
+            s = sin(mycar.pos(3)*pi/180);
+            squareX = [mycar.pos(1)+2500*s mycar.pos(1)+2500*s+30000*c mycar.pos(1)-2500*s+30000*c mycar.pos(1)-2500*s mycar.pos(1)+2500*s];
+            squareY = [mycar.pos(2)-2500*c mycar.pos(2)-2500*c+30000*s mycar.pos(2)+2500*c+30000*s mycar.pos(2)+2500*c mycar.pos(2)-2500*c];
+            
+            nr_frontCar = length(idx_frontCar);
+            idx_mindist = [];
+            dist_min = 30000;
+            for i = 1:nr_frontCar
+                
+                in = inpolygon(othercars.car{idx_frontCar(i)}.pos(1), othercars.car{idx_frontCar(i)}.pos(2), squareX, squareY);
+                if in == 1
+                    if norm(mycar.pos(1:2) - othercars.car{idx_frontCar(i)}.pos(1:2)) < dist_min
+                        dist_min = norm(mycar.pos(1:2) - othercars.car{idx_frontCar(i)}.pos(1:2));
+                        idx_mindist = idx_frontCar(i);
+                    end
+                end
             end
             
-        elseif othercars.car{i}.pos(1) < 320*10^3 
-            v0 = 10000;
-            if othercars.car{i}.flgIDM == 0
-                
-                % set the index number among the same target lane
-                if isempty(find(othercars.car_nr(othercars.car{i}.goallane,:), 1, 'last')) % if there is no othercars heading for same lane
-                    idx_nr = 1;
-                else
-                    idx_nr = find(othercars.car_nr(othercars.car{i}.goallane,:), 1, 'last') + 1;
-                end
-                
-                % set the carID to the array
-                othercars.car_nr(othercars.car{i}.goallane, idx_nr) = i;
-                
-                othercars.car{i}.flgIDM = 1;
-            end
-            
-            [idx_crashcar, t, mycar_posEst] = is_carcrashed_TTC_verIDM_widecar_4point_mycar2circle(othercars, i, time_TTC, step_TTC, mycar);
-            if ~isempty(idx_crashcar)
-                
-                
-                fprintf(1, 'after [%d] seconds, [%d] and [%d] collide\n', t, i, idx_crashcar);
-            
-                A3 = norm(mycar_posEst(1:2) - othercars.car{i}.pos(1:2));
-                %A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * othercars.car{i}.vel(1)/2/sqrt(a*b))/A3;
-                if idx_crashcar > 0
-                    A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{idx_crashcar}.vel(1))/2/sqrt(a*b))/A3;
-                else
-                    A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
-                end
-                A1 = othercars.car{i}.vel(1)/v0;
-                othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
-                if othercars.car{i}.acceleration < -30000
-                    fprintf(2, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
-                    othercars.car{i}.acceleration = -30000;
-                else
-                    fprintf(1, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
-                end
+            if ~isempty(idx_mindist) % IDM following frontcar
+                A3 = norm(othercars.car{idx_mindist}.pos(1:2) - mycar.pos(1:2)) - l;
+                A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_mindist}.vel(1))/2/sqrt(a*b))/A3;
             else
-                if i == mycar.rear_nr % IDM following mycar
-                    A3 = norm(mycar.pos(1:2) - othercars.car{i}.pos(1:2)) - l;
-                    A1 = othercars.car{i}.vel(1)/v0;
-                    A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
-                    
-                    othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
-                    if othercars.car{i}.acceleration < -1470
-                        othercars.car{i}.acceleration = -1470;
-                    end
-                    
-                    if FLAG_LANECHANGE == 1
-                        if othercars.car{i}.acceleration < -30000
-                            fprintf(2, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
-                            othercars.car{i}.acceleration = -30000;
-                        else
-                            fprintf(1, 'car[%d] acceleration = [%4d] \n', i, othercars.car{i}.acceleration);
-                        end
-                        if othercars.car{i}.acceleration < - 3920
-                            othercars.car{i}.angry = 1;
-                        else
-                            othercars.car{i}.angry = 0;
-                        end
-                    end
-                else  % IDM following othercars
-                    other_front_nr = find(othercars.car_nr(othercars.car{i}.goallane,:) == i) - 1;
-                    
-                    if i ~= othercars.car_nr(othercars.car{i}.goallane,1) % IDM following frontcar
-                        A3 = norm(othercars.car{othercars.car_nr(othercars.car{i}.goallane,other_front_nr)}.pos(1:2) - othercars.car{i}.pos(1:2)) - l;
-                        A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{othercars.car_nr(othercars.car{i}.goallane,other_front_nr)}.vel(1))/2/sqrt(a*b))/A3;
-                    else
-                        A2 = 0;
-                    end
-                    A1 = othercars.car{i}.vel(1)/v0;
-                    othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
-                end
+                A2 = 0;
             end
+            A1 = mycar.vel(1)/v0;
+            mycar.acceleration = a*(1 - A1^delta - A2^2);
+            
         end
     end
+end
 
+mycar.vel(1) = mycar.vel(1) + mycar.acceleration*sim.T;
 
+% decelerate in the toll lane
+if mycar.pos(1) > 275*10^3 && mycar.vel(1) > 5000
+    mycar.vel(1) = mycar.vel(1) - 3000 * sim.T; % decelerate if exceeds 18km/h in the tolllane
+end
+
+% control minimum velocity
+if mycar.vel(1) < 0 && mycar.pos(1) < 320 * 10^3
+    mycar.vel(1) = 0;
+end
 
 % UPDATE MY CAR INFORMATION
 mycar.pos = update_pos(mycar.pos, mycar.vel, sim.T);
 mycar.bd  = get_carshape(mycar.pos, mycar.W, mycar.H);
+
+end
+
+function targetDegree = get_tatgetTheta(pos,path)
+
+nData = size(path,1);
+
+dist=bsxfun(@hypot,path(:,1)-pos(1),path(:,2)-pos(2));
+[~,idx]=min(dist);
+
+if idx~=nData
+   vx= path(idx+1,1)-path(idx,1); 
+   vy= path(idx+1,2)-path(idx,2); 
+else
+   vx= path(idx,1)-path(idx-1,1); 
+   vy= path(idx,2)-path(idx-1,2);   
+end
+
+targetDegree =atan(vy/vx)*180/pi;
+
+end
+
+function pos = predict_pos(pos, vel, T)
+
+c = cos(pos(3)*pi/180);
+s = sin(pos(3)*pi/180);
+pos(1:2) = pos(1:2) + vel(1)*T*[c s];
+pos(3) = pos(3) + vel(2)*T;
+
+% DETERMINE DEGREE TO LIE BETWEEN -180~180
+while pos(3) > 180
+    pos(3) = pos(3) - 360;
+end
+while pos(3) < -180
+    pos(3) = pos(3) + 360;
+end
+
+end
