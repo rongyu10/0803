@@ -14,8 +14,8 @@ sim       = init_sim(0.1); % dt = 0.02 [sec]
 othercars  = init_othercars();
 nr_cars    = 46; % total number of cars (1st:20cars, 2nd:6cars, 3rd:20cars)
 othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
-othercars  = addcars_tollplaza_IN_lower5_cross(othercars, road.track{1}, nr_cars);
-load('othercars_cross');
+othercars  = addcars_tollplaza_IN_lower5(othercars, road.track{1}, nr_cars);
+load('othercars_lower5_2');
 
 %---------------
 %--- set mycar--
