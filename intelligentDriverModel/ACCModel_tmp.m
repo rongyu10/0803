@@ -114,21 +114,21 @@ for i = 1:ncars
             accele_ACC = (1-c)*accele_IDM + c*( accele_CAH + b_max*tanh((accele_IDM - accele_CAH)/b_max));
         end
 
-        if accele_ACC < -9000
-            accele_ACC = -9000;
-        end
-        %---------------------------
-        v_new = v + accele_ACC * sim.T;
-        othercars.car{traffic.order(i)}.vel(1) = max(0.0,v_new); % 速度は正
-        othercars.car{traffic.order(i)}.accele = accele_ACC;
+%         if accele_ACC < -9000
+%             accele_ACC = -9000;
+%         end
+%         %---------------------------
+%         v_new = v + accele_ACC * sim.T;
+%         othercars.car{traffic.order(i)}.vel(1) = max(0.0,v_new); % 速度は正
+%         othercars.car{traffic.order(i)}.accele = accele_ACC;
         
-        if (accele_ACC < -3000)&&(accele_ACC > -7000)
-            othercars.car{traffic.order(i)}.IDM.angry = 1;
-        elseif (accele_ACC <= -7000)
-            othercars.car{traffic.order(i)}.IDM.angry = 2;
-        else
-            othercars.car{traffic.order(i)}.IDM.angry = 0;            
-        end
+%         if (accele_ACC < -3000)&&(accele_ACC > -7000)
+%             othercars.car{traffic.order(i)}.IDM.angry = 1;
+%         elseif (accele_ACC <= -7000)
+%             othercars.car{traffic.order(i)}.IDM.angry = 2;
+%         else
+%             othercars.car{traffic.order(i)}.IDM.angry = 0;
+%         end
     end
 end
 %-------------------------------------------------------

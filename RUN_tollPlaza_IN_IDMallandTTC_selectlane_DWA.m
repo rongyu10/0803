@@ -15,7 +15,7 @@ othercars  = init_othercars();
 nr_cars    = 46; % total number of cars (1st:20cars, 2nd:6cars, 3rd:20cars)
 othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
 othercars  = addcars_tollplaza_IN(othercars, road.track{1}, nr_cars);
-load('othercars_over3G');
+%load('othercars_over3G');
 
 %---------------
 %--- set mycar--
@@ -42,6 +42,22 @@ idm.b = 3000; %desired deceleration
 idm.delta = 4; %acceleration exponent
 idm.s0 = 2000; % minimum distance
 idm.l = 4000; % vehicle length
+%============================================================
+
+%======= Dynamic Window Approach ============================
+% FLAG_DynamicWindow     = true;
+% FLAG_methodDWA         = 1;   % 1: normal DWA, 2: time-varying DWA, 3: DWA with velocity obstacles(under constraction) 
+% PLOT_DWA               = true;
+% PLOT_COLLISION_AREA    = false;
+% PLOT_VELOCITY_OBSTACLE = true;
+% goal      = [220000 -2000];
+% obstacleR = 0;
+% 
+% %[最高速度[mm/s],最高回頭速度[rad/s],最高加減速度[mm/ss],最高加減回頭速度[rad/ss], 速度解像度[mm/s],回頭速度解像度[rad/s]]
+% Kinematic = [20000, (40.0)/180*pi, 5000, (40.0)/180*pi,200, (1)/180*pi];
+% %評価関数のパラメータ [heading,dist,velocity,predictDT]
+% evalParam = [20.0,50.0,10.0,3.0]; % [0.1,0.45,0.1,4.0]
+% area      = [track.xmin, track.xmax, track.ymin, track.xmax];
 %============================================================
 
 % INITIALIZE FIGURE
@@ -130,7 +146,7 @@ while sim.flag && ishandle(fig)
             othercars  = respawn_othercars_tollplaza(othercars,road,sim);
             
             % update speed and position of mycar (included merging and IDM)
-            [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs(mycar, sim, othercars, idm, laneChangePath);
+            [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_DWA(mycar, sim, othercars, idm, laneChangePath);
             
             % update speed and position of othercars (included merging and IDM)
             [othercars, mycar]  = update_control_othercars_mycar_IN_TTCandIDMall_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
