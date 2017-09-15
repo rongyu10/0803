@@ -1,4 +1,4 @@
-function [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_ACC(mycar, sim, othercars, idm, laneChangePath)
+function [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_ACC2(mycar, sim, othercars, idm, laneChangePath)
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -19,19 +19,29 @@ step_TTC = 0.1;
 idx_crashcar = [];
 
 
+
 if mycar.flgPlaza == 0 % before entering plaza
     
     v0 = 15000;
     mycar.acceleration = 0;
-    
+    mycar.targetDegree_pre = 0;
+    mycar.targetDegree = 0;
+    mycar.targetDegree_dif = zeros(1, 5);
+    mycar.targetDegree_dif_sum = 0;
     
     [idx_crashcar, t, mycar_posEst, idx_frontCar] = is_carcrashed_formycar_TTC_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar);
     
     % identify index of nearest othercar in the observing box
-    c = cos(mycar.pos(3)*pi/180);
-    s = sin(mycar.pos(3)*pi/180);
-    mycar.squareX = [mycar.pos(1)+2500*s+6000*c mycar.pos(1)+2500*s+30000*c mycar.pos(1)-2500*s+30000*c mycar.pos(1)-2500*s+6000*c mycar.pos(1)+2500*s+6000*c];
-    mycar.squareY = [mycar.pos(2)-2500*c+6000*s mycar.pos(2)-2500*c+30000*s mycar.pos(2)+2500*c+30000*s mycar.pos(2)+2500*c+6000*s mycar.pos(2)-2500*c+6000*s];
+    for i = 0:10
+        mycar_posEst_det = update_pos_steerfirst(mycar.pos, mycar.vel, 0.3*i);
+        mycar_bdEst_det = get_car_futurepoint(mycar_posEst_det, mycar.W, mycar.H + 2500);
+        mycar.squareX(i+1) = mycar_bdEst_det(1,1);
+        mycar.squareY(i+1) = mycar_bdEst_det(1,2);
+        mycar.squareX(22-i) = mycar_bdEst_det(2,1);
+        mycar.squareY(22-i) = mycar_bdEst_det(2,2);
+    end
+    mycar.squareX(23) = mycar.squareX(1);
+    mycar.squareY(23) = mycar.squareY(1);
     
     nr_frontCar = length(idx_frontCar);
     idx_mindist = [];
@@ -46,7 +56,7 @@ if mycar.flgPlaza == 0 % before entering plaza
         end
     end
     
-    if ~isempty(idx_crashcar) % && idx_mindist ~= idx_crashcar
+    if ~isempty(idx_crashcar)
         
         fprintf(1, 'after [%d] seconds, mycar and [%d](%d, %d) collide\n', t, idx_crashcar, othercars.car{idx_crashcar}.pos(1), othercars.car{idx_crashcar}.pos(2));
         
@@ -128,7 +138,7 @@ if mycar.flgPlaza == 0 % before entering plaza
         
     end
     
-    if mycar.acceleration < -9800
+    if mycar.acceleration < -4900
         fprintf(2, 'mycar(%d, %d) acceleration = [%4d] \n', mycar.pos(1), mycar.pos(2), mycar.acceleration);
         %mycar.acceleration = -9800;
     else
@@ -147,17 +157,37 @@ if mycar.flgPlaza == 0 % before entering plaza
 elseif mycar.flgPlaza == 1 % after entering plaza
     
     pos = predict_pos(mycar.pos, mycar.vel, sim.T);
-    targetDegree = get_tatgetTheta(pos,mycar.pathTranslated);
-    mycar.pos(3) = targetDegree;
+    mycar.targetDegree_pre = mycar.targetDegree;
+    mycar.targetDegree = get_tatgetTheta(pos,mycar.pathTranslated);
+    
+    mycar.targetDegree_dif_sum = 0;
+    for i = 1:4
+        mycar.targetDegree_dif(i) = mycar.targetDegree_dif(i+1);
+        mycar.targetDegree_dif_sum = mycar.targetDegree_dif_sum + mycar.targetDegree_dif(i);
+    end
+    mycar.targetDegree_dif(5) = mycar.targetDegree - mycar.targetDegree_pre;
+    mycar.targetDegree_dif_sum = mycar.targetDegree_dif_sum + mycar.targetDegree_dif(5);
+    
+    mycar.vel(2) = mycar.targetDegree_dif_sum/sim.T/5;
+    %fprintf(1, 'mycar.vel(2) = [%4d]', mycar.vel(2));
+    mycar.pos(3) = mycar.targetDegree;
+    
+    
     
     if mycar.pos(1) < 187.5*10^3
         v0 = 12500;
         [idx_crashcar, t, mycar_posEst, idx_frontCar] = is_carcrashed_formycar_TTC_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar);
         
-        c = cos(mycar.pos(3)*pi/180);
-        s = sin(mycar.pos(3)*pi/180);
-        mycar.squareX = [mycar.pos(1)+2500*s+6000*c mycar.pos(1)+2500*s+30000*c mycar.pos(1)-2500*s+30000*c mycar.pos(1)-2500*s+6000*c mycar.pos(1)+2500*s+6000*c];
-        mycar.squareY = [mycar.pos(2)-2500*c+6000*s mycar.pos(2)-2500*c+30000*s mycar.pos(2)+2500*c+30000*s mycar.pos(2)+2500*c+6000*s mycar.pos(2)-2500*c+6000*s];
+        for i = 0:10
+            mycar_posEst_det = update_pos_steerfirst(mycar.pos, mycar.vel, 0.3*i);
+            mycar_bdEst_det = get_car_futurepoint(mycar_posEst_det, mycar.W, mycar.H + 2500);
+            mycar.squareX(i+1) = mycar_bdEst_det(1,1);
+            mycar.squareY(i+1) = mycar_bdEst_det(1,2);
+            mycar.squareX(22-i) = mycar_bdEst_det(2,1);
+            mycar.squareY(22-i) = mycar_bdEst_det(2,2);
+        end
+        mycar.squareX(23) = mycar.squareX(1);
+        mycar.squareY(23) = mycar.squareY(1);
         
         nr_frontCar = length(idx_frontCar);
         idx_mindist = [];
@@ -172,7 +202,7 @@ elseif mycar.flgPlaza == 1 % after entering plaza
             end
         end
         
-        if (~isempty(idx_crashcar)) % && (idx_mindist ~= idx_crashcar)
+        if ~isempty(idx_crashcar)
             
             fprintf(1, 'after [%d] seconds, mycar and [%d](%d, %d) collide\n', t, idx_crashcar, othercars.car{idx_crashcar}.pos(1), othercars.car{idx_crashcar}.pos(2));
             
@@ -247,7 +277,7 @@ elseif mycar.flgPlaza == 1 % after entering plaza
                     accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
                 end
                 mycar.acceleration = accele_ACC;
-            
+                
             else
                 A1 = mycar.vel(1)/v0;
                 mycar.acceleration = a*(1 - A1^delta);
@@ -279,10 +309,16 @@ elseif mycar.flgPlaza == 1 % after entering plaza
         
         [idx_crashcar, t, mycar_posEst, idx_frontCar] = is_carcrashed_formycar_TTC_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar);
         
-        c = cos(mycar.pos(3)*pi/180);
-        s = sin(mycar.pos(3)*pi/180);
-        mycar.squareX = [mycar.pos(1)+2500*s+6000*c mycar.pos(1)+2500*s+30000*c mycar.pos(1)-2500*s+30000*c mycar.pos(1)-2500*s+6000*c mycar.pos(1)+2500*s+6000*c];
-        mycar.squareY = [mycar.pos(2)-2500*c+6000*s mycar.pos(2)-2500*c+30000*s mycar.pos(2)+2500*c+30000*s mycar.pos(2)+2500*c+6000*s mycar.pos(2)-2500*c+6000*s];
+        for i = 0:10
+            mycar_posEst_det = update_pos_steerfirst(mycar.pos, mycar.vel, 0.3*i);
+            mycar_bdEst_det = get_car_futurepoint(mycar_posEst_det, mycar.W, mycar.H + 2500);
+            mycar.squareX(i+1) = mycar_bdEst_det(1,1);
+            mycar.squareY(i+1) = mycar_bdEst_det(1,2);
+            mycar.squareX(22-i) = mycar_bdEst_det(2,1);
+            mycar.squareY(22-i) = mycar_bdEst_det(2,2);
+        end
+        mycar.squareX(23) = mycar.squareX(1);
+        mycar.squareY(23) = mycar.squareY(1);
         
         nr_frontCar = length(idx_frontCar);
         idx_mindist = [];
@@ -297,7 +333,7 @@ elseif mycar.flgPlaza == 1 % after entering plaza
             end
         end
         
-        if (~isempty(idx_crashcar)) % && (idx_mindist ~= idx_crashcar)
+        if ~isempty(idx_crashcar)
             
             fprintf(1, 'after [%d] seconds, mycar and [%d](%d, %d) collide\n', t, idx_crashcar, othercars.car{idx_crashcar}.pos(1), othercars.car{idx_crashcar}.pos(2));
             
@@ -371,7 +407,7 @@ elseif mycar.flgPlaza == 1 % after entering plaza
                     accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
                 end
                 mycar.acceleration = accele_ACC;
-            
+                
             else
                 A1 = mycar.vel(1)/v0;
                 mycar.acceleration = a*(1 - A1^delta);
@@ -390,10 +426,17 @@ elseif mycar.flgPlaza == 1 % after entering plaza
         
         [~, ~, ~, idx_frontCar] = is_carcrashed_formycar_TTC_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar);
         
-        c = cos(mycar.pos(3)*pi/180);
-        s = sin(mycar.pos(3)*pi/180);
-        mycar.squareX = [mycar.pos(1)+2500*s+6000*c mycar.pos(1)+2500*s+30000*c mycar.pos(1)-2500*s+30000*c mycar.pos(1)-2500*s+6000*c mycar.pos(1)+2500*s+6000*c];
-        mycar.squareY = [mycar.pos(2)-2500*c+6000*s mycar.pos(2)-2500*c+30000*s mycar.pos(2)+2500*c+30000*s mycar.pos(2)+2500*c+6000*s mycar.pos(2)-2500*c+6000*s];
+        for i = 0:10
+            mycar_posEst_det = update_pos_steerfirst(mycar.pos, mycar.vel, 0.3*i);
+            mycar_bdEst_det = get_car_futurepoint(mycar_posEst_det, mycar.W, mycar.H + 2500);
+            mycar.squareX(i+1) = mycar_bdEst_det(1,1);
+            mycar.squareY(i+1) = mycar_bdEst_det(1,2);
+            mycar.squareX(22-i) = mycar_bdEst_det(2,1);
+            mycar.squareY(22-i) = mycar_bdEst_det(2,2);
+        end
+        mycar.squareX(23) = mycar.squareX(1);
+        mycar.squareY(23) = mycar.squareY(1);
+        
         
         nr_frontCar = length(idx_frontCar);
         idx_mindist = [];
@@ -477,11 +520,11 @@ dist=bsxfun(@hypot,path(:,1)-pos(1),path(:,2)-pos(2));
 [~,idx]=min(dist);
 
 if idx~=nData
-   vx= path(idx+1,1)-path(idx,1); 
-   vy= path(idx+1,2)-path(idx,2); 
+    vx= path(idx+1,1)-path(idx,1);
+    vy= path(idx+1,2)-path(idx,2);
 else
-   vx= path(idx,1)-path(idx-1,1); 
-   vy= path(idx,2)-path(idx-1,2);   
+    vx= path(idx,1)-path(idx-1,1);
+    vy= path(idx,2)-path(idx-1,2);
 end
 
 targetDegree =atan(vy/vx)*180/pi;

@@ -20,7 +20,7 @@ othercars  = addcars_tollplaza_IN(othercars, road.track{1}, nr_cars);
 %---------------
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-140000 5250 0];
+ini_pos    = [-135000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 % SETTING OF TOLL ENTERING
@@ -32,6 +32,8 @@ mycar.front_nr = 0; % carID in front of mycar
 mycar.rear_nr = 0; % carID behind mycar
 mycar.save.lane_idx = mycar.startlane;
 mycar.flgIDM = 0;
+mycar.squareX = zeros(1,21);
+mycar.squareY = zeros(1,21);
 %---------------
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
@@ -42,22 +44,6 @@ idm.b = 3000; %desired deceleration
 idm.delta = 4; %acceleration exponent
 idm.s0 = 2000; % minimum distance
 idm.l = 4000; % vehicle length
-%============================================================
-
-%======= Dynamic Window Approach ============================
-% FLAG_DynamicWindow     = true;
-% FLAG_methodDWA         = 1;   % 1: normal DWA, 2: time-varying DWA, 3: DWA with velocity obstacles(under constraction) 
-% PLOT_DWA               = true;
-% PLOT_COLLISION_AREA    = false;
-% PLOT_VELOCITY_OBSTACLE = true;
-% goal      = [220000 -2000];
-% obstacleR = 0;
-% 
-% %[最高速度[mm/s],最高回頭速度[rad/s],最高加減速度[mm/ss],最高加減回頭速度[rad/ss], 速度解像度[mm/s],回頭速度解像度[rad/s]]
-% Kinematic = [20000, (40.0)/180*pi, 5000, (40.0)/180*pi,200, (1)/180*pi];
-% %評価関数のパラメータ [heading,dist,velocity,predictDT]
-% evalParam = [20.0,50.0,10.0,3.0]; % [0.1,0.45,0.1,4.0]
-% area      = [track.xmin, track.xmax, track.ymin, track.xmax];
 %============================================================
 
 % INITIALIZE FIGURE
@@ -99,13 +85,13 @@ while sim.flag && ishandle(fig)
         case {'uparrow', 'leftbracket'}
             % change the goal(target) lane
             %mycar.vel(1) = mycar.vel(1)+5000;
-            if mycar.pos(1) < 100*10^3
+            if mycar.pos(1) < 100*10^3 && mycar.selectlane ~= 1
                 mycar.selectlane = mycar.selectlane - 1;
             end
         case {'downarrow', 'slash'}
             % change the goal(target) lane
             %mycar.vel(1) = mycar.vel(1)-5000;
-            if mycar.pos(1) < 100*10^3
+            if mycar.pos(1) < 100*10^3 && mycar.selectlane ~= 15
                 mycar.selectlane = mycar.selectlane + 1;
             end
         case 'space'
@@ -146,7 +132,7 @@ while sim.flag && ishandle(fig)
             othercars  = respawn_othercars_tollplaza(othercars,road,sim);
             
             % update speed and position of mycar (included merging and IDM)
-            [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_DWA(mycar, sim, othercars, idm, laneChangePath);
+            [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_ACC3(mycar, sim, othercars, idm, laneChangePath);
             
             % update speed and position of othercars (included merging and IDM)
             [othercars, mycar]  = update_control_othercars_mycar_IN_TTCandIDMall_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
@@ -170,10 +156,11 @@ while sim.flag && ishandle(fig)
                 key_pressed = 'p';
                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
                 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
-                
+                mycar.startlane = 3;
                 mycar.selectlane = 8;
                 mycar.front_nr = 0; % carID in front of mycar
                 mycar.rear_nr = 0; % carID behind mycar
+                mycar.save.lane_idx = mycar.startlane;
                 FLAG_LANECHANGE = false;
                 sim.mode = 'QUIT';
                 clear update_control_mycar_merge_intelligent
@@ -181,10 +168,11 @@ while sim.flag && ishandle(fig)
                 fprintf(2, 'OUTSIDE THE TRACK. \n');
                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
                 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
-               
+                mycar.startlane = 3;
                 mycar.selectlane = 8;
                 mycar.front_nr = 0; % carID in front of mycar
                 mycar.rear_nr = 0; % carID behind mycar
+                mycar.save.lane_idx = mycar.startlane;
                 FLAG_LANECHANGE = false;
             end
             %if is_carcrashed(myinfo)
@@ -192,10 +180,11 @@ while sim.flag && ishandle(fig)
                 fprintf(2, 'COLLISION OCCURRED. \n');
                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
                 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
-                
+                mycar.startlane = 3;
                 mycar.selectlane = 8;
                 mycar.front_nr = 0; % carID in front of mycar
                 mycar.rear_nr = 0; % carID behind mycar
+                mycar.save.lane_idx = mycar.startlane;
                 FLAG_LANECHANGE = false;
                 clear update_control_mycar_merge_intelligent
             end
@@ -234,8 +223,8 @@ while sim.flag && ishandle(fig)
     plot_arrow_selectlane_IN(mycar.selectlane);
     plot_othercars(othercars, SIMPLECARSHAPE, REALCARSHAPE);
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
+    plot_mycar_path_in_plaza(laneChangePath, mycar);
     plot_mycar_detecting_area(mycar);
-    
     %----
     plot_title(titlestr, titlecol, titlefontsize);
     drawnow;

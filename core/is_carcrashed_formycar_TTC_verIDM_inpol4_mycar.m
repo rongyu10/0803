@@ -21,7 +21,7 @@ else
                 
                 othercars_posEst = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
                 othercars_bdEst = get_car4point(othercars_posEst, othercars.car{idx_nearCar(i)}.W, othercars.car{idx_nearCar(i)}.H);
-                
+
                 in = inpolygon(mycar_bdEst(:,1), mycar_bdEst(:,2), othercars_bdEst(:,1), othercars_bdEst(:,2));
                 %----
                 if any(in, 1)

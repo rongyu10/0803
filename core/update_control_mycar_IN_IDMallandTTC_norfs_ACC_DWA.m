@@ -1,4 +1,4 @@
-function [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_DWA(mycar, sim, othercars, idm, laneChangePath)
+function [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_ACC_DWA(mycar, sim, othercars, idm, laneChangePath)
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -8,6 +8,20 @@ b = idm.b; %desired deceleration
 delta = idm.delta; %acceleration exponent
 s0 = idm.s0; % minimum distance
 l = idm.l; % vehicle length
+%============================================================
+
+% PARAMETER OF CAH-------------------------------------------
+coolness = 0.99;          % coolness facotor
+% -----------------------------------------------------------
+
+%======= Dynamic Window Approach ============================
+obstacleR = 0;
+
+%[最高速度[mm/s],最高回頭速度[rad/s],最高加減速度[mm/ss],最高加減回頭速度[rad/ss], 速度解像度[mm/s],回頭速度解像度[rad/s]]
+Kinematic = [20000, (40.0)/180*pi, 5000, (40.0)/180*pi,200, (1)/180*pi];
+%評価関数のパラメータ [heading,dist,velocity,predictDT]
+evalParam = [20.0,50.0,10.0,3.0]; % [0.1,0.45,0.1,4.0]
+area      = [track.xmin, track.xmax, track.ymin, track.xmax];
 %============================================================
 
 % PARAMETER OF TTC-------------------------------------------
@@ -58,28 +72,71 @@ if mycar.flgPlaza == 0 % before entering plaza
             
             if ~isempty(idx_mindist) % IDM following frontcar in the observing box
                 fprintf(1, 'Following car [%d](%d, %d) by IDM\n',idx_mindist, othercars.car{idx_mindist}.pos(1), othercars.car{idx_mindist}.pos(2));
+                A1 = mycar.vel(1)/v0;
                 A3 = norm(othercars.car{idx_mindist}.pos(1:2) - mycar.pos(1:2)) - l;
                 A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_mindist}.vel(1))/2/sqrt(a*b))/A3;
-            else
-                A2 = 0;
-            end
-            A1 = mycar.vel(1)/v0;
-            
-            if a*(1 - A1^delta - A2^2) < mycar.acceleration
-                mycar.acceleration = a*(1 - A1^delta - A2^2);
-                fprintf(1, 'calculated by IDM is larger deceleration\n');
+                accele_IDM = a*(1 - A1^delta - A2^2);
+                
+                % -----ACC model-----------
+                aLead = 0;  % this value need to be modified !!
+                aLeadRestricted = min(aLead,a);
+                dvp = max(mycar.vel(1) - othercars.car{idx_mindist}.vel(1),0);
+                vLead = othercars.car{idx_mindist}.vel(1);
+                
+                denomCAH = vLead*vLead - 2*A3*aLeadRestricted;
+                
+                if (vLead*dvp < -2*A3*aLeadRestricted)&&(denomCAH~=0)
+                    accele_CAH = v*v*aLeadRestricted/denomCAH;
+                else
+                    accele_CAH = aLeadRestricted - 0.5*dvp*dvp/max(A3,0.1);
+                end
+                
+                if accele_IDM > accele_CAH
+                    accele_ACC = accele_IDM;
+                else
+                    accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
+                end
+                
+                if accele_ACC < mycar.acceleration
+                    mycar.acceleration = accele_ACC;
+                    fprintf(1, 'calculated by IDM is larger deceleration\n');
+                end
             end
             
         else
             if ~isempty(idx_mindist) % IDM following frontcar
                 fprintf(1, 'Following car [%d](%d, %d) by IDM\n',idx_mindist, othercars.car{idx_mindist}.pos(1), othercars.car{idx_mindist}.pos(2));
+                A1 = mycar.vel(1)/v0;
                 A3 = norm(othercars.car{idx_mindist}.pos(1:2) - mycar.pos(1:2)) - l;
                 A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_mindist}.vel(1))/2/sqrt(a*b))/A3;
+                
+                accele_IDM = a*(1 - A1^delta - A2^2);
+                
+                % -----ACC model-----------
+                aLead = 0;  % this value need to be modified !!
+                aLeadRestricted = min(aLead,a);
+                dvp = max(mycar.vel(1) - othercars.car{idx_mindist}.vel(1),0);
+                vLead = othercars.car{idx_mindist}.vel(1);
+                
+                denomCAH = vLead*vLead - 2*A3*aLeadRestricted;
+                
+                if (vLead*dvp < -2*A3*aLeadRestricted)&&(denomCAH~=0)
+                    accele_CAH = v*v*aLeadRestricted/denomCAH;
+                else
+                    accele_CAH = aLeadRestricted - 0.5*dvp*dvp/max(A3,0.1);
+                end
+                
+                if accele_IDM > accele_CAH
+                    accele_ACC = accele_IDM;
+                else
+                    accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
+                end
+                mycar.acceleration = accele_ACC;
+            
             else
-                A2 = 0;
+                A1 = mycar.vel(1)/v0;
+                mycar.acceleration = a*(1 - A1^delta);
             end
-            A1 = mycar.vel(1)/v0;
-            mycar.acceleration = a*(1 - A1^delta - A2^2);
             
         end
         
@@ -102,7 +159,7 @@ if mycar.flgPlaza == 0 % before entering plaza
 elseif mycar.flgPlaza == 1 % after entering plaza
     
     pos = predict_pos(mycar.pos, mycar.vel, sim.T);
-    targetDegree = get_tatgetTheta(pos,mycar.pathTranslated);
+    [targetDegree, idx] = get_tatgetTheta(pos,mycar.pathTranslated);
     mycar.pos(3) = targetDegree;
     
     if mycar.pos(1) < 187.5*10^3
@@ -140,36 +197,95 @@ elseif mycar.flgPlaza == 1 % after entering plaza
             mycar.acceleration = a*(1 - A1^delta - A2^2);
             
             
-            if ~isempty(idx_mindist) % IDM following frontcar
+            if ~isempty(idx_mindist) % IDM following frontcar in the observing box
                 fprintf(1, 'Following car [%d](%d, %d) by IDM\n',idx_mindist, othercars.car{idx_mindist}.pos(1), othercars.car{idx_mindist}.pos(2));
+                A1 = mycar.vel(1)/v0;
                 A3 = norm(othercars.car{idx_mindist}.pos(1:2) - mycar.pos(1:2)) - l;
                 A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_mindist}.vel(1))/2/sqrt(a*b))/A3;
-            else
-                A2 = 0;
-            end
-            A1 = mycar.vel(1)/v0;
-            
-            if a*(1 - A1^delta - A2^2) < mycar.acceleration
-                mycar.acceleration = a*(1 - A1^delta - A2^2);
-                fprintf(1, 'calculated by IDM is larger deceleration\n');
+                accele_IDM = a*(1 - A1^delta - A2^2);
+                
+                % -----ACC model-----------
+                aLead = 0;  % this value need to be modified !!
+                aLeadRestricted = min(aLead,a);
+                dvp = max(mycar.vel(1) - othercars.car{idx_mindist}.vel(1),0);
+                vLead = othercars.car{idx_mindist}.vel(1);
+                
+                denomCAH = vLead*vLead - 2*A3*aLeadRestricted;
+                
+                if (vLead*dvp < -2*A3*aLeadRestricted)&&(denomCAH~=0)
+                    accele_CAH = v*v*aLeadRestricted/denomCAH;
+                else
+                    accele_CAH = aLeadRestricted - 0.5*dvp*dvp/max(A3,0.1);
+                end
+                
+                if accele_IDM > accele_CAH
+                    accele_ACC = accele_IDM;
+                else
+                    accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
+                end
+                
+                if accele_ACC < mycar.acceleration
+                    mycar.acceleration = accele_ACC;
+                    fprintf(1, 'calculated by IDM is larger deceleration\n');
+                end
             end
             
         else
             if ~isempty(idx_mindist) % IDM following frontcar
                 fprintf(1, 'Following car [%d](%d, %d) by IDM\n',idx_mindist, othercars.car{idx_mindist}.pos(1), othercars.car{idx_mindist}.pos(2));
+                A1 = mycar.vel(1)/v0;
                 A3 = norm(othercars.car{idx_mindist}.pos(1:2) - mycar.pos(1:2)) - l;
                 A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_mindist}.vel(1))/2/sqrt(a*b))/A3;
-            else
-                A2 = 0;
-            end
-            A1 = mycar.vel(1)/v0;
-            mycar.acceleration = a*(1 - A1^delta - A2^2);
+                
+                accele_IDM = a*(1 - A1^delta - A2^2);
+                
+                % -----ACC model-----------
+                aLead = 0;  % this value need to be modified !!
+                aLeadRestricted = min(aLead,a);
+                dvp = max(mycar.vel(1) - othercars.car{idx_mindist}.vel(1),0);
+                vLead = othercars.car{idx_mindist}.vel(1);
+                
+                denomCAH = vLead*vLead - 2*A3*aLeadRestricted;
+                
+                if (vLead*dvp < -2*A3*aLeadRestricted)&&(denomCAH~=0)
+                    accele_CAH = v*v*aLeadRestricted/denomCAH;
+                else
+                    accele_CAH = aLeadRestricted - 0.5*dvp*dvp/max(A3,0.1);
+                end
+                
+                if accele_IDM > accele_CAH
+                    accele_ACC = accele_IDM;
+                else
+                    accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
+                end
+                mycar.acceleration = accele_ACC;
             
+            else
+                A1 = mycar.vel(1)/v0;
+                mycar.acceleration = a*(1 - A1^delta);
+            end
         end
         
         if mycar.acceleration < -9800
             fprintf(2, 'mycar(%d, %d) acceleration = [%4d] \n', mycar.pos(1), mycar.pos(2), mycar.acceleration);
             %mycar.acceleration = -9800;
+            
+            fprintf(2, 'deviate path by DWA\n');
+            
+            
+            x = [mycar.pos(1), mycar.pos(2), toRadian(mycar.pos(3)), mycar.vel(1), toRadian(mycar.vel(2))]';
+            goal = [mycar.pathTranslated(idx + 30,1), mycar.pathTranslated(idx + 30,2)];
+            obstacleR = 0;
+            [u,traj,eval]=DynamicWindowApproach(x,Kinematic,goal,evalParam,obstacle,obstacleR,sim.T);
+            
+            %--- Update mycar velocity -----------
+            if isempty(eval)
+                new_vel = mycar.vel; % for failed case
+            else
+                new_vel = [u(1), toDegree(u(2))]; % DWA result
+            end
+            mycar.vel = new_vel;
+            %-------------------------------------
         else
             fprintf(1, 'mycar(%d, %d) acceleration = [%4d] \n', mycar.pos(1), mycar.pos(2), mycar.acceleration);
         end
@@ -222,30 +338,73 @@ elseif mycar.flgPlaza == 1 % after entering plaza
             A1 = mycar.vel(1)/v0;
             mycar.acceleration = a*(1 - A1^delta - A2^2);
             
-            if ~isempty(idx_mindist) % IDM following frontcar
+            if ~isempty(idx_mindist) % IDM following frontcar in the observing box
                 fprintf(1, 'Following car [%d](%d, %d) by IDM\n',idx_mindist, othercars.car{idx_mindist}.pos(1), othercars.car{idx_mindist}.pos(2));
+                A1 = mycar.vel(1)/v0;
                 A3 = norm(othercars.car{idx_mindist}.pos(1:2) - mycar.pos(1:2)) - l;
                 A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_mindist}.vel(1))/2/sqrt(a*b))/A3;
-            else
-                A2 = 0;
-            end
-            A1 = mycar.vel(1)/v0;
-            
-            if a*(1 - A1^delta - A2^2) < mycar.acceleration
-                mycar.acceleration = a*(1 - A1^delta - A2^2);
-                fprintf(1, 'calculated by IDM is larger deceleration\n');
+                accele_IDM = a*(1 - A1^delta - A2^2);
+                
+                % -----ACC model-----------
+                aLead = 0;  % this value need to be modified !!
+                aLeadRestricted = min(aLead,a);
+                dvp = max(mycar.vel(1) - othercars.car{idx_mindist}.vel(1),0);
+                vLead = othercars.car{idx_mindist}.vel(1);
+                
+                denomCAH = vLead*vLead - 2*A3*aLeadRestricted;
+                
+                if (vLead*dvp < -2*A3*aLeadRestricted)&&(denomCAH~=0)
+                    accele_CAH = v*v*aLeadRestricted/denomCAH;
+                else
+                    accele_CAH = aLeadRestricted - 0.5*dvp*dvp/max(A3,0.1);
+                end
+                
+                if accele_IDM > accele_CAH
+                    accele_ACC = accele_IDM;
+                else
+                    accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
+                end
+                
+                if accele_ACC < mycar.acceleration
+                    mycar.acceleration = accele_ACC;
+                    fprintf(1, 'calculated by IDM is larger deceleration\n');
+                end
             end
             
         else
             if ~isempty(idx_mindist) % IDM following frontcar
                 fprintf(1, 'Following car [%d](%d, %d) by IDM\n',idx_mindist, othercars.car{idx_mindist}.pos(1), othercars.car{idx_mindist}.pos(2));
+                A1 = mycar.vel(1)/v0;
                 A3 = norm(othercars.car{idx_mindist}.pos(1:2) - mycar.pos(1:2)) - l;
                 A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_mindist}.vel(1))/2/sqrt(a*b))/A3;
+                
+                accele_IDM = a*(1 - A1^delta - A2^2);
+                
+                % -----ACC model-----------
+                aLead = 0;  % this value need to be modified !!
+                aLeadRestricted = min(aLead,a);
+                dvp = max(mycar.vel(1) - othercars.car{idx_mindist}.vel(1),0);
+                vLead = othercars.car{idx_mindist}.vel(1);
+                
+                denomCAH = vLead*vLead - 2*A3*aLeadRestricted;
+                
+                if (vLead*dvp < -2*A3*aLeadRestricted)&&(denomCAH~=0)
+                    accele_CAH = v*v*aLeadRestricted/denomCAH;
+                else
+                    accele_CAH = aLeadRestricted - 0.5*dvp*dvp/max(A3,0.1);
+                end
+                
+                if accele_IDM > accele_CAH
+                    accele_ACC = accele_IDM;
+                else
+                    accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
+                end
+                mycar.acceleration = accele_ACC;
+            
             else
-                A2 = 0;
+                A1 = mycar.vel(1)/v0;
+                mycar.acceleration = a*(1 - A1^delta);
             end
-            A1 = mycar.vel(1)/v0;
-            mycar.acceleration = a*(1 - A1^delta - A2^2);
             
         end
         
@@ -280,13 +439,37 @@ elseif mycar.flgPlaza == 1 % after entering plaza
         
         if ~isempty(idx_mindist) % IDM following frontcar
             fprintf(1, 'Following car [%d](%d, %d) by IDM\n',idx_mindist, othercars.car{idx_mindist}.pos(1), othercars.car{idx_mindist}.pos(2));
+            A1 = mycar.vel(1)/v0;
             A3 = norm(othercars.car{idx_mindist}.pos(1:2) - mycar.pos(1:2)) - l;
             A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{idx_mindist}.vel(1))/2/sqrt(a*b))/A3;
+            
+            accele_IDM = a*(1 - A1^delta - A2^2);
+            
+            % -----ACC model-----------
+            aLead = 0;  % this value need to be modified !!
+            aLeadRestricted = min(aLead,a);
+            dvp = max(mycar.vel(1) - othercars.car{idx_mindist}.vel(1),0);
+            vLead = othercars.car{idx_mindist}.vel(1);
+            
+            denomCAH = vLead*vLead - 2*A3*aLeadRestricted;
+            
+            if (vLead*dvp < -2*A3*aLeadRestricted)&&(denomCAH~=0)
+                accele_CAH = v*v*aLeadRestricted/denomCAH;
+            else
+                accele_CAH = aLeadRestricted - 0.5*dvp*dvp/max(A3,0.1);
+            end
+            
+            if accele_IDM > accele_CAH
+                accele_ACC = accele_IDM;
+            else
+                accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
+            end
+            mycar.acceleration = accele_ACC;
+            
         else
-            A2 = 0;
+            A1 = mycar.vel(1)/v0;
+            mycar.acceleration = a*(1 - A1^delta);
         end
-        A1 = mycar.vel(1)/v0;
-        mycar.acceleration = a*(1 - A1^delta - A2^2);
         
         if mycar.acceleration < -9800
             fprintf(2, 'mycar(%d, %d) acceleration = [%4d] \n', mycar.pos(1), mycar.pos(2), mycar.acceleration);
@@ -315,7 +498,7 @@ mycar.bd  = get_carshape(mycar.pos, mycar.W, mycar.H);
 
 end
 
-function targetDegree = get_tatgetTheta(pos,path)
+function [targetDegree, idx] = get_tatgetTheta(pos,path)
 
 nData = size(path,1);
 
@@ -365,6 +548,11 @@ trajX = reshape(tmpX',1,[]);
 trajY = reshape(tmpY',1,[]);
 %size(trajX)
 
+if length(trajX)~=length(trajY)
+    trajX = [];
+    trajY = [];
+end
+
 end
 
 function [u,trajDB,evalDB]=DynamicWindowApproach(x,model,goal,evalParam,ob,R,dt)
@@ -376,7 +564,7 @@ Vr=CalcDynamicWindow(x,model,dt);
 [evalDB,trajDB]=Evaluation(x,Vr,goal,ob,R,model,evalParam,dt);
 
 if isempty(evalDB)
-    disp('no path to goal!!');
+    %disp('no path to goal!!');
     u=[0;0];return;
 end
 
@@ -403,7 +591,7 @@ Vr=CalcDynamicWindow(x,model,dt);
 [evalDB,trajDB]=Evaluation(x,Vr,goal,ob,R,model,evalParam,dt);
 
 if isempty(evalDB)
-    disp('no path to goal!!');
+    %disp('no path to goal!!');
     u=[0;0];return;
 end
 
@@ -675,11 +863,30 @@ function [x,traj]=GenerateTrajectory(x,vt,ot,evaldt,model,dt)
 
 time=0;
 u=[vt;ot];%入力値
-traj=x;%軌跡データ
+
+jdata = ceil(evaldt/dt)+1;
+traj  = zeros(5,jdata);
+%traj=x;%軌跡データ
+traj(:,1)=x;%軌跡データ
+
+F = [1 0 0 0 0
+     0 1 0 0 0
+     0 0 1 0 0
+     0 0 0 0 0
+     0 0 0 0 0];
+
+B =[1 0
+    1 0
+    0 dt
+    1 0
+    0 1];
+j = 1;
 while time<=evaldt
     time=time+dt;%シミュレーション時間の更新
-    x=f(x,u,dt);%運動モデルによる推移
-    traj=[traj x];
+    j = j+1;
+    x=f(F,B,x,u,dt);%運動モデルによる推移
+    %traj=[traj x];
+    traj(:,j)= x;
 end
 end
 
@@ -754,23 +961,27 @@ Vr=[max(Vtmp(:,1)) min(Vtmp(:,2)) max(Vtmp(:,3)) min(Vtmp(:,4))];
 %[vmin,vmax,ωmin,ωmax]
 end
 
-function x = f(x, u,dt)
+function x = f(F,B, x, u,dt)
 % Motion Model
  
-F = [1 0 0 0 0
-     0 1 0 0 0
-     0 0 1 0 0
-     0 0 0 0 0
-     0 0 0 0 0];
- 
-B = [dt*cos(x(3)) 0
-    dt*sin(x(3)) 0
-    0 dt
-    1 0
-    0 1];
+% F = [1 0 0 0 0
+%      0 1 0 0 0
+%      0 0 1 0 0
+%      0 0 0 0 0
+%      0 0 0 0 0];
+
+% B = [dt*cos(x(3)) 0
+%     dt*sin(x(3)) 0
+%     0 dt
+%     1 0
+%     0 1];
+
+B(1,1) = dt*cos(x(3));
+B(2,1) = dt*sin(x(3));
 
 x= F*x+B*u;
 end
+
 
 function radian = toRadian(degree)
 % degree to radian
@@ -781,3 +992,4 @@ function degree = toDegree(radian)
 % radian to degree
 degree = radian/pi*180;
 end
+

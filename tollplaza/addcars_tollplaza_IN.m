@@ -2,8 +2,6 @@ function othercars = addcars_tollplaza_IN(othercars, track, nr_cars)
 % ADD CARS IN RANDOM POSTIONS
 VERBOSE = 0;
 
-
-
 for carid = 1:nr_cars
     if carid <= othercars.npl
        laneidx= 1;

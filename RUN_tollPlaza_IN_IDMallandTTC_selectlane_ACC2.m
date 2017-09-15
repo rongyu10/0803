@@ -20,7 +20,7 @@ load('othercars_over3G');
 %---------------
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-140000 5250 0];
+ini_pos    = [-135000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 % SETTING OF TOLL ENTERING
@@ -32,6 +32,8 @@ mycar.front_nr = 0; % carID in front of mycar
 mycar.rear_nr = 0; % carID behind mycar
 mycar.save.lane_idx = mycar.startlane;
 mycar.flgIDM = 0;
+mycar.squareX = zeros(1,21);
+mycar.squareY = zeros(1,21);
 %---------------
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
@@ -83,13 +85,13 @@ while sim.flag && ishandle(fig)
         case {'uparrow', 'leftbracket'}
             % change the goal(target) lane
             %mycar.vel(1) = mycar.vel(1)+5000;
-            if mycar.pos(1) < 100*10^3
+            if mycar.pos(1) < 100*10^3 && mycar.selectlane ~= 1
                 mycar.selectlane = mycar.selectlane - 1;
             end
         case {'downarrow', 'slash'}
             % change the goal(target) lane
             %mycar.vel(1) = mycar.vel(1)-5000;
-            if mycar.pos(1) < 100*10^3
+            if mycar.pos(1) < 100*10^3 && mycar.selectlane ~= 15
                 mycar.selectlane = mycar.selectlane + 1;
             end
         case 'space'
@@ -130,7 +132,7 @@ while sim.flag && ishandle(fig)
             othercars  = respawn_othercars_tollplaza(othercars,road,sim);
             
             % update speed and position of mycar (included merging and IDM)
-            [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_ACC(mycar, sim, othercars, idm, laneChangePath);
+            [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_ACC2(mycar, sim, othercars, idm, laneChangePath);
             
             % update speed and position of othercars (included merging and IDM)
             [othercars, mycar]  = update_control_othercars_mycar_IN_TTCandIDMall_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
@@ -154,10 +156,11 @@ while sim.flag && ishandle(fig)
                 key_pressed = 'p';
                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
                 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
-                
+                mycar.startlane = 3;
                 mycar.selectlane = 8;
                 mycar.front_nr = 0; % carID in front of mycar
                 mycar.rear_nr = 0; % carID behind mycar
+                mycar.save.lane_idx = mycar.startlane;
                 FLAG_LANECHANGE = false;
                 sim.mode = 'QUIT';
                 clear update_control_mycar_merge_intelligent
@@ -165,10 +168,11 @@ while sim.flag && ishandle(fig)
                 fprintf(2, 'OUTSIDE THE TRACK. \n');
                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
                 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
-               
+                mycar.startlane = 3;
                 mycar.selectlane = 8;
                 mycar.front_nr = 0; % carID in front of mycar
                 mycar.rear_nr = 0; % carID behind mycar
+                mycar.save.lane_idx = mycar.startlane;
                 FLAG_LANECHANGE = false;
             end
             %if is_carcrashed(myinfo)
@@ -176,10 +180,11 @@ while sim.flag && ishandle(fig)
                 fprintf(2, 'COLLISION OCCURRED. \n');
                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
                 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
-                
+                mycar.startlane = 3;
                 mycar.selectlane = 8;
                 mycar.front_nr = 0; % carID in front of mycar
                 mycar.rear_nr = 0; % carID behind mycar
+                mycar.save.lane_idx = mycar.startlane;
                 FLAG_LANECHANGE = false;
                 clear update_control_mycar_merge_intelligent
             end

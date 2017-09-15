@@ -1,4 +1,4 @@
-function bd = get_car4point(pos, W, H)
+function bd = get_car_futurepoint(pos, W, H)
 
 x0 = pos(1);
 y0 = pos(2);
@@ -6,18 +6,11 @@ deg = pos(3);
 c = cos(deg*pi/180);
 s = sin(deg*pi/180);
 
-x1 = x0 - W/2*c + H/2*s;
-y1 = y0 - W/2*s - H/2*c;
+x1 = x0 + H/2*s;
+y1 = y0 - H/2*c;
 
-x2 = x0 + W/2*c + H/2*s;
-y2 = y0 + W/2*s - H/2*c;
-
-x3 = x0 + W/2*c - H/2*s;
-y3 = y0 + W/2*s + H/2*c;
-
-x4 = x0 - W/2*c - H/2*s;
-y4 = y0 - W/2*s + H/2*c;
-
+x2 = x0 - H/2*s;
+y2 = y0 + H/2*c;
 
 % gamma = 1;
 % x12c = gamma*x1 + (1-gamma)*x2;
@@ -40,4 +33,4 @@ y4 = y0 - W/2*s + H/2*c;
 % r = sqrt((x2-xc)^2 + (y2-yc)^2);
 % seg = repmat([xc yc], nseg, 1) + r*[cs ss];
 
-bd = [x1 y1 ; x2 y2 ; x3 y3 ; x4 y4 ; x1 y1];
+bd = [x1 y1 ; x2 y2];
