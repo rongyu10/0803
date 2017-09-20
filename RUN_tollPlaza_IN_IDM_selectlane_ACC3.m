@@ -132,7 +132,7 @@ while sim.flag && ishandle(fig)
             othercars  = respawn_othercars_tollplaza(othercars,road,sim);
             
             % update speed and position of mycar (included merging and IDM)
-            [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_ACC3(mycar, sim, othercars, idm, laneChangePath);
+            [mycar, othercars] = update_control_mycar_IN_IDM_norfs_ACC3(mycar, sim, othercars, idm, laneChangePath);
             
             % update speed and position of othercars (included merging and IDM)
             [othercars, mycar]  = update_control_othercars_mycar_IN_TTCandIDMall_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);

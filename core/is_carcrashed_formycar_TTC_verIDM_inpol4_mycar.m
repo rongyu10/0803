@@ -42,7 +42,7 @@ end
 end
 
 
-function [idx_nearCar, idx_frontCar] = get_nearCar(mycar, othercars) % get the number of othercars in front of mycar and getting close to mycar
+function [idx_nearCar, idx_frontCar] = get_nearCar(mycar, othercars) % get the number of othercars in front of mycar and close to mycar
 
 DISTANCE = 30*10^3;     % 30m
 

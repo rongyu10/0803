@@ -1,4 +1,4 @@
-function [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_ACC3(mycar, sim, othercars, idm, laneChangePath)
+function [mycar, othercars] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3(mycar, sim, othercars, idm, laneChangePath)
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -13,7 +13,7 @@ l = idm.l; % vehicle length
 coolness = 0.99;          % coolness facotor
 
 % PARAMETER OF TTC-------------------------------------------
-time_TTC = 5.0;
+time_TTC = 3.0;
 step_TTC = 0.1;
 
 idx_crashcar = [];
@@ -70,23 +70,26 @@ elseif mycar.flgPlaza == 1 % after entering plaza
 end
 
 % estimate crashing othercar and identify approaching othercar in front of mycar----------------------
-[idx_crashcar, t, mycar_posEst, idx_frontCar] = is_carcrashed_formycar_TTC_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar);
+[idx_nearCar, idx_crashcar, t, mycar_posEst] = is_carcrashed_formycar_TTCpre_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar, laneChangePath);
 
-nr_frontCar = length(idx_frontCar);
+
+
+
+nr_nearCar = length(idx_nearCar);
 idx_mindist = [];
 dist_min = 30000;
 % ----------------------------------------------------------------------------------------------------
 
-% make square of detecting area-----
-for i = 0:10
-    mycar.squareX(i+1) = mycar.pos(1) + 3000 * i;
-    mycar.squareX(22-i) = mycar.squareX(i+1);
+% make square of detecting area for IDM-----
+for i = 0:5
+    mycar.squareX(i+1) = mycar.pos(1) + mycar.vel(1)*0.6*i;
+    mycar.squareX(12-i) = mycar.squareX(i+1);
     
     if mycar.squareX(i+1) <= 100*10^3
         mycar.squareY(i+1) = mycar.pos(2) - 2500;
-        mycar.squareY(22-i) = mycar.pos(2) + 2500;
+        mycar.squareY(12-i) = mycar.pos(2) + 2500;
         
-    elseif mycar.squareX(i+1) > 100*10^3 && mycar.squareX(i+1) <= 275*10^3
+    elseif mycar.squareX(i+1) <= 275*10^3
         nData = size(laneChangePath{mycar.selectlane, mycar.save.lane_idx},1);
         for idx = 1:nData
             if mycar.squareX(i+1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1) < 0
@@ -109,27 +112,27 @@ for i = 0:10
         left_right_point = get_car_futurepoint(mycar_posEst_det, mycar.W, 5000);
         mycar.squareX(i+1) = left_right_point(1,1);
         mycar.squareY(i+1) = left_right_point(1,2);
-        mycar.squareX(22-i) = left_right_point(2,1);
-        mycar.squareY(22-i) = left_right_point(2,2);
+        mycar.squareX(12-i) = left_right_point(2,1);
+        mycar.squareY(12-i) = left_right_point(2,2);
         
-    elseif mycar.squareX(i+1) > 275*10^3
+    else
         mycar.squareY(i+1) = (77.5-mycar.selectlane*5.0)*10^3 - 2500;
-        mycar.squareY(22-i) = (77.5-mycar.selectlane*5.0)*10^3 + 2500;
+        mycar.squareY(12-i) = (77.5-mycar.selectlane*5.0)*10^3 + 2500;
         
     end
     
 end
-mycar.squareX(23) = mycar.squareX(1);
-mycar.squareY(23) = mycar.squareY(1);
+mycar.squareX(13) = mycar.squareX(1);
+mycar.squareY(13) = mycar.squareY(1);
 % ----------------------------------
 
 % identify the nearest othercar in the detecting area --------------
-for i = 1:nr_frontCar
-    in = inpolygon(othercars.car{idx_frontCar(i)}.pos(1), othercars.car{idx_frontCar(i)}.pos(2), mycar.squareX, mycar.squareY);
+for i = 1:nr_nearCar
+    in = inpolygon(othercars.car{idx_nearCar(i)}.pos(1), othercars.car{idx_nearCar(i)}.pos(2), mycar.squareX, mycar.squareY);
     if in == 1
-        if norm(mycar.pos(1:2) - othercars.car{idx_frontCar(i)}.pos(1:2)) < dist_min
-            dist_min = norm(mycar.pos(1:2) - othercars.car{idx_frontCar(i)}.pos(1:2));
-            idx_mindist = idx_frontCar(i);
+        if norm(mycar.pos(1:2) - othercars.car{idx_nearCar(i)}.pos(1:2)) < dist_min
+            dist_min = norm(mycar.pos(1:2) - othercars.car{idx_nearCar(i)}.pos(1:2));
+            idx_mindist = idx_nearCar(i);
         end
     end
 end
@@ -137,15 +140,29 @@ end
 
 if ~isempty(idx_crashcar)
     
-    fprintf(1, 'after [%d] seconds, mycar and [%d](%d, %d) collide\n', t, idx_crashcar, othercars.car{idx_crashcar}.pos(1), othercars.car{idx_crashcar}.pos(2));
+    nr_collideCar = length(idx_crashcar);
+    idx_maxDecelerate = [];
+    min_acceleration = 0;
     
-    A3 = norm(mycar_posEst(1:2) - mycar.pos(1:2));
-    if A3 < 4000
-        A3 = 4000;
+    % iterate by number of estimated collision cars (to calculate deceleration by TTC)
+    for i = 1:nr_collideCar
+        fprintf(1, 'after [%d] seconds, mycar and [%d](%d, %d) collide at (%d, %d)\n', t, idx_crashcar, othercars.car{idx_crashcar(i)}.pos(1), othercars.car{idx_crashcar(i)}.pos(2), mycar_posEst(1), mycar_posEst(2));
+        
+        A3 = norm(othercars.car{idx_crashcar(i)}.pos(1:2) - mycar.pos(1:2));
+        if A3 < 4000
+            A3 = 4000;
+        end
+        A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - (othercars.car{idx_crashcar(i)}.vel(1)*cos((othercars.car{idx_crashcar(i)}.pos(3)-mycar.pos(3))*pi/180)))/2/sqrt(a*b))/A3;
+        A1 = mycar.vel(1)/v0;
+        cur_acceleration = a*(1 - A1^delta - A2^2);
+        
+        if cur_acceleration < min_acceleration
+            mycar.acceleration = cur_acceleration;
+            idx_maxDecelerate = idx_crashcar(i);
+            fprintf(1, 'my car decelerate by othercar[%d]\n', idx_maxDecelerate);
+        end
     end
-    A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - (othercars.car{idx_crashcar}.vel(1)*cos((othercars.car{idx_crashcar}.pos(3)-mycar.pos(3))*pi/180)))/2/sqrt(a*b))/A3;
-    A1 = mycar.vel(1)/v0;
-    mycar.acceleration = a*(1 - A1^delta - A2^2);
+    
     
     if ~isempty(idx_mindist) % IDM following frontcar in the observing box
         fprintf(1, 'Following car [%d](%d, %d) by IDM\n',idx_mindist, othercars.car{idx_mindist}.pos(1), othercars.car{idx_mindist}.pos(2));

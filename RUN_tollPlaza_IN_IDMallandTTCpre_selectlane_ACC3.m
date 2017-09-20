@@ -32,8 +32,8 @@ mycar.front_nr = 0; % carID in front of mycar
 mycar.rear_nr = 0; % carID behind mycar
 mycar.save.lane_idx = mycar.startlane;
 mycar.flgIDM = 0;
-mycar.squareX = zeros(1,21);
-mycar.squareY = zeros(1,21);
+mycar.squareX = zeros(1,13);
+mycar.squareY = zeros(1,13);
 %---------------
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
@@ -132,7 +132,7 @@ while sim.flag && ishandle(fig)
             othercars  = respawn_othercars_tollplaza(othercars,road,sim);
             
             % update speed and position of mycar (included merging and IDM)
-            [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_ACC3(mycar, sim, othercars, idm, laneChangePath);
+            [mycar, othercars] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3(mycar, sim, othercars, idm, laneChangePath);
             
             % update speed and position of othercars (included merging and IDM)
             [othercars, mycar]  = update_control_othercars_mycar_IN_TTCandIDMall_manual(othercars, sim, mycar, idm, laneChangePath, lengthP, FLAG_LANECHANGE);
@@ -225,6 +225,8 @@ while sim.flag && ishandle(fig)
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
     plot_mycar_path_in_plaza(laneChangePath, mycar);
     plot_mycar_detecting_area(mycar);
+    %plot_mycar_TTC_detecting_area(est_squareX, est_squareY);
+    
     %----
     plot_title(titlestr, titlecol, titlefontsize);
     drawnow;

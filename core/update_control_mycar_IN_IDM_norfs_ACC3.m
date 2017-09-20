@@ -1,4 +1,4 @@
-function [mycar, othercars] = update_control_mycar_IN_IDMallandTTC_norfs_ACC3(mycar, sim, othercars, idm, laneChangePath)
+function [mycar, othercars] = update_control_mycar_IN_IDM_norfs_ACC3(mycar, sim, othercars, idm, laneChangePath)
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -175,11 +175,13 @@ if ~isempty(idx_crashcar)
         end
         
         if accele_ACC < mycar.acceleration
-            mycar.acceleration = accele_ACC;
             fprintf(1, 'calculated by IDM is larger deceleration\n');
         else
             fprintf(2, 'calculated by TTC is larger deceleration\n');
         end
+        mycar.acceleration = accele_ACC;
+    else
+        mycar.acceleration = 0;
     end
     
 else

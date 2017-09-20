@@ -13,7 +13,7 @@ car_traj = zeros(pred_hor, 3);
 car_trajbd = cell(pred_hor, 1);
 for i = 1:pred_hor
     for j = 1:2
-        mycar.postemp  = update_pos(mycar.postemp, mycar.vel, 0.1);
+        mycar.postemp  = update_pos(mycar.postemp, mycar.vel, 0.25);
     end
     car_traj(i, :) = mycar.postemp;
     rate           = 0.8;
