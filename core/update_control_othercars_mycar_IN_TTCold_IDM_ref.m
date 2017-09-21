@@ -1,4 +1,4 @@
-function [othercars, table_same_lane] = update_control_othercars_mycar_IN_TTCandIDMall_manual_ref(othercars, sim, mycar, idm, laneChangePath, table_same_lane)
+function [othercars, table_same_lane] = update_control_othercars_mycar_IN_TTCold_IDM_ref(othercars, sim, mycar, idm, laneChangePath, table_same_lane)
 
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
@@ -118,25 +118,21 @@ for i = 1:othercars.n
                 othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
                 
             else
-                if i == mycar.rear_nr % IDM following mycar
+                other_front_nr = find(table_same_lane(othercars.car{i}.goallane,:) == i) - 1;
+                
+                if other_front_nr == 0 % if following nocar
+                    A2 = 0;
+                elseif table_same_lane(othercars.car{i}.goallane,other_front_nr) == -1 % if following mycar
                     A3 = norm(mycar.pos(1:2) - othercars.car{i}.pos(1:2)) - l;
-                    A1 = othercars.car{i}.vel(1)/v0;
                     A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
-                    
-                    othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
-                    
-                else  % IDM following othercars
-                    other_front_nr = find(table_same_lane(othercars.car{i}.goallane,:) == i) - 1;
-                    
-                    if i ~= table_same_lane(othercars.car{i}.goallane,1) % IDM following frontcar
-                        A3 = norm(othercars.car{table_same_lane(othercars.car{i}.goallane,other_front_nr)}.pos(1:2) - othercars.car{i}.pos(1:2)) - l;
-                        A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{table_same_lane(othercars.car{i}.goallane,other_front_nr)}.vel(1))/2/sqrt(a*b))/A3;
-                    else
-                        A2 = 0;
-                    end
-                    A1 = othercars.car{i}.vel(1)/v0;
-                    othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
+                else % if following othercars
+                    A3 = norm(othercars.car{table_same_lane(othercars.car{i}.goallane,other_front_nr)}.pos(1:2) - othercars.car{i}.pos(1:2)) - l;
+                    A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - othercars.car{table_same_lane(othercars.car{i}.goallane,other_front_nr)}.vel(1))/2/sqrt(a*b))/A3;
                 end
+                    
+                A1 = othercars.car{i}.vel(1)/v0;
+                othercars.car{i}.acceleration = a*(1 - A1^delta - A2^2);
+
             end
         end
     end

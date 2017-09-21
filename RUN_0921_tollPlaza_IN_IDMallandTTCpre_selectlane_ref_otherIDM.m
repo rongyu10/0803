@@ -15,12 +15,13 @@ othercars  = init_othercars();
 nr_cars    = 46; % total number of cars (1st:20cars, 2nd:6cars, 3rd:20cars)
 othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
 othercars  = addcars_tollplaza_IN_cross1lane(othercars, road.track{1}, nr_cars);
-%load('othercars_compareTTC');
+%load('othercars_0921');
 
 %---------------
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
 ini_pos    = [-123000 5250 0];
+%ini_pos    = [-123000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 % SETTING OF TOLL ENTERING
@@ -133,11 +134,14 @@ while sim.flag && ishandle(fig)
             sim        = update_sim(sim);
             [othercars, table_same_lane]  = respawn_othercars_tollplaza(othercars,road,table_same_lane);
             
+            
+            % update speed and position of othercars
+            [othercars, table_same_lane]  = update_control_othercars_mycar_IN_TTColdandIDM_IDM_ref(othercars, sim, mycar, idm, laneChangePath, table_same_lane);
+            
+            
             % update speed and position of mycar
             [mycar, table_same_lane] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3_ref(mycar, sim, othercars, idm, laneChangePath, table_same_lane);
             
-            % update speed and position of othercars
-            [othercars, table_same_lane]  = update_control_othercars_mycar_IN_TTCandIDMall_manual_ref(othercars, sim, mycar, idm, laneChangePath, table_same_lane);
             
             myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
             ms_update  = etime(clock, clk_update)*1000;
@@ -202,7 +206,7 @@ while sim.flag && ishandle(fig)
     FILL_LANES           = 1; % 1
     SIMPLECARSHAPE       = 1; % 0(描画処理が重い場合は SIMPLECARSHAPE=1, REALCARSHAPE=0とする)
     REALCARSHAPE         = 0; % 1 
-    PLOT_FUTURE_CARPOSES = 1; % 1
+    PLOT_FUTURE_CARPOSES = 0; % 1
     PLOT_CAR_PATHS       = 0; % 1
     PLOT_RFS             = 0; % 1
     strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ' ...
@@ -226,7 +230,7 @@ while sim.flag && ishandle(fig)
     plot_othercars(othercars, SIMPLECARSHAPE, REALCARSHAPE);
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
     plot_mycar_path_in_plaza(laneChangePath, mycar);
-    plot_mycar_detecting_area(mycar);
+    %plot_mycar_detecting_area(mycar);
     %plot_mycar_TTC_detecting_area(est_squareX, est_squareY);
     
     %----

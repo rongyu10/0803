@@ -8,7 +8,7 @@ iclk = clock;
 
 if first_flag
     first_flag = false;
-    h.path = plot(laneChangePath{mycar.selectlane, mycar.save.lane_idx}(:,1), laneChangePath{mycar.selectlane, mycar.save.lane_idx}(:,2), ':c', 'LineWidth', 1);   
+    h.path = plot(laneChangePath{mycar.selectlane, mycar.save.lane_idx}(:,1), laneChangePath{mycar.selectlane, mycar.save.lane_idx}(:,2), ':c', 'LineWidth', 10);   
 else
     h.path.XData = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(:,1);
     h.path.YData = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(:,2);

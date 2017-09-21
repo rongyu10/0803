@@ -18,10 +18,10 @@ else
             mycar_posEst(2) = mycar.pos(2);
             
         elseif mycar_posEst(1) <= 275*10^3
-            nData = size(laneChangePath{mycar.selectlane, mycar.save.lane_idx},1);
-            for idx = 1:nData
-                if mycar_posEst(1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1) < 0
-                    mycar_posEst(2) = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,2);
+            %nData = size(laneChangePath{mycar.selectlane, mycar.save.lane_idx},1);
+            for idx_me = 1:5:201
+                if mycar_posEst(1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx_me,1) < 0
+                    mycar_posEst(2) = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx_me,2);
                     break;
                 end
             end
@@ -32,7 +32,7 @@ else
         end
         
         
-        % make square of detecting area for IDM-----
+        % make square of detecting area for IDM(TTCver)-----
         est_squareX = zeros(1,13);
         est_squareY = zeros(1,13);
         for i = 0:5
@@ -44,14 +44,29 @@ else
                 est_squareY(12-i) = mycar_posEst(2) + 2500;
                 
             elseif est_squareX(i+1) <= 275*10^3
-                nData = size(laneChangePath{mycar.selectlane, mycar.save.lane_idx},1);
-                for idx = 1:nData
-                    if est_squareX(i+1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1) < 0
-                        break;
+                %nData = size(laneChangePath{mycar.selectlane, mycar.save.lane_idx},1);
+                if i ~= 5
+                    for idx = 1:20:201
+                        if est_squareX(i+1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1) < 0
+                            break;
+                        end
+                    end
+                elseif i == 0
+                    est_squareX(i+1) = mycar_posEst(1);
+                    est_squareX(12-i) = mycar_posEst(1);
+                    est_squareY(i+1) = mycar_posEst(2);
+                    est_squareY(12-i) = mycar_posEst(2);
+                    idx = idx_me;
+                else
+                    for idx = 1:5:201
+                        if est_squareX(i+1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1) < 0
+                            break;
+                        end
                     end
                 end
+                    
                 
-                if idx~=nData
+                if idx~=201
                     vx= laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx+1,1)-laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1);
                     vy= laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx+1,2)-laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,2);
                 else

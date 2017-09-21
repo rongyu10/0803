@@ -1,4 +1,4 @@
-function bd = get_car4point(pos, W, H)
+function bd = get_car4point_test(pos, W, H,bd)
 
 x0 = pos(1);
 y0 = pos(2);
@@ -40,7 +40,7 @@ y4 = y0 - W/2*s + H/2*c;
 % r = sqrt((x2-xc)^2 + (y2-yc)^2);
 % seg = repmat([xc yc], nseg, 1) + r*[cs ss];
 
-bd      = zeros(5,2);
+%bd      = zeros(5,2);
 bd(1,:) =[x1 y1];
 bd(2,:) =[x2 y2];
 bd(3,:) =[x3 y3];

@@ -1,8 +1,8 @@
-function [idx_crashcar, t_crashcar, pos_crashcar] = is_carcrashed_TTC_verIDM_widecar_4point_mycar2circle(othercars, idx, time_TTC, step_TTC, mycar)
+function [idx_nearCar, idx_crashcar, t_crashcar, pos_crashcar, est_mycar] = is_carcrashed_TTC_verIDM_widecar_4point_mycar2circle(othercars, idx, time_TTC, step_TTC, mycar)
 
-idx_nearCar = get_nearCar(othercars,idx);
-est_mycar = get_nearMyCar(mycar.pos, othercars.car{idx}.pos);
-idx_crashcar = []; % 0:mycar 1~:number of othercar
+idx_nearCar = get_nearCar(othercars,idx); % (multiple number of cars in this)
+est_mycar = get_nearMyCar(mycar, othercars, idx);
+idx_crashcar = []; % 0:mycar 1~:number of othercar (only 1 car in this)
 t_crashcar = [];
 pos_crashcar = [];
 
@@ -83,12 +83,18 @@ end
 
 end
 
-function est_mycar = get_nearMyCar(MycarPos, OthercarPos)
+function est_mycar = get_nearMyCar(mycar, othercars, idx)
 
 est_mycar = [];
-DISTANCE = 20*10^3;     % 30m
+DISTANCE = othercars.car{idx}.vel(1)*3;
 
-diff= OthercarPos(1:2) - MycarPos(1:2);
+if othercars.car{idx}.pos(1) > mycar.pos(1)
+    return
+end
+
+pos = othercars.car{idx}.pos(1:2);
+diff= pos - mycar.pos(1:2);
+
 if norm(diff) < DISTANCE
     est_mycar = true;
 end
@@ -97,7 +103,7 @@ end
 
 function idx_nearCar = get_nearCar(othercars,idx) % get the number of othercars in front of mycar and getting close to object car
 
-DISTANCE = 20*10^3;     % 30m
+DISTANCE = othercars.car{idx}.vel(1)*3;
 
 mycar_pos = othercars.car{idx}.pos(1:2);
 nr_cars = othercars.n;
@@ -111,17 +117,26 @@ for i=1:nr_cars
     if othercars.car{idx}.pos(1) > othercars.car{i}.pos(1)
         continue
     end
+%     
+%     if (othercars.car{idx}.pos(2) - othercars.car{i}.pos(2)) * (othercars.car{idx}.pos(3) - othercars.car{i}.pos(3)) > 0 && (othercars.car{idx}.goallane ~= othercars.car{i}.goallane) % if both cars head to opposite direction(eliminate same goallane)
+%         continue
+%     end
+% 
+%     pos = othercars.car{i}.pos(1:2);
+%     diff= pos - mycar_pos;
+%     if norm(diff) < DISTANCE
+%       idx_nearCar= [idx_nearCar;i];
+%     end
     
-    if (othercars.car{idx}.pos(2) - othercars.car{i}.pos(2)) * (othercars.car{idx}.pos(3) - othercars.car{i}.pos(3)) > 0 && (othercars.car{idx}.goallane ~= othercars.car{i}.goallane) % if both cars head to opposite direction(eliminate same goallane)
-        continue
+    if abs(othercars.car{idx}.pos(1)-othercars.car{i}.pos(1)) < DISTANCE
+        pos = othercars.car{i}.pos(1:2);
+        diff= pos - mycar_pos;
+        
+        if norm(diff) < DISTANCE
+            idx_nearCar= [idx_nearCar;i];
+        end
     end
-
     
-    pos = othercars.car{i}.pos(1:2);
-    diff= pos - mycar_pos;
-    if norm(diff) < DISTANCE
-      idx_nearCar= [idx_nearCar;i];
-    end
 end
 
 end
