@@ -8,13 +8,13 @@ addpath(genpath('./intelligentDriverModel'))
 addpath(genpath('./turnSignal'))
 %--- set simulation
 road      = init_road_tollplaza_IN();
-sim       = init_sim(0.1); % dt = 0.02 [sec]
+sim       = init_sim(0.15); % dt = 0.02 [sec]
 %------------------
 %--- set othercars
 othercars  = init_othercars();
 nr_cars    = 46; % total number of cars (1st:20cars, 2nd:6cars, 3rd:20cars)
 othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
-othercars  = addcars_tollplaza_IN_cross1lane(othercars, road.track{1}, nr_cars);
+othercars  = addcars_tollplaza_IN(othercars, road.track{1}, nr_cars);
 %load('othercars_0921');
 
 %---------------
@@ -206,7 +206,7 @@ while sim.flag && ishandle(fig)
     FILL_LANES           = 1; % 1
     SIMPLECARSHAPE       = 1; % 0(描画処理が重い場合は SIMPLECARSHAPE=1, REALCARSHAPE=0とする)
     REALCARSHAPE         = 0; % 1 
-    PLOT_FUTURE_CARPOSES = 0; % 1
+    PLOT_FUTURE_CARPOSES = 1; % 1
     PLOT_CAR_PATHS       = 0; % 1
     PLOT_RFS             = 0; % 1
     strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ' ...
@@ -230,7 +230,7 @@ while sim.flag && ishandle(fig)
     plot_othercars(othercars, SIMPLECARSHAPE, REALCARSHAPE);
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
     plot_mycar_path_in_plaza(laneChangePath, mycar);
-    %plot_mycar_detecting_area(mycar);
+    plot_mycar_detecting_area(mycar);
     %plot_mycar_TTC_detecting_area(est_squareX, est_squareY);
     
     %----
