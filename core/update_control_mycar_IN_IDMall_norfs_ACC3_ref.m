@@ -1,5 +1,4 @@
-function [mycar, table_same_lane] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3_ref(mycar, sim, othercars, idm, laneChangePath, table_same_lane)
-
+function [mycar, table_same_lane] = update_control_mycar_IN_IDMall_norfs_ACC3_ref(mycar, sim, othercars, idm, laneChangePath, table_same_lane)
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
 v0 = idm.v0; % desired velocity
@@ -75,7 +74,7 @@ end
 [idx_nearCar, idx_crashcar, t, mycar_posEst] = is_carcrashed_formycar_TTCpre_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar, laneChangePath);
 
 
-
+idx_crashcar = [];
 
 nr_nearCar = length(idx_nearCar);
 idx_mindist = [];
@@ -179,10 +178,9 @@ if ~isempty(idx_crashcar)
         if cur_acceleration < min_acceleration
             mycar.acceleration = cur_acceleration;
             idx_maxDecelerate = idx_crashcar(i);
-            
+            %fprintf(1, 'my car decelerate by othercar[%d]\n', idx_maxDecelerate);
         end
     end
-    %fprintf(1, 'my car decelerate by othercar[%d]\n', idx_maxDecelerate);
     
     
     if ~isempty(idx_mindist) % IDM following frontcar in the observing box

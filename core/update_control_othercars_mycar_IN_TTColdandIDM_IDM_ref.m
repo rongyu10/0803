@@ -158,9 +158,9 @@ for i = 1:othercars.n
                 
                 if accele_ACC < othercars.car{i}.acceleration
                     othercars.car{i}.acceleration = accele_ACC;
-                    fprintf(1, 'CAR[%d]: calculated by IDM to [%d] is larger deceleration\n', i, idx_mindist);
+                    %fprintf(1, 'CAR[%d]: calculated by IDM to [%d] is larger deceleration\n', i, idx_mindist);
                 else
-                    fprintf(1, 'CAR[%d]: calculated by TTC to [%d] is larger deceleration\n', i, idx_crashcar);
+                    %fprintf(1, 'CAR[%d]: calculated by TTC to [%d] is larger deceleration\n', i, idx_crashcar);
                 end
             end
             
@@ -207,7 +207,7 @@ for i = 1:othercars.n
                 
                 othercars.car{i}.acceleration = accele_ACC;
                 
-                fprintf(1, 'CAR[%d]: calculated by IDM to [%d] only\n', i, idx_mindist);
+                %fprintf(1, 'CAR[%d]: calculated by IDM to [%d] only\n', i, idx_mindist);
             else
                 A1 = othercars.car{i}.vel(1)/v0;
                 othercars.car{i}.acceleration = a*(1 - A1^delta);
@@ -362,9 +362,9 @@ for i = 1:othercars.n
                     
                     if accele_ACC < othercars.car{i}.acceleration
                         othercars.car{i}.acceleration = accele_ACC;
-                        fprintf(1, 'CAR[%d]: calculated by IDM to [%d] is larger deceleration\n', i, idx_mindist);
+                        %fprintf(1, 'CAR[%d]: calculated by IDM to [%d] is larger deceleration\n', i, idx_mindist);
                     else
-                        fprintf(1, 'CAR[%d]: calculated by TTC to [%d] is larger deceleration\n', i, idx_crashcar);
+                        %fprintf(1, 'CAR[%d]: calculated by TTC to [%d] is larger deceleration\n', i, idx_crashcar);
                     end
                     
                     
@@ -415,7 +415,7 @@ for i = 1:othercars.n
                     othercars.car{i}.acceleration = accele_ACC;
                     
                     
-                    fprintf(1, 'CAR[%d]: calculated by IDM to [%d] only\n', i, idx_mindist);
+                    %fprintf(1, 'CAR[%d]: calculated by IDM to [%d] only\n', i, idx_mindist);
                     
                     
                 else

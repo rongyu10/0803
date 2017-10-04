@@ -73,6 +73,7 @@ end
 % MAKE TABLE OF GOING SAME TOLL LANE
 table_same_lane = zeros(15,15);
 
+plot_mycardec = zeros(200);
 
 % RUN
 % INITIALIZE SAVER
@@ -140,8 +141,7 @@ while sim.flag && ishandle(fig)
             
             
             % update speed and position of mycar
-            [mycar, table_same_lane] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3_ref(mycar, sim, othercars, idm, laneChangePath, table_same_lane);
-            
+            [mycar, table_same_lane] = update_control_mycar_IN_IDMall_norfs_ACC3_ref(mycar, sim, othercars, idm, laneChangePath, table_same_lane);
             
             
             myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
