@@ -12,7 +12,7 @@ l = idm.l; % vehicle length
 %============================================================
 
 % PARAMETER OF TTC-------------------------------------------
-time_TTC = 3.0;
+time_TTC = 4.0;
 step_TTC = 0.1;
 
 coolness = 0.99;          % coolness facotor
@@ -229,7 +229,7 @@ for i = 1:othercars.n
         othercars.car{i}.pos(3) = targetDegree;
         
         if othercars.car{i}.pos(1) < 187.5*10^3
-            v0 = 12500;
+            v0 = 15000;
             [idx_nearCar, idx_crashcar, t, mycar_posEst, est_mycar] = is_carcrashed_TTC_verIDM_widecar_4point_mycar2circle(othercars, i, time_TTC, step_TTC, mycar);
             
             squareX = zeros(1,13);
@@ -426,7 +426,7 @@ for i = 1:othercars.n
             end
             
         elseif othercars.car{i}.pos(1) < 320*10^3 
-            v0 = 10000;
+            v0 = 12500;
             if othercars.car{i}.flgIDM == 0
                 
                 % set the index number among the same target lane

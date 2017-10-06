@@ -14,7 +14,7 @@ sim       = init_sim(0.10); % dt = 0.02 [sec]
 othercars  = init_othercars();
 nr_cars    = 46; % total number of cars (1st:20cars, 2nd:6cars, 3rd:20cars)
 othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
-othercars  = addcars_tollplaza_IN_cross1lane(othercars, road.track{1}, nr_cars);
+othercars  = addcars_tollplaza_IN_cross1lane2(othercars, road.track{1}, nr_cars);
 %load('othercars_0921');
 
 %---------------
@@ -73,6 +73,8 @@ end
 % MAKE TABLE OF GOING SAME TOLL LANE
 table_same_lane = zeros(15,15);
 
+plot_mycardec = [];
+time_plot_mycardec = 0;
 
 % RUN
 % INITIALIZE SAVER
@@ -142,7 +144,10 @@ while sim.flag && ishandle(fig)
             % update speed and position of mycar
             [mycar, table_same_lane] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3_ref(mycar, sim, othercars, idm, laneChangePath, table_same_lane);
             
-            
+            if mycar.pos(1) > 0 && time_plot_mycardec < 15
+                plot_mycardec = [plot_mycardec; time_plot_mycardec mycar.vel(1)/1000 mycar.acceleration/1000];
+                time_plot_mycardec = time_plot_mycardec + 0.1;
+            end
             
             myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
             ms_update  = etime(clock, clk_update)*1000;
@@ -210,19 +215,19 @@ while sim.flag && ishandle(fig)
     PLOT_FUTURE_CARPOSES = 1; % 1
     PLOT_CAR_PATHS       = 0; % 1
     PLOT_RFS             = 0; % 1
-    strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ' ...
-        '[VEL: %.1fKM/H %.1fDEG/S] \n' ...
-        '[%dSEG-%dLANE] / [LANE-DEV DIST:%.1fMM DEG:%.1fDEG] \n' ...
-        '[LEFT:%.2fM-CENTER:%.2fM-RIGHT:%.2fM]\n' ...
-        '[#SAVE: %d]'];
-    titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot ...
-        , mycar.vel(1)/10000*36, mycar.vel(2) ...
-        , myinfo.seg_idx, myinfo.lane_idx, myinfo.lane_dev, myinfo.deg ...
-        , myinfo.left_fb_dists(1)/1000, myinfo.center_fb_dists(1)/1000 ...
-        , myinfo.right_fb_dists(1)/1000 ...
-        , traj.data.n);
-%     strtemp = '[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ';
-%     titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot);
+%     strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ' ...
+%         '[VEL: %.1fKM/H %.1fDEG/S] \n' ...
+%         '[%dSEG-%dLANE] / [LANE-DEV DIST:%.1fMM DEG:%.1fDEG] \n' ...
+%         '[LEFT:%.2fM-CENTER:%.2fM-RIGHT:%.2fM]\n' ...
+%         '[#SAVE: %d]'];
+%     titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot ...
+%         , mycar.vel(1)/10000*36, mycar.vel(2) ...
+%         , myinfo.seg_idx, myinfo.lane_idx, myinfo.lane_dev, myinfo.deg ...
+%         , myinfo.left_fb_dists(1)/1000, myinfo.center_fb_dists(1)/1000 ...
+%         , myinfo.right_fb_dists(1)/1000 ...
+%         , traj.data.n);
+    strtemp = '[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ';
+    titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot);
     titlefontsize = get_fontsize();
     
     axisinfo = plot_track_tollplaza(road, FILL_LANES);

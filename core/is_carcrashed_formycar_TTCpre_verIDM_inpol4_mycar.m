@@ -1,15 +1,16 @@
-function [idx_nearCar, idx_crashcar, t_crashcar, pos_crashcar] = is_carcrashed_formycar_TTCpre_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar, laneChangePath)
+function [idx_nearCar, idx_crashcar, t_crashcar, pos_crashcar, pos_crashcar_other] = is_carcrashed_formycar_TTCpre_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar, laneChangePath)
 
 
 idx_nearCar = get_nearCar(mycar, othercars);
 idx_crashcar = []; % 0:mycar 1~:number of othercar
 t_crashcar = [];
 pos_crashcar = [];
+pos_crashcar_other = [];
 
 if isempty(idx_nearCar)
     return
 else
-    
+    clk_TTC = clock;
     for t = 0:step_TTC:time_TTC
         
         mycar_posEst(1) = mycar.pos(1) + mycar.vel(1)*t;
@@ -109,11 +110,14 @@ else
                 idx_crashcar = [idx_crashcar;idx_nearCar(i)];
                 t_crashcar = [t_crashcar;t];
                 pos_crashcar = [pos_crashcar;mycar_posEst];
+                pos_crashcar_other = [pos_crashcar_other; othercars_posEst];
             end
             %----
         end
         
     end
+    ms_TTC  = etime(clock, clk_TTC)*1000;
+    %fprintf(2, 'TTC calculating = [%d]msec\n', ms_TTC);
 end
 
 end

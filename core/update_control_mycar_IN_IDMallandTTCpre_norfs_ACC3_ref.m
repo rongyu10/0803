@@ -46,13 +46,10 @@ elseif mycar.flgPlaza == 1 % after entering plaza
     mycar.pos(3) = mycar.targetDegree;
     
     if mycar.pos(1) < 187.5*10^3
-        v0 = 12500;
-        
-        
-        
-        
+        v0 = 15000;
+
     elseif mycar.pos(1) < 275*10^3
-        v0 = 10000;
+        v0 = 12500;
         if mycar.flgIDM == 0
             
             % set the index number among the same target lane
@@ -66,13 +63,15 @@ elseif mycar.flgPlaza == 1 % after entering plaza
         end
         
     elseif mycar.pos(1) < 320*10^3
-        v0 = 7500;
+        v0 = 10000;
     end
     
 end
 
+
+
 % estimate crashing othercar and identify approaching othercar in front of mycar----------------------
-[idx_nearCar, idx_crashcar, t, mycar_posEst] = is_carcrashed_formycar_TTCpre_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar, laneChangePath);
+[idx_nearCar, idx_crashcar, t, mycar_posEst, othercar_posEst] = is_carcrashed_formycar_TTCpre_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar, laneChangePath);
 
 
 
@@ -162,24 +161,29 @@ if ~isempty(idx_crashcar)
     
     nr_collideCar = length(idx_crashcar);
     idx_maxDecelerate = [];
+    t_maxDecelerate = [];
     min_acceleration = 0;
     
     % iterate by number of estimated collision cars (to calculate deceleration by TTC)
     for i = 1:nr_collideCar
         %fprintf(1, 'after [%d] seconds, mycar and [%d](%d, %d) collide at (%d, %d)\n', t, idx_crashcar, othercars.car{idx_crashcar(i)}.pos(1), othercars.car{idx_crashcar(i)}.pos(2), mycar_posEst(1), mycar_posEst(2));
         
-        A3 = norm(othercars.car{idx_crashcar(i)}.pos(1:2) - mycar.pos(1:2));
-        if A3 < 4000
-            A3 = 4000;
+        %A3 = norm(othercars.car{idx_crashcar(i)}.pos(1:2) - mycar.pos(1:2));
+        othercar_posEst_i = othercar_posEst(i,:);
+        A3_TTC = norm(othercar_posEst_i(1:2) - mycar.pos(1:2)) - l;
+        if A3_TTC < 4000
+            A3_TTC = 4000;
         end
-        A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - (othercars.car{idx_crashcar(i)}.vel(1)*cos((othercars.car{idx_crashcar(i)}.pos(3)-mycar.pos(3))*pi/180)))/2/sqrt(a*b))/A3;
+        %A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - (othercars.car{idx_crashcar(i)}.vel(1)*cos((othercars.car{idx_crashcar(i)}.pos(3)-mycar.pos(3))*pi/180)))/2/sqrt(a*b))/A3_TTC;
+        A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * mycar.vel(1)/2/sqrt(a*b))/A3_TTC;
+        
         A1 = mycar.vel(1)/v0;
         cur_acceleration = a*(1 - A1^delta - A2^2);
         
         if cur_acceleration < min_acceleration
             mycar.acceleration = cur_acceleration;
             idx_maxDecelerate = idx_crashcar(i);
-            
+            t_maxDecelerate = t(i);
         end
     end
     %fprintf(1, 'my car decelerate by othercar[%d]\n', idx_maxDecelerate);
@@ -214,12 +218,12 @@ if ~isempty(idx_crashcar)
         
         if accele_ACC < mycar.acceleration
             mycar.acceleration = accele_ACC;
-            fprintf(1, 'calculated by IDM is larger deceleration\n');
+            fprintf(1, 'calculated by IDM is larger deceleration to car [%d] (distance = [%d])\n', idx_mindist, A3);
         else
-            fprintf(1, 'calculated by TTC is larger deceleration\n');
+            fprintf(1, 'calculated by TTC(in [%d] second) is larger deceleration to car [%d] (distance = [%d]). Frontcarpos of IDM is [%d, %d].\n', t_maxDecelerate, idx_maxDecelerate, A3_TTC, othercar_posEst_i(1), othercar_posEst_i(2));
         end
     else
-        fprintf(1, 'calculated by only TTC\n');
+        fprintf(1, 'calculated by only TTC(in [%d] second) to car [%d] (distance = [%d]). Frontcarpos of IDM is [%d, %d].\n',t_maxDecelerate, idx_maxDecelerate, A3_TTC, othercar_posEst_i(1), othercar_posEst_i(2));
     end
     
 else
@@ -251,7 +255,7 @@ else
             accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
         end
         mycar.acceleration = accele_ACC;
-        fprintf(1, 'calculated by only IDM\n');
+        fprintf(1, 'calculated by only IDM to car [%d] (distance = [%d])\n', idx_mindist, A3);
     else
         A1 = mycar.vel(1)/v0;
         mycar.acceleration = a*(1 - A1^delta);
@@ -273,7 +277,7 @@ end
 mycar.pos = update_pos(mycar.pos, mycar.vel, sim.T);
 mycar.bd  = get_carshape(mycar.pos, mycar.W, mycar.H);
 
-if mycar.acceleration < -4900
+if mycar.acceleration < -2940
     fprintf(2, 'mycar(%d, %d) acceleration = [%4d] \n', mycar.pos(1), mycar.pos(2), mycar.acceleration);
     %mycar.acceleration = -9800;
 else
