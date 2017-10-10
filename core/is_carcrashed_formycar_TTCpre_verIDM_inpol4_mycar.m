@@ -11,33 +11,35 @@ if isempty(idx_nearCar)
     return
 else
     clk_TTC = clock;
+    
+
+    
     for t = 0:step_TTC:time_TTC
         
         mycar_posEst(1) = mycar.pos(1) + mycar.vel(1)*t;
         
         if mycar_posEst(1) <= 100*10^3
             mycar_posEst(2) = mycar.pos(2);
-            
         elseif mycar_posEst(1) <= 275*10^3
             %nData = size(laneChangePath{mycar.selectlane, mycar.save.lane_idx},1);
-            for idx_me = 1:5:201
+            for idx_me = 1:201
                 if mycar_posEst(1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx_me,1) < 0
+                    mycar_posEst(1) = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx_me,1);
                     mycar_posEst(2) = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx_me,2);
                     break;
                 end
             end
-            
         else
             mycar_posEst(2) = (77.5-mycar.selectlane*5.0)*10^3;
-            
         end
         
         
-        % make square of detecting area for IDM(TTCver)-----
+        % make square of detecting area for IDM(TTCver)-----------------------------------
         est_squareX = zeros(1,13);
         est_squareY = zeros(1,13);
+        
         for i = 0:5
-            est_squareX(i+1) = mycar_posEst(1) - 4000 + mycar.vel(1)*0.6*i;
+            est_squareX(i+1) = mycar_posEst(1) + mycar.vel(1)*0.6*i;
             est_squareX(12-i) = est_squareX(i+1);
             
             if est_squareX(i+1) <= 100*10^3
@@ -45,14 +47,8 @@ else
                 est_squareY(12-i) = mycar_posEst(2) + 2500;
                 
             elseif est_squareX(i+1) <= 275*10^3
-                %nData = size(laneChangePath{mycar.selectlane, mycar.save.lane_idx},1);
-                if i ~= 5
-                    for idx = 1:20:201
-                        if est_squareX(i+1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1) < 0
-                            break;
-                        end
-                    end
-                elseif i == 0
+                
+                if i == 0
                     est_squareX(i+1) = mycar_posEst(1);
                     est_squareX(12-i) = mycar_posEst(1);
                     est_squareY(i+1) = mycar_posEst(2);
@@ -65,7 +61,7 @@ else
                         end
                     end
                 end
-                    
+                
                 
                 if idx~=201
                     vx= laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx+1,1)-laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1);
@@ -75,10 +71,12 @@ else
                     vy= laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,2)-laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx-1,2);
                 end
                 
+                %calculate the center point of the red rectangle
                 mycar_posEst_det(1) = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1);
                 mycar_posEst_det(2) = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,2);
                 mycar_posEst_det(3) = atan(vy/vx)*180/pi;
                 
+                %calculate point of the red rectangle from the center point
                 left_right_point = get_car_futurepoint(mycar_posEst_det, mycar.W, 5000);
                 est_squareX(i+1) = left_right_point(1,1);
                 est_squareY(i+1) = left_right_point(1,2);
@@ -94,7 +92,7 @@ else
         end
         est_squareX(13) = est_squareX(1);
         est_squareY(13) = est_squareY(1);
-        % ----------------------------------
+        %(end) make square of detecting area for IDM(TTCver)----------------------------------
         
         
         nr_cars = length(idx_nearCar);

@@ -1,4 +1,4 @@
-function [mycar, table_same_lane] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3_ref(mycar, sim, othercars, idm, laneChangePath, table_same_lane)
+function [mycar, table_same_lane] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3_ref_v0(mycar, sim, othercars, idm, laneChangePath, table_same_lane)
 
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
@@ -174,8 +174,8 @@ if ~isempty(idx_crashcar)
 %         if A3_TTC < 4000
 %             A3_TTC = 4000;
 %         end
-        A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - (othercars.car{idx_crashcar(i)}.vel(1)*cos((othercars.car{idx_crashcar(i)}.pos(3)-mycar.pos(3))*pi/180)))/2/sqrt(a*b))/A3_TTC;
-        %A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * mycar.vel(1)/2/sqrt(a*b))/A3_TTC;
+        %A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - (othercars.car{idx_crashcar(i)}.vel(1)*cos((othercars.car{idx_crashcar(i)}.pos(3)-mycar.pos(3))*pi/180)))/2/sqrt(a*b))/A3_TTC;
+        A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * mycar.vel(1)/2/sqrt(a*b))/A3_TTC;
         
         A1 = mycar.vel(1)/v0;
         accele_IDM = a*(1 - A1^delta - A2^2);

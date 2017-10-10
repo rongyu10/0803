@@ -8,7 +8,8 @@ addpath(genpath('./intelligentDriverModel'))
 addpath(genpath('./turnSignal'))
 %--- set simulation
 road      = init_road_tollplaza_IN();
-sim       = init_sim(0.10); % dt = 0.02 [sec]
+dt = 0.1;
+sim       = init_sim(dt); % dt = 0.02 [sec]
 %------------------
 %--- set othercars
 othercars  = init_othercars();
@@ -20,7 +21,7 @@ othercars  = addcars_tollplaza_IN_cross1lane2(othercars, road.track{1}, nr_cars)
 %---------------
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-123000 5250 0];
+ini_pos    = [-120000 5250 0];
 %ini_pos    = [-123000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
@@ -41,7 +42,7 @@ mycar.squareY = zeros(1,13);
 idm.v0 = 15000; % desired velocity
 idm.T = 1.5; % Safe time headway
 idm.a = 1000; % maximum acceleration
-idm.b = 3000; %desired deceleration
+idm.b = 2000; %desired deceleration
 idm.delta = 4; %acceleration exponent
 idm.s0 = 2000; % minimum distance
 idm.l = 4000; % vehicle length
@@ -146,7 +147,7 @@ while sim.flag && ishandle(fig)
             
             if mycar.pos(1) > 0 && time_plot_mycardec < 15
                 plot_mycardec = [plot_mycardec; time_plot_mycardec mycar.vel(1)/1000 mycar.acceleration/1000];
-                time_plot_mycardec = time_plot_mycardec + 0.1;
+                time_plot_mycardec = time_plot_mycardec + dt;
             end
             
             myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);

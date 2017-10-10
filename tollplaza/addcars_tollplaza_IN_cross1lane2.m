@@ -1,4 +1,4 @@
-function othercars = addcars_tollplaza_IN_cross1lane(othercars, track, nr_cars)
+function othercars = addcars_tollplaza_IN_cross1lane2(othercars, track, nr_cars)
 % ADD CARS IN RANDOM POSTIONS
 VERBOSE = 0;
 
