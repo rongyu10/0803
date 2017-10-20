@@ -14,7 +14,7 @@ l = idm.l; % vehicle length
 coolness = 0.99;          % coolness facotor
 
 % PARAMETER OF TTC-------------------------------------------
-time_TTC = 3.0;
+time_TTC = 10.0;
 step_TTC = sim.T;
 
 idx_crashcar = [];
@@ -242,6 +242,10 @@ if ~isempty(idx_crashcar)
             accele_ACC = accele_IDM;
         else
             accele_ACC = (1-coolness)*accele_IDM + coolness*( accele_CAH + b*tanh((accele_IDM - accele_CAH)/b));
+        end
+        
+        if t_maxDecelerate == 0 && mycar.pos(1) > 187.5
+            fprintf(1, '');
         end
         
         if accele_ACC < mycar.acceleration

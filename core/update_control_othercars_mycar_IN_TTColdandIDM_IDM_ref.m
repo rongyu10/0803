@@ -118,7 +118,7 @@ for i = 1:othercars.n
             if ~isempty(idx_mindist) % IDM following frontcar in the observing box
                 %fprintf(1, 'Following car [%d](%d, %d) by IDM\n',idx_mindist, othercars.car{idx_mindist}.pos(1), othercars.car{idx_mindist}.pos(2));
                 
-                if idx_mindist == 0
+                if idx_mindist == 0 % for mycar
                     A1 = othercars.car{i}.vel(1)/v0;
                     A3 = norm(mycar.pos(1:2) - othercars.car{i}.pos(1:2)) - l;
                     A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - (mycar.vel(1)*cos((mycar.pos(3)-othercars.car{i}.pos(3))*pi/180)))/2/sqrt(a*b))/A3;
@@ -129,7 +129,7 @@ for i = 1:othercars.n
                     aLeadRestricted = min(aLead,a);
                     dvp = max(othercars.car{i}.vel(1) - mycar.vel(1),0);
                     vLead = mycar.vel(1);
-                else
+                else % for othercars
                     A1 = othercars.car{i}.vel(1)/v0;
                     A3 = norm(othercars.car{idx_mindist}.pos(1:2) - othercars.car{i}.pos(1:2)) - l;
                     A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - (othercars.car{idx_mindist}.vel(1)*cos((othercars.car{idx_mindist}.pos(3)-othercars.car{i}.pos(3))*pi/180)))/2/sqrt(a*b))/A3;
@@ -168,7 +168,7 @@ for i = 1:othercars.n
             
             if ~isempty(idx_mindist) % IDM following frontcar in the observing box
                 %fprintf(1, 'Following car [%d](%d, %d) by IDM\n',idx_mindist, othercars.car{idx_mindist}.pos(1), othercars.car{idx_mindist}.pos(2));
-                if idx_mindist == 0
+                if idx_mindist == 0 % for mycar
                     A1 = othercars.car{i}.vel(1)/v0;
                     A3 = norm(mycar.pos(1:2) - othercars.car{i}.pos(1:2)) - l;
                     A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - (mycar.vel(1)*cos((mycar.pos(3)-othercars.car{i}.pos(3))*pi/180)))/2/sqrt(a*b))/A3;
@@ -179,7 +179,7 @@ for i = 1:othercars.n
                     aLeadRestricted = min(aLead,a);
                     dvp = max(othercars.car{i}.vel(1) - mycar.vel(1),0);
                     vLead = mycar.vel(1);
-                else
+                else % for othercars
                     A1 = othercars.car{i}.vel(1)/v0;
                     A3 = norm(othercars.car{idx_mindist}.pos(1:2) - othercars.car{i}.pos(1:2)) - l;
                     A2 = (s0 + othercars.car{i}.vel(1)*T + othercars.car{i}.vel(1) * (othercars.car{i}.vel(1) - (othercars.car{idx_mindist}.vel(1)*cos((othercars.car{idx_mindist}.pos(3)-othercars.car{i}.pos(3))*pi/180)))/2/sqrt(a*b))/A3;

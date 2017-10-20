@@ -215,7 +215,7 @@ while sim.flag && ishandle(fig)
     FILL_LANES           = 1; % 1
     SIMPLECARSHAPE       = 1; % 0(描画処理が重い場合は SIMPLECARSHAPE=1, REALCARSHAPE=0とする)
     REALCARSHAPE         = 0; % 1 
-    PLOT_FUTURE_CARPOSES = 1; % 1
+    PLOT_FUTURE_CARPOSES = 0; % 1
     PLOT_CAR_PATHS       = 0; % 1
     PLOT_RFS             = 0; % 1
 %     strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ' ...

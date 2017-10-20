@@ -143,7 +143,7 @@ while sim.flag && ishandle(fig)
             
             
             % update speed and position of mycar
-            [mycar, table_same_lane] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3_ref(mycar, sim, othercars, idm, laneChangePath, table_same_lane);
+            [mycar, table_same_lane] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3_ref_v0(mycar, sim, othercars, idm, laneChangePath, table_same_lane);
             
             if mycar.pos(1) > 0 && time_plot_mycardec < 15
                 plot_mycardec = [plot_mycardec; time_plot_mycardec mycar.vel(1)/1000 mycar.acceleration/1000];
@@ -213,7 +213,7 @@ while sim.flag && ishandle(fig)
     FILL_LANES           = 1; % 1
     SIMPLECARSHAPE       = 1; % 0(描画処理が重い場合は SIMPLECARSHAPE=1, REALCARSHAPE=0とする)
     REALCARSHAPE         = 0; % 1 
-    PLOT_FUTURE_CARPOSES = 1; % 1
+    PLOT_FUTURE_CARPOSES = 0; % 1
     PLOT_CAR_PATHS       = 0; % 1
     PLOT_RFS             = 0; % 1
 %     strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS] ' ...
