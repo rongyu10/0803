@@ -12,7 +12,7 @@ l = idm.l; % vehicle length
 %============================================================
 
 % PARAMETER OF TTC-------------------------------------------
-time_TTC = 4.0;
+time_TTC = 3.0;
 step_TTC = 0.1;
 
 coolness = 0.99;          % coolness facotor

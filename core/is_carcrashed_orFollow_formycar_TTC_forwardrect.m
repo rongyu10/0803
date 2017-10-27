@@ -1,11 +1,11 @@
-function [idx_nearCar, idx_crashcar, t_crashcar, pos_crashcar, pos_crashcar_other] = is_carcrashed_formycar_TTCpre_verIDM_inpol4_mycar(othercars, time_TTC, step_TTC, mycar, laneChangePath)
-
+function [idx_observedcar, t_observedcar, pos_mycarEst, pos_observedcarEst] = is_carcrashed_orFollow_formycar_TTC_forwardrect(othercars, time_TTC, step_TTC, mycar, laneChangePath)
 
 idx_nearCar = get_nearCar(mycar, othercars);
-idx_crashcar = []; % 0:mycar 1~:number of othercar
-t_crashcar = [];
-pos_crashcar = [];
-pos_crashcar_other = [];
+% idx_nearCar = get_frontCar(mycar, othercars);
+idx_observedcar = []; % 0:mycar 1~:number of othercar
+t_observedcar = [];
+pos_mycarEst = [];
+pos_observedcarEst = [];
 
 if isempty(idx_nearCar)
     return
@@ -46,6 +46,7 @@ else
                 est_squareY(i+1) = mycar_posEst(2) - 2500;
                 est_squareY(12-i) = mycar_posEst(2) + 2500;
                 
+                mycar_posEst(3) = 0;
             elseif est_squareX(i+1) <= 275*10^3
                 
                 if i == 0
@@ -90,6 +91,7 @@ else
                 est_squareY(i+1) = (77.5-mycar.selectlane*5.0)*10^3 - 2500;
                 est_squareY(12-i) = (77.5-mycar.selectlane*5.0)*10^3 + 2500;
                 
+                mycar_posEst(3) = 0;
             end
             
         end
@@ -100,7 +102,7 @@ else
         
         nr_cars = length(idx_nearCar);
         for i = 1:nr_cars
-            if find(idx_crashcar == idx_nearCar(i)) % if the target index's collision is already detected
+            if find(idx_observedcar == idx_nearCar(i)) % if the target index's collision is already detected
                 continue
             end
             
@@ -108,10 +110,10 @@ else
             in = inpolygon(othercars_posEst(1), othercars_posEst(2), est_squareX, est_squareY);
             %----
             if any(in, 1)
-                idx_crashcar = [idx_crashcar;idx_nearCar(i)];
-                t_crashcar = [t_crashcar;t];
-                pos_crashcar = [pos_crashcar;mycar_posEst];
-                pos_crashcar_other = [pos_crashcar_other; othercars_posEst];
+                idx_observedcar = [idx_observedcar; idx_nearCar(i)];
+                t_observedcar = [t_observedcar; t];
+                pos_mycarEst = [pos_mycarEst; mycar_posEst];
+                pos_observedcarEst = [pos_observedcarEst; othercars_posEst];
             end
             %----
         end
@@ -135,6 +137,41 @@ idx_nearCar =[];
 for i=1:nr_cars
     
     if abs(mycar.pos(1)-othercars.car{i}.pos(1)) < DISTANCE
+        pos = othercars.car{i}.pos(1:2);
+        diff= pos - mycar_pos;
+        
+        if norm(diff) < DISTANCE
+            idx_nearCar= [idx_nearCar;i];
+        end
+    end
+    
+end
+
+end
+
+function idx_nearCar = get_frontCar(mycar, othercars) % get the number of othercars in front of mycar and close to mycar
+
+DISTANCE = mycar.vel(1)*3;     % distance running in 3 seconds
+
+mycar_pos = mycar.pos(1:2);
+nr_cars = othercars.n;
+
+idx_nearCar =[];
+for i=1:nr_cars
+    
+%     if mycar.pos(1) > othercars.car{i}.pos(1)
+%         continue
+%     end
+    
+    if abs(mycar.pos(1)-othercars.car{i}.pos(1)) < DISTANCE
+        
+        
+        [theta_mycar2other,~] = cart2pol(mycar.pos(1) - othercars.car{i}.pos(1), mycar.pos(2) - othercars.car{i}.pos(2));
+        if abs(mycar.pos(3) - theta_mycar2other*180/pi) > 90
+            fprintf(1, 'car[%d] is back of mycar [%d]\n', i, mycar.pos(3) - theta_mycar2other*180/pi);
+            continue
+        end
+        
         pos = othercars.car{i}.pos(1:2);
         diff= pos - mycar_pos;
         

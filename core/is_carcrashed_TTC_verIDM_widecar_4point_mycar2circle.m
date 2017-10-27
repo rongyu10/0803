@@ -11,6 +11,8 @@ if isempty(idx_nearCar) && isempty(est_mycar)
 else
     
     for t = 0:step_TTC:time_TTC
+        
+        % if there are any othercars near index car
         if(~isempty(idx_nearCar))
             nr_cars = length(idx_nearCar);
             for i = 1:nr_cars
@@ -28,20 +30,10 @@ else
                     if norm(mycar_bdEst(idx_point,:) - othercars_bdEst(1,:)) < 2000
                         %fprintf(1, 'Front point[%d] ', idx_point);
                         flgCollide = 1;
-                        if t == 0
-                            %fprintf(2, 'Collide\n');
-                            
-                        end
-                        
                         break;
                     elseif norm(mycar_bdEst(idx_point,:) - othercars_bdEst(2,:)) < 2000
-                        %fprintf(1, 'Front point[%d] ', idx_point);
+                        %fprintf(1, 'Rear point[%d] ', idx_point);
                         flgCollide = 1;
-                        if t == 0
-                            %fprintf(2, 'Collide\n');
-                            
-                        end
-                        
                         break;
                     end
                 end
@@ -60,6 +52,7 @@ else
             end
         end
         
+        % if there is mycar near index car
         if(~isempty(est_mycar))
             
             mycar_posEst = update_pos(othercars.car{idx}.pos, othercars.car{idx}.vel, t);

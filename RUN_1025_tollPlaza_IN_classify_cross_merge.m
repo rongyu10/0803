@@ -21,14 +21,13 @@ othercars  = addcars_tollplaza_IN_cross1lane2(othercars, road.track{1}, nr_cars)
 %---------------
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-119500 5250 0];
-%ini_pos    = [-123000 5250 0];
+ini_pos    = [-120000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 % SETTING OF TOLL ENTERING
 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
 mycar.startlane = 3;
-mycar.selectlane = 13;
+mycar.selectlane = 8;
 mycar.pos(2) = 8750 - 3500*(mycar.startlane-1);
 mycar.front_nr = 0; % carID in front of mycar
 mycar.rear_nr = 0; % carID behind mycar
@@ -139,11 +138,11 @@ while sim.flag && ishandle(fig)
             
             
             % update speed and position of othercars
-            [othercars, table_same_lane]  = update_control_othercars_mycar_IN_TTColdandIDM_IDM_ref(othercars, sim, mycar, idm, laneChangePath, table_same_lane);
-            
+            [othercars, table_same_lane]  = update_control_othercars_IN_classify_cross_merge(othercars, sim, mycar, idm, laneChangePath, table_same_lane);
+            % [othercars, table_same_lane] = update_control_othercars_mycar_IN_TTColdandIDM_IDM_ref(othercars, sim, mycar, idm, laneChangePath, table_same_lane);
             
             % update speed and position of mycar
-            [mycar, table_same_lane] = update_control_mycar_IN_IDMallandTTCpre_norfs_ACC3_ref_v0(mycar, sim, othercars, idm, laneChangePath, table_same_lane);
+            [mycar, table_same_lane] = update_control_mycar_IN_classify_cross_merge(mycar, sim, othercars, idm, laneChangePath, table_same_lane);
             
             if mycar.pos(1) > 0 && time_plot_mycardec < 15
                 plot_mycardec = [plot_mycardec; time_plot_mycardec mycar.vel(1)/1000 mycar.acceleration/1000];

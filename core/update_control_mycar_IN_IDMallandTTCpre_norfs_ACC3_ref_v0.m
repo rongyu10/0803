@@ -14,7 +14,7 @@ l = idm.l; % vehicle length
 coolness = 0.99;          % coolness facotor
 
 % PARAMETER OF TTC-------------------------------------------
-time_TTC = 10.0;
+time_TTC = 3.0;
 step_TTC = sim.T;
 
 idx_crashcar = [];
@@ -311,10 +311,10 @@ mycar.pos = update_pos(mycar.pos, mycar.vel, sim.T);
 mycar.bd  = get_carshape(mycar.pos, mycar.W, mycar.H);
 
 if mycar.acceleration < -2940
-    fprintf(2, 'mycar(%d, %d) acceleration = [%4d] \n', mycar.pos(1), mycar.pos(2), mycar.acceleration);
+    fprintf(2, 'mycar(%d, %d, %d) acceleration = [%4d] \n', mycar.pos(1), mycar.pos(2), mycar.pos(3), mycar.acceleration);
     %mycar.acceleration = -9800;
 else
-    fprintf(1, 'mycar(%d, %d) acceleration = [%4d] \n', mycar.pos(1), mycar.pos(2), mycar.acceleration);
+    fprintf(1, 'mycar(%d, %d, %d) acceleration = [%4d] \n', mycar.pos(1), mycar.pos(2), mycar.pos(3), mycar.acceleration);
 end
 
 
