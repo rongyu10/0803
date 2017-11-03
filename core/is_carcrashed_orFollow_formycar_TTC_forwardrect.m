@@ -1,4 +1,4 @@
-function [idx_observedcar, t_observedcar, pos_mycarEst, pos_observedcarEst] = is_carcrashed_orFollow_formycar_TTC_forwardrect(othercars, time_TTC, step_TTC, mycar, laneChangePath)
+function [idx_observedcar, t_observedcar, pos_mycarEst, pos_observedcarEst, idx_observing_mycar, angle_observing_mycar, mycarpos_observing_mycar] = is_carcrashed_orFollow_formycar_TTC_forwardrect(othercars, mycar, laneChangePath, FLAG_OTHERCAR_INTENTION_EST)
 
 idx_nearCar = get_nearCar(mycar, othercars);
 % idx_nearCar = get_frontCar(mycar, othercars);
@@ -6,15 +6,16 @@ idx_observedcar = []; % 0:mycar 1~:number of othercar
 t_observedcar = [];
 pos_mycarEst = [];
 pos_observedcarEst = [];
+idx_observing_mycar = [];
+angle_observing_mycar = [];
+mycarpos_observing_mycar = [];
 
 if isempty(idx_nearCar)
     return
 else
     clk_TTC = clock;
     
-
-    
-    for t = 0:step_TTC:time_TTC
+    for t = 0:mycar.step_TTC:mycar.time_TTC
         
         mycar_posEst(1) = mycar.pos(1) + mycar.vel(1)*t;
         
@@ -23,7 +24,7 @@ else
         elseif mycar_posEst(1) <= 275*10^3
             %nData = size(laneChangePath{mycar.selectlane, mycar.save.lane_idx},1);
             for idx_me = 1:201
-                if mycar_posEst(1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx_me,1) < 0
+                if mycar_posEst(1) - 100*10^3 - 175/200*(idx_me - 1)*10^3 < 0
                     mycar_posEst(1) = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx_me,1);
                     mycar_posEst(2) = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx_me,2);
                     break;
@@ -39,15 +40,16 @@ else
         est_squareY = zeros(1,13);
         
         for i = 0:5
-            est_squareX(i+1) = mycar_posEst(1) + mycar.vel(1)*0.6*i;
-            est_squareX(12-i) = est_squareX(i+1);
+            X_est = mycar_posEst(1) + mycar.vel(1)*0.6*i;
             
-            if est_squareX(i+1) <= 100*10^3
+            if X_est <= 100*10^3
+                est_squareX(i+1) = X_est;
+                est_squareX(12-i) = X_est;
                 est_squareY(i+1) = mycar_posEst(2) - 2500;
                 est_squareY(12-i) = mycar_posEst(2) + 2500;
                 
                 mycar_posEst(3) = 0;
-            elseif est_squareX(i+1) <= 275*10^3
+            elseif X_est <= 275*10^3
                 
                 if i == 0
                     est_squareX(i+1) = mycar_posEst(1);
@@ -57,7 +59,8 @@ else
                     idx = idx_me;
                 else
                     for idx = 1:5:201
-                        if est_squareX(i+1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1) < 0
+                        if X_est - 100*10^3 - 175/200*(idx - 1)*10^3 < 0
+                        % if est_squareX(i+1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx+1,1) < 0
                             break;
                         end
                     end
@@ -88,6 +91,8 @@ else
                 est_squareY(12-i) = left_right_point(2,2);
                 
             else
+                est_squareX(i+1) = X_est;
+                est_squareX(12-i) = X_est;
                 est_squareY(i+1) = (77.5-mycar.selectlane*5.0)*10^3 - 2500;
                 est_squareY(12-i) = (77.5-mycar.selectlane*5.0)*10^3 + 2500;
                 
@@ -102,20 +107,45 @@ else
         
         nr_cars = length(idx_nearCar);
         for i = 1:nr_cars
-            if find(idx_observedcar == idx_nearCar(i)) % if the target index's collision is already detected
+            if ~isempty(find(idx_observedcar == idx_nearCar(i), 1)) && ~isempty(find(idx_observing_mycar == idx_nearCar(i), 1)) % if the target index's collision is already detected
                 continue
             end
             
             othercars_posEst = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
+            
+            % detect the index(and so on) of othercars in mycar's detecting area---------------
             in = inpolygon(othercars_posEst(1), othercars_posEst(2), est_squareX, est_squareY);
-            %----
+            
             if any(in, 1)
                 idx_observedcar = [idx_observedcar; idx_nearCar(i)];
                 t_observedcar = [t_observedcar; t];
                 pos_mycarEst = [pos_mycarEst; mycar_posEst];
                 pos_observedcarEst = [pos_observedcarEst; othercars_posEst];
             end
-            %----
+            %------------------------------
+            
+            % detect the index(and so on) of othercars which detect mycar in its detecting area---------------
+            for j = 0:1
+                
+                Pos_est = update_pos(othercars_posEst, othercars.car{idx_nearCar(i)}.vel, j*3.0);
+                
+                left_right_point = get_car_futurepoint(Pos_est, mycar.W, 5000);
+                othercar_est_squareX(j+1) = left_right_point(1,1);
+                othercar_est_squareY(j+1) = left_right_point(1,2);
+                othercar_est_squareX(4-j) = left_right_point(2,1);
+                othercar_est_squareY(4-j) = left_right_point(2,2);
+                
+            end
+            othercar_est_squareX(5) = othercar_est_squareX(1);
+            othercar_est_squareY(5) = othercar_est_squareY(1);
+            in = inpolygon(mycar_posEst(1), mycar_posEst(2), othercar_est_squareX, othercar_est_squareY);
+            
+            if any(in, 1)
+                idx_observing_mycar = [idx_observing_mycar; idx_nearCar(i)];
+                angle_observing_mycar = [angle_observing_mycar; abs(mycar_posEst(3) - othercars_posEst(3))];
+                mycarpos_observing_mycar = [mycarpos_observing_mycar; mycar_posEst];
+            end
+            %------------------------------
         end
         
     end

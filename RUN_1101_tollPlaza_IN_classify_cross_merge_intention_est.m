@@ -18,16 +18,14 @@ othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
 othercars  = addcars_tollplaza_IN_cross1lane2(othercars, road.track{1}, nr_cars);
 for i = 1:nr_cars
     % othercars.car{i}.time_TTC = 0.1*randi(30);
-    othercars.car{i}.time_TTC = 3.0;
+    othercars.car{i}.time_TTC = 0.0;
 end
-othercars.step_TTC = sim.T;
 %load('othercars_0921');
 
 %---------------
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-% ini_pos    = [-115000 5250 0];
-ini_pos    = [-118100 5250 0];
+ini_pos    = [-117000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 % SETTING OF TOLL ENTERING
@@ -41,8 +39,6 @@ mycar.save.lane_idx = mycar.startlane;
 mycar.flgIDM = 0;
 mycar.squareX = zeros(1,13);
 mycar.squareY = zeros(1,13);
-mycar.time_TTC = 3.0;
-mycar.step_TTC = sim.T;
 %---------------
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
@@ -67,7 +63,6 @@ ms_update = 0; ms_plot = 0;
 %-- FLAG INTERACTION ---------
 FLAG_INTERACTION = true;
 FLAG_LANECHANGE  = false;
-FLAG_OTHERCAR_INTENTION_EST = true;
 %-----------------------------
 
 % MAKE LANECHANGE PATH

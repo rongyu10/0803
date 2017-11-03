@@ -202,8 +202,8 @@ if ~isempty(idx_observedcar)
         aLeadRestricted = min(aLead,a);
         
         if FLAG_Follow_or_Cross
-            dvp = max(mycar.vel(1) - othercars.car{idx_observedcar(i)}.vel(1)*cos((othercars.car{idx_observedcar(i)}.pos(3)-mycar.pos(3))*pi/180), 0);
-            vLead = othercars.car{idx_observedcar(i)}.vel(1)*cos((othercars.car{idx_observedcar(i)}.pos(3)-mycar.pos(3))*pi/180);
+            dvp = max(mycar.vel(1) - othercars.car{idx_observedcar(i)}.vel(1),0);
+            vLead = othercars.car{idx_observedcar(i)}.vel(1);
         else
             dvp = max(mycar.vel(1),0);
             vLead = 0;

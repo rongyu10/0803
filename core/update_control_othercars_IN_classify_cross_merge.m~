@@ -102,10 +102,10 @@ for i = 1:othercars.n
             
             if FLAG_Follow_or_Cross
                 if idx_observedcar(j) == 0 % for mycar
-                    dvp = max(othercars.car{i}.vel(1) - mycar.vel(1)*cos((mycar.pos(3)-othercars.car{i}.pos(3))*pi/180),0);
-                    vLead = mycar.vel(1)*cos((mycar.pos(3)-othercars.car{i}.pos(3))*pi/180);
+                    dvp = max(othercars.car{i}.vel(1) - mycar.vel(1),0);
+                    vLead = mycar.vel(1);
                 else % for othercar
-                    dvp = max(othercars.car{i}.vel(1) - othercars.car{idx_observedcar(j)}.vel(1)*cos((othercars.car{idx_observedcar(j)}.pos(3)-othercars.car{i}.pos(3))*pi/180),0);
+                    dvp = max(othercars.car{i}.vel(1) - othercars.car{idx_observedcar(j)}.vel(1),0);
                     vLead = othercars.car{idx_observedcar(j)}.vel(1);
                 end
             else
@@ -144,16 +144,9 @@ for i = 1:othercars.n
         if idx_maxDecelerate == 0
             if FLAG_Follow_or_Cross
                 if othercars.car{i}.acceleration < -2940
-                    fprintf(2, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
-                else
-                    fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
-                end
+                fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
             else
-                if othercars.car{i}.acceleration < -2940
-                    fprintf(2, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by CROSS. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
-                else
-                    fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by CROSS. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
-                end
+                fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by CROSS. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
             end
 %             if FLAG_Follow_or_Cross
 %                 fprintf(1, 'car[%d] decelerate to car [%d] (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, idx_maxDecelerate, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
