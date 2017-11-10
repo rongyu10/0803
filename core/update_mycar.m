@@ -1,8 +1,11 @@
-function mycar = update_mycar(mycar, sim, othercars)
+function mycar = update_mycar(mycar, sim, othercars, varargin)
 % UPDATE MY CAR INFORMATION
 mycar.pos = update_pos(mycar.pos, mycar.vel, sim.T);
 mycar.bd  = get_carshape(mycar.pos, mycar.W, mycar.H);
-mycar = update_rfs(mycar, othercars);
+
+if nargin == 3 || varargin{1} == 1
+    mycar = update_rfs(mycar, othercars);
+end
 
 
 

@@ -1,4 +1,4 @@
-function [othercars, table_same_lane] = update_control_othercars_IN_classify_cross_merge(othercars, sim, mycar, idm, laneChangePath, table_same_lane)
+function othercars = calculate_velocity_othercars_tollPlaza_IN(othercars, sim, mycar, idm, laneChangePath)
 
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
@@ -11,18 +11,12 @@ s0 = idm.s0; % minimum distance
 l = idm.l; % vehicle length
 %============================================================
 
-% PARAMETER OF TTC-------------------------------------------
-%time_TTC = 0;
-step_TTC = 0.1;
-
-coolness = 0.99;          % coolness facotor
 
 for i = 1:othercars.n
     
     if othercars.car{i}.flgPlaza == 0 % before entering plaza
         v0 = 15000;
-        
-        
+         
     elseif othercars.car{i}.flgPlaza == 1 % after entering plaza
         pos = predict_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
         othercars.car{i}.targetDegree = get_tatgetTheta(pos,othercars.car{i}.pathTranslated);
@@ -39,17 +33,6 @@ for i = 1:othercars.n
             
         elseif othercars.car{i}.pos(1) < 275*10^3
             v0 = 12500;
-            if othercars.car{i}.flgIDM == 0
-                
-                % set the index number among the same target lane
-                if isempty(find(table_same_lane(othercars.car{i}.goallane,:), 1, 'last')) % if there is no othercars heading for same lane
-                    idx_nr = 1;
-                else
-                    idx_nr = find(table_same_lane(othercars.car{i}.goallane,:), 1, 'last') + 1;
-                end
-                table_same_lane(othercars.car{i}.goallane, idx_nr) = -1; % idx '-1' indicates mycar
-                othercars.car{i}.flgIDM = 1;
-            end
             
         elseif othercars.car{i}.pos(1) < 320*10^3
             v0 = 10000;
@@ -59,7 +42,9 @@ for i = 1:othercars.n
     
     
     [idx_observedcar, t_observedcar, pos_mycarEst, pos_observedcarEst] = is_carcrashed_orFollow_forothercars_TTC_forwardrect(othercars, i, mycar, laneChangePath);    
-        
+    
+    
+    
         
     if ~isempty(idx_observedcar)
         
@@ -77,11 +62,19 @@ for i = 1:othercars.n
                 FLAG_Follow_or_Cross = 0;
             end
             
+            
+            cur_acceleration = calculate_acceleration_IDM(othercars.car{i}, mycar, pos_observedcarEst(j,:), idm, FLAG_Follow_or_Cross);
+            
+            
+            
             %fprintf(1, 'after [%d] seconds, mycar and [%d](%d, %d) collide at (%d, %d)\n', t, idx_observedcar, othercars.car{idx_observedcar(i)}.pos(1), othercars.car{idx_observedcar(i)}.pos(2), pos_mycarEst(1), pos_mycarEst(2));
             
             %A3 = norm(othercars.car{idx_observedcar(i)}.pos(1:2) - mycar.pos(1:2));
             othercar_posEst_i = pos_observedcarEst(j,:);
             A3_TTC = norm(othercar_posEst_i(1:2) - othercars.car{i}.pos(1:2)) - l;
+            if A3_TTC < s0
+                A3_TTC = s0;
+            end
             
             if FLAG_Follow_or_Cross
                 if idx_observedcar(j) == 0 % for mycar
@@ -102,10 +95,10 @@ for i = 1:othercars.n
             
             if FLAG_Follow_or_Cross
                 if idx_observedcar(j) == 0 % for mycar
-                    dvp = max(othercars.car{i}.vel(1) - mycar.vel(1),0);
-                    vLead = mycar.vel(1);
+                    dvp = max(othercars.car{i}.vel(1) - mycar.vel(1)*cos((mycar.pos(3)-othercars.car{i}.pos(3))*pi/180),0);
+                    vLead = mycar.vel(1)*cos((mycar.pos(3)-othercars.car{i}.pos(3))*pi/180);
                 else % for othercar
-                    dvp = max(othercars.car{i}.vel(1) - othercars.car{idx_observedcar(j)}.vel(1),0);
+                    dvp = max(othercars.car{i}.vel(1) - othercars.car{idx_observedcar(j)}.vel(1)*cos((othercars.car{idx_observedcar(j)}.pos(3)-othercars.car{i}.pos(3))*pi/180),0);
                     vLead = othercars.car{idx_observedcar(j)}.vel(1);
                 end
             else
@@ -144,9 +137,16 @@ for i = 1:othercars.n
         if idx_maxDecelerate == 0
             if FLAG_Follow_or_Cross
                 if othercars.car{i}.acceleration < -2940
-                fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
+                    fprintf(2, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
+                else
+                    fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
+                end
             else
-                fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by CROSS. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
+                if othercars.car{i}.acceleration < -2940
+                    fprintf(2, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by CROSS. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
+                else
+                    fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (distance = [%d], observed time = [%d], reldegree = [%d]) by CROSS. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
+                end
             end
 %             if FLAG_Follow_or_Cross
 %                 fprintf(1, 'car[%d] decelerate to car [%d] (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', i, idx_maxDecelerate, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
@@ -155,16 +155,11 @@ for i = 1:othercars.n
 %             end
         end
     else
-        A1 = othercars.car{i}.vel(1)/v0;
-        othercars.car{i}.acceleration = a*(1 - A1^delta);
+        % if there is no car in detecting area
+        A1 = othercars.car{i}.vel(1)/idm.v0;
+        othercars.car{i}.acceleration = idm.a*(1 - A1^idm.delta);
     end
     
-end
-    
-    
-    
-% update position after updating all the velocity of othercars
-for i = 1:othercars.n
     othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + othercars.car{i}.acceleration*sim.T;
     
     % control minimum velocity
@@ -172,17 +167,28 @@ for i = 1:othercars.n
         othercars.car{i}.vel(1) = 0;
     end
     
-    % UPDATE MY CAR INFORMATION
-    othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
-    othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);
-    
-    % if entering the plaza
-    if othercars.car{i}.pos(1) > 100*10^3 && othercars.car{i}.pos(1) < 275*10^3
-        othercars.car{i}.flgPlaza = 1;
-        
-        othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx};
-    end
 end
+    
+% update position after updating all the velocity of othercars
+% for i = 1:othercars.n
+%     othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + othercars.car{i}.acceleration*sim.T;
+%     
+%     % control minimum velocity
+%     if othercars.car{i}.vel(1) < 0 && othercars.car{i}.pos(1) < 320 * 10^3
+%         othercars.car{i}.vel(1) = 0;
+%     end
+%     
+%     % UPDATE MY CAR INFORMATION
+%     othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
+%     othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);
+%     
+%     % if entering the plaza
+%     if othercars.car{i}.pos(1) > 100*10^3 && othercars.car{i}.pos(1) < 275*10^3
+%         othercars.car{i}.flgPlaza = 1;
+%         
+%         othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx};
+%     end
+% end
     
 end
 

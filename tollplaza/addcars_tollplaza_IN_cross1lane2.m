@@ -5,58 +5,20 @@ VERBOSE = 0;
 
 
 for carid = 1:nr_cars
-    if carid <= othercars.npl
-       laneidx= 1;
-       tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       %x = (120-carid*40+20*rand)*10^3;
-       x = (120-carid*60)*10^3;
-       y = tmppos(2);
-       carpos = [x y 0];
-       othercars.car{carid}.goallane = 13;
-       %othercars.car{carid}.goallane = randi(5) + 10;
-       %othercars.car{carid}.goallane = randi(15);
-       if othercars.car{carid}.goallane <= 5
-           othercars.car{carid}.crossflg = 0;
-       else
-           othercars.car{carid}.crossflg = 1;
-       end
-    end
-%     elseif carid <= othercars.npl + 6
-%        laneidx= 2;
-%        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-%        if carid <= othercars.npl + 6
-%            x = (120-(carid-othercars.npl)*40+20*rand)*10^3;
-%        end
-%        y = tmppos(2);
-%        carpos = [x y 0];
-%        othercars.car{carid}.goallane = randi(15);
-%        %othercars.car{carid}.goallane = 8;
-%        if othercars.car{carid}.goallane >= 6 && othercars.car{carid}.goallane <= 10
-%            othercars.car{carid}.crossflg = 0;
-%        else
-%            othercars.car{carid}.crossflg = 1;
-%        end 
-%     else
-%        laneidx= 3;
-%        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-%        x = (120-(carid-(othercars.npl + 6))*40+20*rand)*10^3;
-%        y = tmppos(2);
-%        carpos = [x y 0];
-%        othercars.car{carid}.goallane = randi(5);
-%        %othercars.car{carid}.goallane = randi(15);
-%        if othercars.car{carid}.goallane >= 11
-%            othercars.car{carid}.crossflg = 0;
-%        else
-%            othercars.car{carid}.crossflg = 1;
-%        end
-%     end
-%     if carid >=10 && carid <= 12
-%         othercars.car{carid}.goallane = 7;
-%     end
     
-%     if carid == 36
-%         othercars.car{carid}.goallane = 1;
-%     end
+    laneidx= 1;
+    tmppos = get_posintrack(track, 1, 0, laneidx, 0);
+    %x = (120-carid*40+20*rand)*10^3;
+    x = (120-carid*60)*10^3;
+    y = tmppos(2);
+    carpos = [x y 0];
+    othercars.car{carid}.goallane = 13;
+    
+    if othercars.car{carid}.goallane <= 5
+        othercars.car{carid}.crossflg = 0;
+    else
+        othercars.car{carid}.crossflg = 1;
+    end
     
     othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
     othercars.car{carid}.flgIDM = 0; % 0:before controlling by IDM ,1:velocity control by IDM (both are on condition in the plaza)

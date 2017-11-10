@@ -1,4 +1,4 @@
-function [mycar, table_same_lane] = update_control_mycar_IN_classify_cross_merge(mycar, sim, othercars, idm, laneChangePath, table_same_lane, PLOT_MYCAR_DETECTING_AREA)
+function mycar = calculate_velocity_mycar_tollPlaza_IN(mycar, sim, othercars, idm, laneChangePath, PLOT_MYCAR_DETECTING_AREA)
 
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
@@ -13,75 +13,33 @@ l = idm.l; % vehicle length
 
 coolness = 0.99;          % coolness facotor
 
-% PARAMETER OF TTC-------------------------------------------
-time_TTC = 3.0;
-step_TTC = sim.T;
 
 idx_observedcar = [];
+idx_observing_mycar = [];
+mycar.acceleration = 0;
 
 FLAG_OTHERCAR_INTENTION_EST = 1;
 
+    % if entering the plaza
+if mycar.flgPlaza == 0 && mycar.pos(1) > 100*10^3
+    mycar.flgPlaza = 1;
+    
+    mycar.pathTranslated = laneChangePath{mycar.goallane, mycar.save.lane_idx};
+end
+
 if mycar.flgPlaza == 0 % before entering plaza
     v0 = 15000;
-%     mycar.acceleration = 0;
-%     mycar.targetDegree_pre = 0;
-%     mycar.targetDegree = 0;
-%     mycar.targetDegree_dif = zeros(1, 5);
-%     mycar.targetDegree_dif_sum = 0;
     
 elseif mycar.flgPlaza == 1 % after entering plaza
     pos = predict_pos(mycar.pos, mycar.vel, sim.T);
     mycar.targetDegree = get_tatgetTheta(pos,mycar.pathTranslated);
     mycar.vel(2) = (mycar.targetDegree - mycar.pos(3))/sim.T;
     
-%     if mycar.targetDegree - mycar.pos(3) > 10
-%         mycar.vel(2) = mycar.vel(2) + 10/sim.T;
-%     elseif mycar.targetDegree - mycar.pos(3) < -10
-%         mycar.vel(2) = mycar.vel(2) - 10/sim.T;
-%     else
-%         mycar.vel(2) = mycar.vel(2) + (mycar.targetDegree - mycar.pos(3))/sim.T;
-%     end
-    
-    
-    
-    
-%     
-%     pos = predict_pos(mycar.pos, mycar.vel, sim.T);
-%     mycar.targetDegree_pre = mycar.targetDegree;
-%     mycar.targetDegree = get_tatgetTheta(pos,mycar.pathTranslated);
-%     mycar.targetDegree_dif_sum = 0;
-%     
-%     for i = 1:4
-%         mycar.targetDegree_dif(i) = mycar.targetDegree_dif(i+1);
-%         mycar.targetDegree_dif_sum = mycar.targetDegree_dif_sum + mycar.targetDegree_dif(i);
-%     end
-%     
-%     mycar.targetDegree_dif(5) = mycar.targetDegree - mycar.targetDegree_pre;
-%     mycar.targetDegree_dif_sum = mycar.targetDegree_dif_sum + mycar.targetDegree_dif(5);
-%     
-%     mycar.vel(2) = mycar.targetDegree_dif_sum/sim.T/5;
-%     mycar.pos(3) = mycar.targetDegree;
-    
-    
-    
-    
-    
     if mycar.pos(1) < 187.5*10^3
         v0 = 15000;
 
     elseif mycar.pos(1) < 275*10^3
         v0 = 12500;
-        if mycar.flgIDM == 0
-            
-            % set the index number among the same target lane
-            if isempty(find(table_same_lane(mycar.selectlane,:), 1, 'last')) % if there is no othercars heading for same lane
-                idx_nr = 1;
-            else
-                idx_nr = find(table_same_lane(mycar.selectlane,:), 1, 'last') + 1;
-            end
-            table_same_lane(mycar.selectlane, idx_nr) = -1; % idx '-1' indicates mycar
-            mycar.flgIDM = 1;
-        end
         
     elseif mycar.pos(1) < 320*10^3
         v0 = 10000;
@@ -94,73 +52,10 @@ end
 % estimate crashing othercar and identify approaching othercar in front of mycar----------------------
 [idx_observedcar, t_observedcar, pos_mycarEst, pos_observedcarEst, idx_observing_mycar, angle_observing_mycar, mycarpos_observing_mycar] = is_carcrashed_orFollow_formycar_TTC_forwardrect(othercars, mycar, laneChangePath, FLAG_OTHERCAR_INTENTION_EST);
 
+
 if PLOT_MYCAR_DETECTING_AREA
-    % make rectangle of detecting area for drawing(along the bezier curve)-----
-    for i = 0:5
-        X_est = mycar.pos(1) + mycar.vel(1)*0.6*i;
-        
-        if X_est <= 100*10^3
-            mycar.squareX(i+1) = X_est;
-            mycar.squareX(12-i) = X_est;
-            mycar.squareY(i+1) = mycar.pos(2) - 2500;
-            mycar.squareY(12-i) = mycar.pos(2) + 2500;
-            
-        elseif X_est <= 275*10^3
-            nData = size(laneChangePath{mycar.selectlane, mycar.save.lane_idx},1);
-            for idx = 1:nData
-                % if mycar.squareX(i+1) - laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1) < 0
-                if X_est - 100*10^3 - 175/200*(idx - 1)*10^3 < 0
-                    break;
-                end
-            end
-            
-            if idx~=nData
-                vx= laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx+1,1)-laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1);
-                vy= laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx+1,2)-laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,2);
-            else
-                vx= laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1)-laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx-1,1);
-                vy= laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,2)-laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx-1,2);
-            end
-            
-            mycar_posEst_det(1) = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,1);
-            mycar_posEst_det(2) = laneChangePath{mycar.selectlane, mycar.save.lane_idx}(idx,2);
-            mycar_posEst_det(3) = atan(vy/vx)*180/pi;
-            
-            left_right_point = get_car_futurepoint(mycar_posEst_det, mycar.W, 5000);
-            mycar.squareX(i+1) = left_right_point(1,1);
-            mycar.squareY(i+1) = left_right_point(1,2);
-            mycar.squareX(12-i) = left_right_point(2,1);
-            mycar.squareY(12-i) = left_right_point(2,2);
-            
-        else
-            mycar.squareX(i+1) = X_est;
-            mycar.squareX(12-i) = X_est;
-            mycar.squareY(i+1) = (77.5-mycar.selectlane*5.0)*10^3 - 2500;
-            mycar.squareY(12-i) = (77.5-mycar.selectlane*5.0)*10^3 + 2500;
-            
-        end
-        
-    end
-    mycar.squareX(13) = mycar.squareX(1);
-    mycar.squareY(13) = mycar.squareY(1);
-    % ----------------------------------
     
-    % make rectangle of detecting area for drawing(along the predicted path from current velocity)-----
-%     for i = 0:1
-%         
-%         Pos_est = update_pos(mycar.pos, mycar.vel, i*3.0);
-%         
-%         left_right_point = get_car_futurepoint(Pos_est, mycar.W, 5000);
-%         mycar.squareX(i+1) = left_right_point(1,1);
-%         mycar.squareY(i+1) = left_right_point(1,2);
-%         mycar.squareX(4-i) = left_right_point(2,1);
-%         mycar.squareY(4-i) = left_right_point(2,2);
-%         
-%     end
-%     mycar.squareX(5) = mycar.squareX(1);
-%     mycar.squareY(5) = mycar.squareY(1);
-    % ----------------------------------
-    
+    [mycar.squareX, mycar.squareY] = make_detecting_rectangle(mycar, mycar.pos, mycar.vel, laneChangePath, mycar.detect_rect_forwardtime, mycar.detect_rect_sidewidth);
     
 end
 
@@ -175,7 +70,7 @@ if ~isempty(idx_observedcar)
     % iterate by number of estimated collision cars (to calculate deceleration by TTC)
     for i = 1:nr_observedCar
         
-        if abs(pos_mycarEst(3) - pos_observedcarEst(3)) < 5
+        if abs(pos_mycarEst(i,3) - pos_observedcarEst(i,3)) < 5
             FLAG_Follow_or_Cross = 1;
         else
             FLAG_Follow_or_Cross = 0;
@@ -186,7 +81,9 @@ if ~isempty(idx_observedcar)
         %A3 = norm(othercars.car{idx_observedcar(i)}.pos(1:2) - mycar.pos(1:2));
         othercar_posEst_i = pos_observedcarEst(i,:);
         A3_TTC = norm(othercar_posEst_i(1:2) - mycar.pos(1:2)) - l;
-
+        if A3_TTC < s0
+            A3_TTC = s0;
+        end
 
         if FLAG_Follow_or_Cross
             A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - (othercars.car{idx_observedcar(i)}.vel(1)*cos((othercars.car{idx_observedcar(i)}.pos(3)-mycar.pos(3))*pi/180)))/2/sqrt(a*b))/A3_TTC;
@@ -202,8 +99,8 @@ if ~isempty(idx_observedcar)
         aLeadRestricted = min(aLead,a);
         
         if FLAG_Follow_or_Cross
-            dvp = max(mycar.vel(1) - othercars.car{idx_observedcar(i)}.vel(1),0);
-            vLead = othercars.car{idx_observedcar(i)}.vel(1);
+            dvp = max(mycar.vel(1) - othercars.car{idx_observedcar(i)}.vel(1)*cos((othercars.car{idx_observedcar(i)}.pos(3)-mycar.pos(3))*pi/180), 0);
+            vLead = othercars.car{idx_observedcar(i)}.vel(1)*cos((othercars.car{idx_observedcar(i)}.pos(3)-mycar.pos(3))*pi/180);
         else
             dvp = max(mycar.vel(1),0);
             vLead = 0;
@@ -238,15 +135,15 @@ if ~isempty(idx_observedcar)
     
     if FLAG_Follow_or_Cross
         if mycar.acceleration < -2940
-            fprintf(2, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_maxDecelerate, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
+            fprintf(2, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_maxDecelerate, A3_TTC, t_maxDecelerate, pos_mycarEst(i,3) - pos_observedcarEst(i,3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
         else
-            fprintf(1, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_maxDecelerate, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
+            fprintf(1, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (distance = [%d], observed time = [%d], reldegree = [%d]) by FOLLOW. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_maxDecelerate, A3_TTC, t_maxDecelerate, pos_mycarEst(i,3) - pos_observedcarEst(i,3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
         end
     else
         if mycar.acceleration < -2940
-            fprintf(2, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (distance = [%d], observed time = [%d], reldegree = [%d]) by CROSS. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_maxDecelerate, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
+            fprintf(2, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (distance = [%d], observed time = [%d], reldegree = [%d]) by CROSS. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_maxDecelerate, A3_TTC, t_maxDecelerate, pos_mycarEst(i,3) - pos_observedcarEst(i,3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
         else
-            fprintf(1, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (distance = [%d], observed time = [%d], reldegree = [%d]) by CROSS. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_maxDecelerate, A3_TTC, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
+            fprintf(1, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (distance = [%d], observed time = [%d], reldegree = [%d]) by CROSS. Observed car position is [%d, %d]. A1=[%d], A2=[%d], A3_TTC=[%d]\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_maxDecelerate, A3_TTC, t_maxDecelerate, pos_mycarEst(i,3) - pos_observedcarEst(i,3), othercar_posEst_i(1), othercar_posEst_i(2), A1, A2, A3_TTC);
         end
     end
 else
@@ -278,10 +175,18 @@ if ~isempty(idx_observing_mycar)
         
         
         if FLAG_Follow_or_Cross
-            A3_TTC = norm(mycar.pos(1:2) - othercars.car{idx_observing_mycar(i)}.pos(1:2)) - l;
+            % othercarsの成分に直して距離を取る
+            [theta_other2mycar,~] = cart2pol(othercars.car{idx_observing_mycar(i)}.pos(1) - mycar.pos(1), othercars.car{idx_observing_mycar(i)}.pos(2) - mycar.pos(2));
+            A3_TTC = norm(mycar.pos(1:2) - othercars.car{idx_observing_mycar(i)}.pos(1:2))*cos(theta_other2mycar*180/pi - othercars.car{idx_observing_mycar(i)}.pos(3)) - l;
+            if A3_TTC < s0
+                A3_TTC = s0;
+            end
             A2 = (s0 + othercars.car{idx_observing_mycar(i)}.vel(1)*T + othercars.car{idx_observing_mycar(i)}.vel(1) * (othercars.car{idx_observing_mycar(i)}.vel(1) - (mycar.vel(1)*cos((mycar.pos(3)-othercars.car{idx_observing_mycar(i)}.pos(3))*pi/180)))/2/sqrt(a*b))/A3_TTC;
         else
             A3_TTC = norm(mycar_posEst_i(1:2) - othercars.car{idx_observing_mycar(i)}.pos(1:2)) - l;
+            if A3_TTC < s0
+                A3_TTC = s0;
+            end
             A2 = (s0 + othercars.car{idx_observing_mycar(i)}.vel(1)*T + othercars.car{idx_observing_mycar(i)}.vel(1) * othercars.car{idx_observing_mycar(i)}.vel(1)/2/sqrt(a*b))/A3_TTC;
         end
         
@@ -318,19 +223,15 @@ if ~isempty(idx_observing_mycar)
             fprintf(1, 'Car[%d]: moderate acceleration to mycar(distance = [%d], reldegree = [%d]) is [%d] by FOLLOW. Actual deceleration is [%d]\n', idx_observing_mycar(i), A3_TTC, angle_observing_mycar(i), moderate_acceleration, othercars.car{idx_observing_mycar(i)}.acceleration);
         else
             fprintf(1, 'Car[%d]: moderate acceleration to mycar(distance = [%d], reldegree = [%d]) is [%d] by CROSS. Actual deceleration is [%d]\n', idx_observing_mycar(i), A3_TTC, angle_observing_mycar(i), moderate_acceleration, othercars.car{idx_observing_mycar(i)}.acceleration);
+            % if (moderate_acceleration < -2940 || othercars.car{idx_observing_mycar(i)}.acceleration > moderate_acceleration) && mycar.acceleration > -2940
+            if othercars.car{idx_observing_mycar(i)}.acceleration > moderate_acceleration && mycar.acceleration > -2940
+                mycar.acceleration = -2940;
+                fprintf(2, 'mycar([%d, %d]) decelerate([%d]) to car [%d] as it doesnot slow down\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_observing_mycar(i));
+            end
         end
         
         % -----end of ACC model---------------
-        
-%         if i == 1
-%             min_acceleration = cur_acceleration;
-%         end
-%         
-%         if cur_acceleration <= min_acceleration
-%             mycar.acceleration = cur_acceleration;
-%             idx_maxDecelerate = idx_observedcar(i);
-%             t_maxDecelerate = t_observedcar(i);
-%         end
+
     end
 end
 
@@ -340,19 +241,6 @@ mycar.vel(1) = mycar.vel(1) + mycar.acceleration*sim.T;
 % control minimum velocity
 if mycar.vel(1) < 0 && mycar.pos(1) < 320 * 10^3
     mycar.vel(1) = 0;
-end
-
-% UPDATE MY CAR INFORMATION
-mycar.pos = update_pos(mycar.pos, mycar.vel, sim.T);
-mycar.bd  = get_carshape(mycar.pos, mycar.W, mycar.H);
-
-
-
-% if entering the plaza
-if mycar.pos(1) > 100*10^3 && mycar.pos(1) < 275*10^3
-    mycar.flgPlaza = 1;
-    
-    mycar.pathTranslated = laneChangePath{mycar.selectlane, mycar.save.lane_idx};
 end
 
 end
