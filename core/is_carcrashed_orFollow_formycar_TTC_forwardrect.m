@@ -1,4 +1,4 @@
-function [idx_observedcar, t_observedcar, pos_mycarEst, pos_observedcarEst, idx_observing_mycar, angle_observing_mycar, mycarpos_observing_mycar] = is_carcrashed_orFollow_formycar_TTC_forwardrect(othercars, mycar, laneChangePath, FLAG_OTHERCAR_INTENTION_EST)
+function [idx_observedcar, t_observedcar, pos_mycarEst, pos_observedcarEst, idx_observing_mycar, angle_observing_mycar, mycarpos_observing_mycar, t_observing_mycar] = is_carcrashed_orFollow_formycar_TTC_forwardrect(othercars, mycar, laneChangePath, FLAG_OTHERCAR_INTENTION_EST)
 
 idx_nearCar = get_nearCar(mycar, othercars);
 % idx_nearCar = get_frontCar(mycar, othercars);
@@ -9,6 +9,7 @@ pos_observedcarEst = [];
 idx_observing_mycar = [];
 angle_observing_mycar = [];
 mycarpos_observing_mycar = [];
+t_observing_mycar = [];
 
 if isempty(idx_nearCar)
     return
@@ -113,7 +114,7 @@ else
         
         nr_cars = length(idx_nearCar);
         for i = 1:nr_cars
-            if ~isempty(find(idx_observedcar == idx_nearCar(i), 1)) && ~isempty(find(idx_observing_mycar == idx_nearCar(i), 1)) % if the target index's collision is already detected
+            if ~isempty(find(idx_observedcar == idx_nearCar(i), 1)) || ~isempty(find(idx_observing_mycar == idx_nearCar(i), 1)) % if the target index's collision is already detected
                 continue
             end
             
@@ -130,7 +131,7 @@ else
             end
             %------------------------------
             
-            if t >= 1.0 && FLAG_OTHERCAR_INTENTION_EST
+            if FLAG_OTHERCAR_INTENTION_EST
                 % detect the index(and so on) of othercars which detect mycar in its detecting area---------------
                 for j = 0:1
                     
@@ -151,6 +152,7 @@ else
                     idx_observing_mycar = [idx_observing_mycar; idx_nearCar(i)];
                     angle_observing_mycar = [angle_observing_mycar; abs(mycar_posEst(3) - othercars_posEst(3))];
                     mycarpos_observing_mycar = [mycarpos_observing_mycar; mycar_posEst];
+                    t_observing_mycar = [t_observing_mycar; t];
                 end
                 %------------------------------
             end
@@ -166,8 +168,8 @@ end
 
 function idx_nearCar = get_nearCar(mycar, othercars) % get the number of othercars in front of mycar and close to mycar
 
-DISTANCE = mycar.vel(1)*3;     % distance running in 3 seconds
-
+% DISTANCE = mycar.vel(1)*3;     % distance running in 3 seconds
+DISTANCE = 50000;
 mycar_pos = mycar.pos(1:2);
 nr_cars = othercars.n;
 
