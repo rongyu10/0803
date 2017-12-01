@@ -48,69 +48,6 @@ else
         
         [est_squareX, est_squareY] = make_detecting_rectangle(mycar, mycar_posEst, mycar.vel, laneChangePath, mycar.detect_rect_forwardtime, mycar.detect_rect_sidewidth);
         
-        % make square of detecting area for IDM(TTCver)-----------------------------------
-%         est_squareX = zeros(1,13);
-%         est_squareY = zeros(1,13);
-%         
-%         for i = 0:5
-%             X_est = mycar_posEst(1) + mycar.vel(1)*0.6*i;
-%             
-%             if X_est <= 100*10^3
-%                 est_squareX(i+1) = X_est;
-%                 est_squareX(12-i) = X_est;
-%                 est_squareY(i+1) = mycar_posEst(2) - 2500;
-%                 est_squareY(12-i) = mycar_posEst(2) + 2500;
-%                 
-%                 
-%             elseif X_est <= 275*10^3
-%                 
-%                 if i == 0
-%                     est_squareX(i+1) = mycar_posEst(1);
-%                     est_squareX(12-i) = mycar_posEst(1);
-%                     est_squareY(i+1) = mycar_posEst(2);
-%                     est_squareY(12-i) = mycar_posEst(2);
-%                 else
-%                     for idx = 1:5:201
-%                         if X_est - 100*10^3 - 175/200*(idx - 1)*10^3 < 0
-%                         % if est_squareX(i+1) - laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx+1,1) < 0
-%                             break;
-%                         end
-%                     end
-%                     
-%                     if idx~=201
-%                         vx= laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx+1,1)-laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx,1);
-%                         vy= laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx+1,2)-laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx,2);
-%                     else
-%                         vx= laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx,1)-laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx-1,1);
-%                         vy= laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx,2)-laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx-1,2);
-%                     end
-%                     
-%                     %calculate the center point of the red rectangle
-%                     mycar_posEst_det(1) = laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx,1);
-%                     mycar_posEst_det(2) = laneChangePath{mycar.goallane, mycar.save.lane_idx}(idx,2);
-%                     mycar_posEst_det(3) = atan(vy/vx)*180/pi;
-%                     
-%                     %calculate point of the red rectangle from the center point
-%                     left_right_point = get_car_futurepoint(mycar_posEst_det, mycar.W, 5000);
-%                     est_squareX(i+1) = left_right_point(1,1);
-%                     est_squareY(i+1) = left_right_point(1,2);
-%                     est_squareX(12-i) = left_right_point(2,1);
-%                     est_squareY(12-i) = left_right_point(2,2);
-%                 end
-%                 
-%             else
-%                 est_squareX(i+1) = X_est;
-%                 est_squareX(12-i) = X_est;
-%                 est_squareY(i+1) = (77.5-mycar.goallane*5.0)*10^3 - 2500;
-%                 est_squareY(12-i) = (77.5-mycar.goallane*5.0)*10^3 + 2500;
-%                 
-%             end
-%             
-%         end
-%         est_squareX(13) = est_squareX(1);
-%         est_squareY(13) = est_squareY(1);
-        %(end) make square of detecting area for IDM(TTCver)----------------------------------
-        
         
         nr_cars = length(idx_nearCar);
         for i = 1:nr_cars

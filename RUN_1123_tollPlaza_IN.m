@@ -42,7 +42,7 @@ othercars.detect_rect_sidewidth = 2500;
 
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-118100 5250 0];
+ini_pos    = [-120000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 % SETTING OF TOLL ENTERING
@@ -58,8 +58,8 @@ mycar.squareX = zeros(1,13);
 mycar.squareY = zeros(1,13);
 mycar.time_TTC = 5.0;
 mycar.step_TTC = sim.T;
-mycar.detect_rect_forwardtime = 3.0;
-mycar.detect_rect_sidewidth = 2500;
+mycar.detect_rect_length = 30*10^3;
+mycar.detect_rect_sidewidth = 4*10^3;
 %---------------
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
@@ -97,8 +97,11 @@ plot_mycardec = [];
 plot_othercardec = [];
 time_plot_mycardec = 0;
 
-PLOT_MYCAR_DETECTING_AREA = 1;
 %-----------------------------------
+
+%--PLOTING MODE-------------
+PLOT_MYCAR_DETECTING_AREA = 1;
+%---------------------------
 
 % RUN
 % INITIALIZE SAVER
@@ -166,7 +169,7 @@ while sim.flag && ishandle(fig)
             % [othercars, table_same_lane] = update_control_othercars_mycar_IN_TTColdandIDM_IDM_ref(othercars, sim, mycar, idm, laneChangePath, table_same_lane);
             
             % update speed and position of mycar
-            mycar = calculate_velocity_mycar_tollPlaza_IN(mycar, sim, othercars, idm, laneChangePath, PLOT_MYCAR_DETECTING_AREA);
+            mycar = calculate_velocity_mycar_tollPlaza_IN_1123(mycar, sim, othercars, idm, laneChangePath);
             
             mycar = update_mycar(mycar, sim, othercars, FLAG_UPDATE_RFS);
             othercars = update_othercars(othercars, sim);

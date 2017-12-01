@@ -1,4 +1,4 @@
-function acceleration = calculate_acceleration_IDM(objectcar, frontcar, pos_frontcar_est, idm, rel_degree)
+function acceleration = calculate_acceleration_IDM_following(objectcar, frontcar, pos_frontcar_est, idm, rel_degree)
 % calculate acceleration by IDM (from preceding and object car's information) 
 
 
@@ -7,14 +7,7 @@ if A3_TTC < idm.s0
     A3_TTC = idm.s0;
 end
 
-if rel_degree < 3
-    A2 = (idm.s0 + objectcar.vel(1)*idm.T + objectcar.vel(1) * (objectcar.vel(1) - frontcar.vel(1)*cos(rel_degree*pi/180))/2/sqrt(idm.a*idm.b))/A3_TTC;
-elseif rel_degree < 5
-    A2 = (idm.s0 + objectcar.vel(1)*idm.T + objectcar.vel(1) * (objectcar.vel(1) - ((5 - rel_degree)/2)*frontcar.vel(1)*cos(rel_degree*pi/180))/2/sqrt(idm.a*idm.b))/A3_TTC;
-else
-    A2 = (idm.s0 + objectcar.vel(1)*idm.T + objectcar.vel(1) * objectcar.vel(1)/2/sqrt(idm.a*idm.b))/A3_TTC;
-end
-
+A2 = (idm.s0 + objectcar.vel(1)*idm.T + objectcar.vel(1) * (objectcar.vel(1) - frontcar.vel(1)*cos(rel_degree*pi/180))/2/sqrt(idm.a*idm.b))/A3_TTC;
 A1 = objectcar.vel(1)/idm.v0;
 accele_IDM = idm.a*(1 - A1^idm.delta - A2^2);
 
@@ -22,16 +15,8 @@ accele_IDM = idm.a*(1 - A1^idm.delta - A2^2);
 aLead = 0;  % this value need to be modified !!
 aLeadRestricted = min(aLead,idm.a);
 
-if rel_degree < 3
-    dvp = max(objectcar.vel(1) - frontcar.vel(1)*cos(rel_degree*pi/180),0);
-    vLead = frontcar.vel(1)*cos(rel_degree*pi*pi/180);
-elseif rel_degree < 5
-    dvp = max(objectcar.vel(1) - ((5 - rel_degree)/2)*frontcar.vel(1)*cos(rel_degree*pi/180),0);
-    vLead = frontcar.vel(1)*cos(rel_degree*pi*pi/180);
-else
-    dvp = max(objectcar.vel(1),0);
-    vLead = 0;
-end
+dvp = max(objectcar.vel(1) - frontcar.vel(1)*cos(rel_degree*pi/180),0);
+vLead = frontcar.vel(1)*cos(rel_degree*pi*pi/180);
 
 denomCAH = vLead*vLead - 2*A3_TTC*aLeadRestricted;
 

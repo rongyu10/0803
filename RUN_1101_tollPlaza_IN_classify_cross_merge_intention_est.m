@@ -27,7 +27,7 @@ end
 othercars  = init_othercars();
 nr_cars    = 46; % total number of cars (1st:20cars, 2nd:6cars, 3rd:20cars)
 othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
-othercars  = addcars_tollplaza_IN(othercars, road.track{1}, nr_cars);
+othercars  = addcars_tollplaza_IN_cross1lane2(othercars, road.track{1}, nr_cars);
 for i = 1:nr_cars
     % othercars.car{i}.time_TTC = 0.1*randi(30);
     othercars.car{i}.time_TTC = 0.0;

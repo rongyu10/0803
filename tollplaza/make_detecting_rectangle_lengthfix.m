@@ -1,17 +1,17 @@
-function [squareX, squareY] = make_detecting_rectangle(car, position, velocity, laneChangePath, rect_length_time, rect_width_side)
+function [squareX, squareY] = make_detecting_rectangle_lengthfix(car, position,laneChangePath, length, width)
 
 % make rectangle of detecting area(4points)-----------------------------------
 squareX = zeros(1,5);
 squareY = zeros(1,5);
 
 for i = 0:1
-    X_est = position(1) + velocity(1)*(rect_length_time)*i;
+    X_est = position(1) + length*i;
     
     if X_est <= 100*10^3
         squareX(i+1) = X_est;
         squareX(4-i) = X_est;
-        squareY(i+1) = car.pos(2) - rect_width_side;
-        squareY(4-i) = car.pos(2) + rect_width_side;
+        squareY(i+1) = car.pos(2) - width;
+        squareY(4-i) = car.pos(2) + width;
         
         
     elseif X_est <= 275*10^3
@@ -41,7 +41,7 @@ for i = 0:1
             
         end
         %calculate point of the red rectangle from the center point
-        left_right_point = get_car_futurepoint(mycar_posEst_det, car.W, rect_width_side);
+        left_right_point = get_car_futurepoint(mycar_posEst_det, car.W, width*2);
         squareX(i+1) = left_right_point(1,1);
         squareY(i+1) = left_right_point(1,2);
         squareX(4-i) = left_right_point(2,1);
@@ -50,8 +50,8 @@ for i = 0:1
     else
         squareX(i+1) = X_est;
         squareX(4-i) = X_est;
-        squareY(i+1) = (77.5-car.goallane*5.0)*10^3 - rect_width_side;
-        squareY(4-i) = (77.5-car.goallane*5.0)*10^3 + rect_width_side;
+        squareY(i+1) = (77.5-car.goallane*5.0)*10^3 - width;
+        squareY(4-i) = (77.5-car.goallane*5.0)*10^3 + width;
         
     end
     

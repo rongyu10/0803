@@ -5,21 +5,19 @@ VERBOSE = 0;
 
 
 for carid = 1:nr_cars
-    if carid <= othercars.npl
-       laneidx= 1;
-       tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       %x = (120-carid*40+20*rand)*10^3;
-       x = (120-carid*40)*10^3;
-       y = tmppos(2);
-       carpos = [x y 0];
-       othercars.car{carid}.goallane = 13;
-       %othercars.car{carid}.goallane = randi(5) + 10;
-       %othercars.car{carid}.goallane = randi(15);
-       if othercars.car{carid}.goallane <= 5
-           othercars.car{carid}.crossflg = 0;
-       else
-           othercars.car{carid}.crossflg = 1;
-       end
+    laneidx= 1;
+    tmppos = get_posintrack(track, 1, 0, laneidx, 0);
+    %x = (120-carid*40+20*rand)*10^3;
+    x = (120-carid*40)*10^3;
+    y = tmppos(2);
+    carpos = [x y 0];
+    othercars.car{carid}.goallane = 1;
+    %othercars.car{carid}.goallane = randi(5) + 10;
+    %othercars.car{carid}.goallane = randi(15);
+    if othercars.car{carid}.goallane <= 5
+        othercars.car{carid}.crossflg = 0;
+    else
+        othercars.car{carid}.crossflg = 1;
     end
 %     elseif carid <= othercars.npl + 6
 %        laneidx= 2;
