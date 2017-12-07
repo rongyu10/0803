@@ -1,19 +1,28 @@
 function mycar = calculate_velocity_mycar_tollPlaza_IN_1123(mycar, sim, othercars, idm, laneChangePath)
 
+% setting of crossing with othercar-----------------------
+MYCAR_AGGRESSIVE_MODE = 2; % mycar agressive mode when crossing with othercar (0:calm, 1:medium, 2:aggressive)
+
+x_start_detecting = 50*10^3;
+max_intersect_point = 60*10^3;
+max_time_dif_intersection = 2.0; % 
+min_time_other_intersection = 1.0; % mycar must yield if othercar arrive intersect point within this value
+time_mergin_crossing = 1.0; % time interval of crossing
+% --------------------------------------------------------
 
 idx_precedingcar = [];
+idx_crossingcar = [];
 mycar.acceleration = [];
 
-
-    % if entering the plaza
+% if entering the plaza
 if mycar.flgPlaza == 0 && mycar.pos(1) > 100*10^3
     mycar.flgPlaza = 1;
     
-    mycar.pathTranslated = laneChangePath{mycar.goallane, mycar.save.lane_idx};
 end
 
 if mycar.flgPlaza == 0 % before entering plaza
     idm.v0 = 15000;
+    mycar.pathTranslated = laneChangePath{mycar.goallane, mycar.save.lane_idx};
     
 elseif mycar.flgPlaza == 1 % after entering plaza
     pos = predict_pos(mycar.pos, mycar.vel, sim.T);
@@ -32,17 +41,65 @@ elseif mycar.flgPlaza == 1 % after entering plaza
     
 end
 
-[mycar.squareX, mycar.squareY] = make_detecting_rectangle_lengthfix(mycar, mycar.pos, laneChangePath, mycar.detect_rect_length, mycar.detect_rect_sidewidth);
+% [mycar.squareX, mycar.squareY] = make_detecting_rectangle_lengthfix(mycar, mycar.pos, laneChangePath, mycar.detect_rect_length, mycar.detect_rect_sidewidth);
 
 
 % estimate crashing othercar and identify approaching othercar in front of mycar----------------------
-[idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car(othercars, mycar);
+if mycar.pos(1) > x_start_detecting
+    [idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car(othercars, mycar);
+    [idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar] = detect_crossing_car(othercars, mycar, max_intersect_point);
+end
 
-
-
+if ~isempty(idx_crossingcar)
+    if abs(arr_t_othercar - arr_t_mycar) > max_time_dif_intersection % if over 1(sec) difference between two cars, mycar does not accelerate and decelerate
+        A1 = mycar.vel(1)/idm.v0;
+        mycar.acceleration = idm.a*(1 - A1^idm.delta);
+    else
+        if arr_t_othercar < max_time_dif_intersection
+            mycar.acceleration = 2*(dist_section_mycar - mycar.vel(1)*(arr_t_othercar + time_mergin_crossing)) / (arr_t_othercar + time_mergin_crossing)^2;
+        else
+            acceleration_if_front = 2*(dist_section_mycar - mycar.vel(1)*(arr_t_othercar - time_mergin_crossing)) / (arr_t_othercar - time_mergin_crossing)^2;
+            acceleration_if_back = 2*(dist_section_mycar - mycar.vel(1)*(arr_t_othercar + time_mergin_crossing)) / (arr_t_othercar + time_mergin_crossing)^2;
+            fprintf(1, 'acceleration_if_front = [%d], acceleration_if_back = [%d]\n', acceleration_if_front, acceleration_if_back);
+            
+            if MYCAR_AGGRESSIVE_MODE == 0
+                if acceleration_if_back > -2940
+                    mycar.acceleration = acceleration_if_back;
+                else
+                    mycar.acceleration = acceleration_if_front;
+                end
+            elseif MYCAR_AGGRESSIVE_MODE == 1
+                if abs(acceleration_if_front) < abs(acceleration_if_back)
+                    mycar.acceleration = acceleration_if_front;
+                else
+                    mycar.acceleration = acceleration_if_back;
+                end
+            else
+                if acceleration_if_front < 2940
+                    mycar.acceleration = acceleration_if_front;
+                else
+                    mycar.acceleration = acceleration_if_back;
+                end
+            end
+            
+        end
+    end
+end
+    
 if ~isempty(idx_precedingcar)
-    mycar.acceleration = calculate_acceleration_IDM_following(mycar, othercars.car{idx_precedingcar}, othercars.car{idx_precedingcar}.pos, idm, rel_degree_precedingcar);
-else
+    
+    temp_acceleration = calculate_acceleration_IDM_following(mycar, othercars.car{idx_precedingcar}, othercars.car{idx_precedingcar}.pos, idm, rel_degree_precedingcar);
+    if ~isempty(mycar.acceleration)
+        if temp_acceleration < mycar.acceleration
+            mycar.acceleration = temp_acceleration;
+        end
+    else
+        mycar.acceleration = temp_acceleration;
+    end
+        
+end
+
+if isempty(idx_crossingcar) && isempty(idx_precedingcar)
     A1 = mycar.vel(1)/idm.v0;
     mycar.acceleration = idm.a*(1 - A1^idm.delta);
 end
@@ -63,6 +120,14 @@ if ~isempty(idx_precedingcar)
         fprintf(2, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_precedingcar, rel_degree_precedingcar);
     else
         fprintf(1, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_precedingcar, rel_degree_precedingcar);
+    end
+end
+
+if ~isempty(idx_crossingcar)
+    if mycar.acceleration < -1960
+        fprintf(2, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d])\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar);
+    else
+        fprintf(1, 'mycar([%d, %d]) decelerate([%d]) to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d])\n', mycar.pos(1), mycar.pos(2), mycar.acceleration, idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar);
     end
 end
 

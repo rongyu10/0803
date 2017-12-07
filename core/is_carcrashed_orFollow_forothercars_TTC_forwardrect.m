@@ -48,10 +48,17 @@ else
         
         
         % if there are any othercars near index car
-        if(~isempty(idx_nearCar))
+        if ~isempty(idx_nearCar)
             nr_cars = length(idx_nearCar);
             for i = 1:nr_cars
+                
+                [theta_mycar2other,~] = cart2pol(othercars.car{idx_nearCar(i)}.pos(1) - othercars.car{idx}.pos(1), othercars.car{idx_nearCar(i)}.pos(2) - othercars.car{idx}.pos(2));
+                
                 if find(idx_observedcar == idx_nearCar(i))
+                    continue
+                end
+                
+                if (othercars.car{idx}.pos(3) - theta_mycar2other*180/pi)*(othercars.car{idx_nearCar(i)}.pos(3) - othercars.car{idx}.pos(3)) >= 0
                     continue
                 end
                 

@@ -1,4 +1,6 @@
-function [idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car(othercars, mycar, laneChangePath)
+function [idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car_rectangle(othercars, mycar)
+% detect preceding car of IDM by using forward rectangle (relative angle is smaller than 5 degree)
+
 
 idx_nearCar = get_nearCar(mycar, othercars);
 % idx_nearCar = get_frontCar(mycar, othercars);
@@ -9,8 +11,6 @@ if isempty(idx_nearCar)
     return
 else
     clk_TTC = clock;
-    
-    
     
     
     nr_cars = length(idx_nearCar);
@@ -87,41 +87,6 @@ idx_nearCar =[];
 for i=1:nr_cars
     
     if abs(mycar.pos(1)-othercars.car{i}.pos(1)) < DISTANCE
-        pos = othercars.car{i}.pos(1:2);
-        diff= pos - mycar_pos;
-        
-        if norm(diff) < DISTANCE
-            idx_nearCar= [idx_nearCar;i];
-        end
-    end
-    
-end
-
-end
-
-function idx_nearCar = get_frontCar(mycar, othercars) % get the number of othercars in front of mycar and close to mycar
-
-DISTANCE = mycar.vel(1)*3;     % distance running in 3 seconds
-
-mycar_pos = mycar.pos(1:2);
-nr_cars = othercars.n;
-
-idx_nearCar =[];
-for i=1:nr_cars
-    
-%     if mycar.pos(1) > othercars.car{i}.pos(1)
-%         continue
-%     end
-    
-    if abs(mycar.pos(1)-othercars.car{i}.pos(1)) < DISTANCE
-        
-        
-        [theta_mycar2other,~] = cart2pol(mycar.pos(1) - othercars.car{i}.pos(1), mycar.pos(2) - othercars.car{i}.pos(2));
-        if abs(mycar.pos(3) - theta_mycar2other*180/pi) > 90
-            fprintf(1, 'car[%d] is back of mycar [%d]\n', i, mycar.pos(3) - theta_mycar2other*180/pi);
-            continue
-        end
-        
         pos = othercars.car{i}.pos(1:2);
         diff= pos - mycar_pos;
         

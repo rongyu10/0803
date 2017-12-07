@@ -28,6 +28,8 @@ othercars  = init_othercars();
 nr_cars    = 46; % total number of cars (1st:20cars, 2nd:6cars, 3rd:20cars)
 othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
 othercars  = addcars_tollplaza_IN_cross1lane2(othercars, road.track{1}, nr_cars);
+%othercars  = addcars_tollplaza_IN(othercars, road.track{1}, nr_cars);
+
 for i = 1:nr_cars
     % othercars.car{i}.time_TTC = 0.1*randi(30);
     othercars.car{i}.time_TTC = 0.0;
@@ -42,7 +44,7 @@ othercars.detect_rect_sidewidth = 2500;
 
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-120000 5250 0];
+ini_pos    = [-115000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 % SETTING OF TOLL ENTERING
@@ -50,16 +52,11 @@ mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
 mycar.startlane = 3;
 mycar.goallane = 8;
 mycar.pos(2) = 8750 - 3500*(mycar.startlane-1);
-mycar.front_nr = 0; % carID in front of mycar
-mycar.rear_nr = 0; % carID behind mycar
 mycar.save.lane_idx = mycar.startlane;
-mycar.flgIDM = 0;
 mycar.squareX = zeros(1,13);
 mycar.squareY = zeros(1,13);
-mycar.time_TTC = 5.0;
-mycar.step_TTC = sim.T;
 mycar.detect_rect_length = 30*10^3;
-mycar.detect_rect_sidewidth = 4*10^3;
+mycar.detect_rect_sidewidth = 4.5*10^3;
 %---------------
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
@@ -88,19 +85,14 @@ FLAG_LANECHANGE  = false;
 FLAG_UPDATE_RFS = false;
 %-----------------------------
 
-
-
-%--MAKE TABLE OF GOING SAME TOLL LANE
-table_same_lane = zeros(15,15);
-
+%--parameter for getting trajectory data
 plot_mycardec = [];
 plot_othercardec = [];
 time_plot_mycardec = 0;
-
 %-----------------------------------
 
 %--PLOTING MODE-------------
-PLOT_MYCAR_DETECTING_AREA = 1;
+PLOT_MYCAR_DETECTING_AREA = 0;
 %---------------------------
 
 % RUN
@@ -166,7 +158,6 @@ while sim.flag && ishandle(fig)
             
             % update speed and position of othercars
             othercars = calculate_velocity_othercars_tollPlaza_IN(othercars, sim, mycar, idm, laneChangePath);
-            % [othercars, table_same_lane] = update_control_othercars_mycar_IN_TTColdandIDM_IDM_ref(othercars, sim, mycar, idm, laneChangePath, table_same_lane);
             
             % update speed and position of mycar
             mycar = calculate_velocity_mycar_tollPlaza_IN_1123(mycar, sim, othercars, idm, laneChangePath);

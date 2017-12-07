@@ -42,7 +42,6 @@ for i = 1:othercars.n
         t_maxDecelerate = [];
         min_acceleration = 0;
         
-        
         % iterate by number of estimated collision cars (to calculate deceleration by TTC)
         for j = 1:nr_observedCar
 
@@ -54,10 +53,7 @@ for i = 1:othercars.n
                 cur_acceleration = calculate_acceleration_IDM(othercars.car{i}, othercars.car{idx_observedcar(j)}, pos_observedcarEst(j,:), idm, rel_degree);
             end
             
-            
-            
             %fprintf(1, 'after [%d] seconds, mycar and [%d](%d, %d) collide at (%d, %d)\n', t, idx_observedcar, othercars.car{idx_observedcar(i)}.pos(1), othercars.car{idx_observedcar(i)}.pos(2), pos_mycarEst(1), pos_mycarEst(2));
-            
             
             if i == 1
                 min_acceleration = cur_acceleration;
@@ -71,8 +67,15 @@ for i = 1:othercars.n
         end
         
         
+        % --regulate acceleration and velocity ---------------------
+        if othercars.car{i}.acceleration > 2940
+            othercars.car{i}.acceleration = 2940;
+        elseif othercars.car{i}.acceleration < -2940
+            othercars.car{i}.acceleration = -2940;
+        end
+        
         if idx_maxDecelerate == 0
-            if othercars.car{i}.acceleration < -2940
+            if othercars.car{i}.acceleration < -1960
                 fprintf(2, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (observed time = [%d], reldegree = [%d]). Mycar position is [%d, %d].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), mycar.pos(1), mycar.pos(2));
             else
                 fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (observed time = [%d], reldegree = [%d]). Mycar position is [%d, %d].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), mycar.pos(1), mycar.pos(2));
@@ -85,6 +88,7 @@ for i = 1:othercars.n
         othercars.car{i}.acceleration = idm.a*(1 - A1^idm.delta);
     end
     
+    
     othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + othercars.car{i}.acceleration*sim.T;
     
     % control minimum velocity
@@ -93,27 +97,6 @@ for i = 1:othercars.n
     end
     
 end
-    
-% update position after updating all the velocity of othercars
-% for i = 1:othercars.n
-%     othercars.car{i}.vel(1) = othercars.car{i}.vel(1) + othercars.car{i}.acceleration*sim.T;
-%     
-%     % control minimum velocity
-%     if othercars.car{i}.vel(1) < 0 && othercars.car{i}.pos(1) < 320 * 10^3
-%         othercars.car{i}.vel(1) = 0;
-%     end
-%     
-%     % UPDATE MY CAR INFORMATION
-%     othercars.car{i}.pos = update_pos(othercars.car{i}.pos, othercars.car{i}.vel, sim.T);
-%     othercars.car{i}.bd  = get_carshape(othercars.car{i}.pos, othercars.car{i}.W, othercars.car{i}.H);
-%     
-%     % if entering the plaza
-%     if othercars.car{i}.pos(1) > 100*10^3 && othercars.car{i}.pos(1) < 275*10^3
-%         othercars.car{i}.flgPlaza = 1;
-%         
-%         othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx};
-%     end
-% end
     
 end
 

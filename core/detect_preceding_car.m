@@ -1,4 +1,6 @@
 function [idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car(othercars, mycar)
+% detect preceding car of IDM around mycar (within 30m approaching)
+
 
 idx_nearCar = get_nearCar(mycar, othercars);
 % idx_nearCar = get_frontCar(mycar, othercars);
@@ -8,27 +10,22 @@ rel_degree_precedingcar = [];
 if isempty(idx_nearCar)
     return
 else
-    clk_TTC = clock;
-    
     
     nr_cars = length(idx_nearCar);
     for i = 1:nr_cars
+        
         if ~isempty(find(idx_precedingcar == idx_nearCar(i), 1)) % if the target index is already detected
             continue
         end
         
-        rel_degree = mycar.pos(3) - othercars.car{idx_nearCar(i)}.pos(3);
+        [theta_mycar2other,~] = cart2pol(othercars.car{idx_nearCar(i)}.pos(1) - mycar.pos(1), othercars.car{idx_nearCar(i)}.pos(2) - mycar.pos(2));
         
-        if abs(rel_degree) > 5 % if the target index is already detected
+        if abs(theta_mycar2other*180/pi - mycar.pos(3)) > 90 % if the target othercar is behind mycar
             continue
         end
         
-        %             othercars_posEst = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
-        
-        % detect the index(and so on) of othercars in mycar's detecting area---------------
-        in = inpolygon(othercars.car{idx_nearCar(i)}.pos(1), othercars.car{idx_nearCar(i)}.pos(2), mycar.squareX, mycar.squareY);
-        
-        if any(in, 1)
+        if (mycar.pos(3) - theta_mycar2other*180/pi)*(othercars.car{idx_nearCar(i)}.pos(3) - mycar.pos(3)) >= 0
+            rel_degree = mycar.pos(3) - othercars.car{idx_nearCar(i)}.pos(3);
             if isempty(idx_precedingcar)
                 idx_precedingcar = idx_nearCar(i);
                 rel_degree_precedingcar = rel_degree;
@@ -37,38 +34,9 @@ else
                 rel_degree_precedingcar = rel_degree;
             end
         end
-        %------------------------------
         
-        %             if FLAG_OTHERCAR_INTENTION_EST
-        %                 % detect the index(and so on) of othercars which detect mycar in its detecting area---------------
-        %                 for j = 0:1
-        %
-        %                     Pos_est = update_pos(othercars_posEst, othercars.car{idx_nearCar(i)}.vel, j*3.0);
-        %
-        %                     left_right_point = get_car_futurepoint(Pos_est, mycar.W, 5000);
-        %                     othercar_est_squareX(j+1) = left_right_point(1,1);
-        %                     othercar_est_squareY(j+1) = left_right_point(1,2);
-        %                     othercar_est_squareX(4-j) = left_right_point(2,1);
-        %                     othercar_est_squareY(4-j) = left_right_point(2,2);
-        %
-        %                 end
-        %                 othercar_est_squareX(5) = othercar_est_squareX(1);
-        %                 othercar_est_squareY(5) = othercar_est_squareY(1);
-        %                 in = inpolygon(mycar_posEst(1), mycar_posEst(2), othercar_est_squareX, othercar_est_squareY);
-        %
-        %                 if any(in, 1)
-        %                     idx_observing_mycar = [idx_observing_mycar; idx_nearCar(i)];
-        %                     angle_observing_mycar = [angle_observing_mycar; abs(mycar_posEst(3) - othercars_posEst(3))];
-        %                     mycarpos_observing_mycar = [mycarpos_observing_mycar; mycar_posEst];
-        %                     t_observing_mycar = [t_observing_mycar; t];
-        %                 end
-        %                 %------------------------------
-        %             end
     end
-    
-    
-    ms_TTC  = etime(clock, clk_TTC)*1000;
-    %fprintf(2, 'TTC calculating = [%d]msec\n', ms_TTC);
+
 end
 
 end
@@ -97,40 +65,6 @@ end
 
 end
 
-function idx_nearCar = get_frontCar(mycar, othercars) % get the number of othercars in front of mycar and close to mycar
-
-DISTANCE = mycar.vel(1)*3;     % distance running in 3 seconds
-
-mycar_pos = mycar.pos(1:2);
-nr_cars = othercars.n;
-
-idx_nearCar =[];
-for i=1:nr_cars
-    
-%     if mycar.pos(1) > othercars.car{i}.pos(1)
-%         continue
-%     end
-    
-    if abs(mycar.pos(1)-othercars.car{i}.pos(1)) < DISTANCE
-        
-        
-        [theta_mycar2other,~] = cart2pol(mycar.pos(1) - othercars.car{i}.pos(1), mycar.pos(2) - othercars.car{i}.pos(2));
-        if abs(mycar.pos(3) - theta_mycar2other*180/pi) > 90
-            fprintf(1, 'car[%d] is back of mycar [%d]\n', i, mycar.pos(3) - theta_mycar2other*180/pi);
-            continue
-        end
-        
-        pos = othercars.car{i}.pos(1:2);
-        diff= pos - mycar_pos;
-        
-        if norm(diff) < DISTANCE
-            idx_nearCar= [idx_nearCar;i];
-        end
-    end
-    
-end
-
-end
 
 function idx_nearPerson = get_nearPerson(mycar,pedestrians)
 
