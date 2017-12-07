@@ -43,7 +43,7 @@ else
         end
 
 
-        [est_squareX, est_squareY] = make_detecting_rectangle(othercars.car{idx}, mycar_posEst, othercars.car{idx}.vel, laneChangePath, othercars.detect_rect_forwardtime, othercars.detect_rect_sidewidth);
+        [est_squareX, est_squareY] = make_detecting_rectangle(othercars.car{idx}, mycar_posEst, laneChangePath, othercars.detect_rect_length, othercars.detect_rect_sidewidth);
         
         
         

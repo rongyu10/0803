@@ -1,17 +1,17 @@
 function mycar = calculate_velocity_mycar_tollPlaza_IN_1123(mycar, sim, othercars, idm, laneChangePath)
 
 % setting of crossing with othercar-----------------------
-MYCAR_AGGRESSIVE_MODE = 1; % mycar agressive mode when crossing with othercar (0:calm, 1:medium, 2:aggressive)
+MYCAR_AGGRESSIVE_MODE = 2; % mycar agressive mode when crossing with othercar (0:calm, 1:medium, 2:aggressive)
 
 x_start_detecting = 50*10^3;
 max_intersect_point = 60*10^3;
 max_time_dif_intersection = 2.0; % 
 % min_time_other_intersection = 1.0; % mycar must yield if othercar arrive intersect point within this value
-time_mergin_crossing = 1.5; % time interval of crossing
+time_mergin_crossing = 1.0; % time interval of crossing
 % --------------------------------------------------------
 
-persistent idx_precedingcar;
-persistent idx_crossingcar;
+idx_precedingcar = [];
+idx_crossingcar = [];
 mycar.acceleration = [];
 
 % if entering the plaza
@@ -46,12 +46,8 @@ end
 
 % estimate crashing othercar and identify approaching othercar in front of mycar----------------------
 if mycar.pos(1) > x_start_detecting
-    if isempty(idx_crossingcar)
-        [idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car(othercars, mycar);
-    end
-    if isempty(idx_precedingcar)
-        [idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar] = detect_crossing_car(othercars, mycar, max_intersect_point);
-    end
+    [idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car(othercars, mycar);
+    [idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar] = detect_crossing_car(othercars, mycar, max_intersect_point);
 end
 
 if ~isempty(idx_crossingcar)

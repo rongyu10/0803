@@ -27,14 +27,14 @@ else
             crosspoint = zeros(1,2);
             
             % calculate crossing point
-            if mycar.pos(2) > othercars.car{idx_nearCar(i)}.pos(2)
+            if mycar.pos(2) > othercars.car{idx_nearCar(i)}.pos(2) % if mycar exists over othercar
                 for j = 1:201
                     if mycar.pathTranslated(j,2) < othercars.car{idx_nearCar(i)}.pos(2) + sin(othercars.car{idx_nearCar(i)}.pos(3)*180/pi) * 175 * (j-1) / 200
                         crosspoint = [mycar.pathTranslated(j,1), mycar.pathTranslated(j,2)];
                         break;
                     end
                 end
-            else
+            else  % if mycar exists under othercar
                 for j = 1:201
                     if mycar.pathTranslated(j,2) > othercars.car{idx_nearCar(i)}.pos(2) + sin(othercars.car{idx_nearCar(i)}.pos(3)*180/pi) * 175 * (j-1) / 200
                         crosspoint = [mycar.pathTranslated(j,1), mycar.pathTranslated(j,2)];

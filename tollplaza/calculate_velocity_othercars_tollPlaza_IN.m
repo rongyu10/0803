@@ -68,14 +68,14 @@ for i = 1:othercars.n
         
         
         % --regulate acceleration and velocity ---------------------
-        if othercars.car{i}.acceleration > 2940
-            othercars.car{i}.acceleration = 2940;
-        elseif othercars.car{i}.acceleration < -2940
-            othercars.car{i}.acceleration = -2940;
-        end
+%         if othercars.car{i}.acceleration > 2940
+%             othercars.car{i}.acceleration = 2940;
+%         elseif othercars.car{i}.acceleration < -2940
+%             othercars.car{i}.acceleration = -2940;
+%         end
         
         if idx_maxDecelerate == 0
-            if othercars.car{i}.acceleration < -1960
+            if othercars.car{i}.acceleration < -2940
                 fprintf(2, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (observed time = [%d], reldegree = [%d]). Mycar position is [%d, %d].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), mycar.pos(1), mycar.pos(2));
             else
                 fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (observed time = [%d], reldegree = [%d]). Mycar position is [%d, %d].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), mycar.pos(1), mycar.pos(2));

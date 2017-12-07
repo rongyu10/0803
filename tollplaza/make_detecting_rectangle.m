@@ -1,11 +1,11 @@
-function [squareX, squareY] = make_detecting_rectangle(car, position, velocity, laneChangePath, rect_length_time, rect_width_side)
+function [squareX, squareY] = make_detecting_rectangle(car, position, laneChangePath, rect_length, rect_width_side)
 
 % make rectangle of detecting area(4points)-----------------------------------
 squareX = zeros(1,5);
 squareY = zeros(1,5);
 
 for i = 0:1
-    X_est = position(1) + velocity(1)*(rect_length_time)*i;
+    X_est = position(1) + rect_length*i;
     
     if X_est <= 100*10^3
         squareX(i+1) = X_est;

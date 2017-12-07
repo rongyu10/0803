@@ -36,7 +36,7 @@ for i = 1:nr_cars
     othercars.car{i}.pathTranslated = laneChangePath{othercars.car{i}.goallane, othercars.car{i}.save.lane_idx};
 end
 othercars.step_TTC = sim.T;
-othercars.detect_rect_forwardtime = 3.0;
+othercars.detect_rect_length = 30000;
 othercars.detect_rect_sidewidth = 2500;
 %load('othercars_0921');
 
@@ -44,7 +44,7 @@ othercars.detect_rect_sidewidth = 2500;
 
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-115000 5250 0];
+ini_pos    = [-110000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 % SETTING OF TOLL ENTERING
