@@ -1,4 +1,4 @@
-function [idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car(othercars, mycar)
+function [idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car_1123(othercars, mycar)
 % detect preceding car of IDM around mycar (within 30m approaching)
 
 
@@ -24,7 +24,7 @@ else
             continue
         end
         
-        if abs(rho_mycar2other*sin(theta_mycar2other*180/pi - mycar.pos(3))) > 3400 % if the target othercar's side mergin is over 3.4(m)
+        if abs(rho_mycar2other*sin(theta_mycar2other*180/pi - mycar.pos(3))) > mycar.detect_sidewidth % if the target othercar's side mergin is over set parameter
             continue
         end
         
@@ -49,7 +49,7 @@ end
 function idx_nearCar = get_nearCar(mycar, othercars) % get the number of othercars in front of mycar and close to mycar
 
 % DISTANCE = mycar.vel(1)*3;     % distance running in 3 seconds
-DISTANCE = mycar.detect_rect_length;
+DISTANCE = mycar.detect_length;
 mycar_pos = mycar.pos(1:2);
 nr_cars = othercars.n;
 

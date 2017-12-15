@@ -43,7 +43,7 @@ othercars.detect_rect_sidewidth = 3.4 * 10^3;
 
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-119900 5250 0];
+ini_pos    = [-105000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 %---------------
@@ -64,13 +64,12 @@ mycar.detect_sidewidth = 3.4 * 10^3;
 %---------------
 
 % setting of crossing mycar with othercar-----------------------
-MYCAR_AGGRESSIVE_MODE = 2; % mycar agressive mode when crossing with othercar (0:calm, 1:medium, 2:aggressive)
+MYCAR_AGGRESSIVE_MODE = 0; % mycar agressive mode when crossing with othercar (0:calm, 1:medium, 2:aggressive)
 mycar.x_start_detecting = 50*10^3;
 mycar.max_intersect_point = 60*10^3;
 mycar.max_time_dif_intersection = 2.0;
 % min_time_other_intersection = 1.0; % mycar must yield if othercar arrive intersect point within this value
-mycar.time_mergin_crossing = 1.5; % time interval of crossing
-mycar.min_angle_crossing = 5.0;
+mycar.time_mergin_crossing = 2.0; % time interval of crossing
 % --------------------------------------------------------
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
@@ -174,7 +173,7 @@ while sim.flag && ishandle(fig)
             othercars = calculate_velocity_othercars_tollPlaza_IN(othercars, sim, mycar, idm, laneChangePath);
             
             % update speed and position of mycar
-            mycar = calculate_velocity_mycar_tollPlaza_IN_1123_judge(mycar, sim, othercars, idm, laneChangePath, MYCAR_AGGRESSIVE_MODE);
+            mycar = calculate_velocity_mycar_tollPlaza_IN_1215(mycar, sim, othercars, idm, laneChangePath, MYCAR_AGGRESSIVE_MODE);
             
             mycar = update_mycar(mycar, sim, othercars, FLAG_UPDATE_RFS);
             othercars = update_othercars(othercars, sim);

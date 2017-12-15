@@ -41,7 +41,7 @@ for i = 0:1
             
         end
         %calculate point of the red rectangle from the center point
-        left_right_point = get_car_futurepoint(mycar_posEst_det, car.W, rect_width_side);
+        left_right_point = get_sidepoint(mycar_posEst_det, rect_width_side);
         squareX(i+1) = left_right_point(1,1);
         squareY(i+1) = left_right_point(1,2);
         squareX(4-i) = left_right_point(2,1);

@@ -1,11 +1,11 @@
-function [idx_observedcar, t_observedcar, pos_mycarEst, pos_observedcarEst] = is_carcrashed_orFollow_forothercars_TTC_forwardrect(othercars, idx, mycar, laneChangePath)
+function [idx_observedcar, t_observedcar, pos_mycarEst, observedcarEst] = detect_frontcar_forothercars(othercars, idx, mycar, laneChangePath)
 
 idx_nearCar = get_nearCar(othercars,idx); % (multiple number of cars in this)
 est_mycar = get_nearMyCar(mycar, othercars, idx);
 idx_observedcar = []; % 0:mycar 1~:number of othercar (only 1 car in this)
 t_observedcar = [];
 pos_mycarEst = [];
-pos_observedcarEst = [];
+observedcarEst = [];
 
 if isempty(idx_nearCar) && isempty(est_mycar)
     return
@@ -58,38 +58,47 @@ else
                     continue
                 end
                 
-                if (othercars.car{idx}.pos(3) - theta_mycar2other*180/pi)*(othercars.car{idx_nearCar(i)}.pos(3) - othercars.car{idx}.pos(3)) >= 0
+                if (othercars.car{idx}.pos(3) - theta_mycar2other*180/pi)*(othercars.car{idx_nearCar(i)}.pos(3) - othercars.car{idx}.pos(3)) <= 0
                     continue
                 end
                 
-                othercars_posEst = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
-                in = inpolygon(othercars_posEst(1), othercars_posEst(2), est_squareX, est_squareY);
+                observedcarEst_cur.pos = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
+                in = inpolygon(observedcarEst_cur.pos(1), observedcarEst_cur.pos(2), est_squareX, est_squareY);
+                observedcarEst_cur.vel = othercars.car{idx_nearCar(i)}.vel;
                 
                 if any(in, 1)
                     idx_observedcar = [idx_observedcar; idx_nearCar(i)];
                     t_observedcar = [t_observedcar; t];
                     pos_mycarEst = [pos_mycarEst; mycar_posEst];
-                    pos_observedcarEst = [pos_observedcarEst; othercars_posEst];
+                    observedcarEst = [observedcarEst; observedcarEst_cur];
                 end
                 
             end
         end
         
         % if there is mycar near index car
-        if(~isempty(est_mycar))
+        if ~isempty(est_mycar)
+            
+            [theta_mycar2other,~] = cart2pol(mycar.pos(1) - othercars.car{idx}.pos(1), mycar.pos(2) - othercars.car{idx}.pos(2));
             
             if find(idx_observedcar == 0)
                 continue
             end
             
-            othercars_posEst = update_pos(mycar.pos, mycar.vel, t);
-            in = inpolygon(othercars_posEst(1), othercars_posEst(2), est_squareX, est_squareY);
+            if (othercars.car{idx}.pos(3) - theta_mycar2other*180/pi)*(mycar.pos(3) - othercars.car{idx}.pos(3)) <= 0
+                continue
+            end
+            
+            observedcarEst_cur.pos = update_pos(mycar.pos, mycar.vel, t);
+            in = inpolygon(observedcarEst_cur.pos(1), observedcarEst_cur.pos(2), est_squareX, est_squareY);
+            observedcarEst_cur.vel = mycar.vel;
+            
             %----
             if any(in, 1) % && othercars.car{idx}.pos(1) < mycar.pos(1)
                 idx_observedcar = [idx_observedcar; 0];
                 t_observedcar = [t_observedcar; t];
                 pos_mycarEst = [pos_mycarEst; mycar_posEst];
-                pos_observedcarEst = [pos_observedcarEst; othercars_posEst];
+                observedcarEst = [observedcarEst; observedcarEst_cur];
             end
             %----
         end
