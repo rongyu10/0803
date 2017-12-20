@@ -3,7 +3,7 @@ function othercars = calculate_velocity_othercars_tollPlaza_IN(othercars, sim, m
 for i = 1:othercars.n
     
     if othercars.car{i}.flgPlaza == 0 % before entering plaza
-        idm.v0 = 15000;
+        idm.v0 = 17500;
         % if entering the plaza
         if othercars.car{i}.pos(1) > 100*10^3 && othercars.car{i}.pos(1) < 275*10^3
             othercars.car{i}.flgPlaza = 1;
@@ -21,20 +21,23 @@ for i = 1:othercars.n
 %             othercars.car{i}.vel(2) = othercars.car{i}.vel(2) + (othercars.car{i}.targetDegree - othercars.car{i}.pos(3))/sim.T;
 %         end
         
-        if othercars.car{i}.pos(1) < 187.5*10^3
-            idm.v0 = 15000;
-            
-        elseif othercars.car{i}.pos(1) < 275*10^3
-            idm.v0 = 12500;
-            
-        elseif othercars.car{i}.pos(1) < 320*10^3
-            idm.v0 = 10000;
-        end
+        % 目標速度をゲートからの距離に応じて27km/h〜63km/hに設定
+        idm.v0 = 7500 + 10000*(320*10^3 - othercars.car{i}.pos(1))/(220*10^3);
+
+%         if othercars.car{i}.pos(1) < 187.5*10^3
+%             idm.v0 = 15000;
+%             
+%         elseif othercars.car{i}.pos(1) < 275*10^3
+%             idm.v0 = 12500;
+%             
+%         elseif othercars.car{i}.pos(1) < 320*10^3
+%             idm.v0 = 10000;
+%         end
         
     end
     
-    [idx_observedcar, t_observedcar, pos_mycarEst, observedcarEst] = detect_frontcar_forothercars(othercars, i, mycar, laneChangePath);    
-        
+    [idx_observedcar, t_observedcar, pos_mycarEst, observedcarEst, othercars] = detect_frontcar_forothercars(othercars, i, mycar, laneChangePath);    
+    
     if ~isempty(idx_observedcar)
         
         nr_observedCar = length(idx_observedcar);
@@ -51,7 +54,7 @@ for i = 1:othercars.n
             
             %fprintf(1, 'after [%d] seconds, mycar and [%d](%d, %d) collide at (%d, %d)\n', t, idx_observedcar, othercars.car{idx_observedcar(i)}.pos(1), othercars.car{idx_observedcar(i)}.pos(2), pos_mycarEst(1), pos_mycarEst(2));
             
-            if i == 1
+            if j == 1
                 min_acceleration = cur_acceleration;
             end
             
@@ -63,27 +66,27 @@ for i = 1:othercars.n
             end
         end
         
+
+        
         
         % --regulate acceleration and velocity ---------------------
-%         if othercars.car{i}.acceleration > 2940
-%             othercars.car{i}.acceleration = 2940;
-%         elseif othercars.car{i}.acceleration < -2940
-%             othercars.car{i}.acceleration = -2940;
+%         if othercars.car{i}.acceleration > othercars.max_acceleration
+%             othercars.car{i}.acceleration = othercars.max_acceleration;
+%         elseif othercars.car{i}.acceleration < -othercars.max_acceleration
+%             othercars.car{i}.acceleration = -othercars.max_acceleration;
 %         end
         
         if idx_maxDecelerate == 0
-            if othercars.car{i}.acceleration < -2940
+            if othercars.car{i}.acceleration < -othercars.max_acceleration
                 fprintf(2, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (observed time = [%d], reldegree = [%d]). Mycar position is [%d, %d].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, t_maxDecelerate, deg_maxDecelerate, mycar.pos(1), mycar.pos(2));
             else
                 fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to mycar (observed time = [%d], reldegree = [%d]). Mycar position is [%d, %d].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, t_maxDecelerate, deg_maxDecelerate, mycar.pos(1), mycar.pos(2));
             end
-        end
-        
-        if idx_maxDecelerate ~= 0
-            if othercars.car{i}.acceleration < -2940
-                fprintf(2, 'car[%d]([%d], [%d]) decelerate([%d]) to car[%d] (observed time = [%d], reldegree = [%d]). Mycar position is [%d, %d].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, idx_maxDecelerate, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), mycar.pos(1), mycar.pos(2));
+        elseif idx_maxDecelerate ~= 0
+            if othercars.car{i}.acceleration < -othercars.max_acceleration
+                fprintf(2, 'car[%d]([%d], [%d]) decelerate([%d]) to car[%d] (observed time = [%d], reldegree = [%d]). Mycar position is [%d, %d].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, idx_maxDecelerate, t_maxDecelerate, deg_maxDecelerate, mycar.pos(1), mycar.pos(2));
             else
-                fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to car[%d] (observed time = [%d], reldegree = [%d]). Mycar position is [%d, %d].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, idx_maxDecelerate, t_maxDecelerate, pos_mycarEst(3) - pos_observedcarEst(3), mycar.pos(1), mycar.pos(2));
+                fprintf(1, 'car[%d]([%d], [%d]) decelerate([%d]) to car[%d] (observed time = [%d], reldegree = [%d]). Mycar position is [%d, %d].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, idx_maxDecelerate, t_maxDecelerate, deg_maxDecelerate, mycar.pos(1), mycar.pos(2));
             end
         end
 

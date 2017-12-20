@@ -1,4 +1,4 @@
-function [idx_observedcar, t_observedcar, pos_mycarEst, observedcarEst] = detect_frontcar_forothercars(othercars, idx, mycar, laneChangePath)
+function [idx_observedcar, t_observedcar, pos_mycarEst, observedcarEst, othercars] = detect_frontcar_forothercars(othercars, idx, mycar, laneChangePath)
 
 idx_nearCar = get_nearCar(othercars,idx); % (multiple number of cars in this)
 est_mycar = get_nearMyCar(mycar, othercars, idx);
@@ -43,7 +43,7 @@ else
         end
 
 
-        [est_squareX, est_squareY] = make_detecting_rectangle(othercars.car{idx}, mycar_posEst, laneChangePath, othercars.detect_rect_length, othercars.detect_rect_sidewidth);
+        [othercars.car{idx}.squareX, othercars.car{idx}.squareY] = make_detecting_rectangle(othercars.car{idx}, mycar_posEst, laneChangePath, othercars.detect_rect_length, othercars.detect_rect_sidewidth);
         
         
         
@@ -58,12 +58,12 @@ else
                     continue
                 end
                 
-                if (othercars.car{idx}.pos(3) - theta_mycar2other*180/pi)*(othercars.car{idx_nearCar(i)}.pos(3) - othercars.car{idx}.pos(3)) <= 0
-                    continue
-                end
+%                 if (othercars.car{idx}.pos(3) - theta_mycar2other*180/pi)*(othercars.car{idx_nearCar(i)}.pos(3) - othercars.car{idx}.pos(3)) <= 0
+%                     continue
+%                 end
                 
                 observedcarEst_cur.pos = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
-                in = inpolygon(observedcarEst_cur.pos(1), observedcarEst_cur.pos(2), est_squareX, est_squareY);
+                in = inpolygon(observedcarEst_cur.pos(1), observedcarEst_cur.pos(2), othercars.car{idx}.squareX, othercars.car{idx}.squareY);
                 observedcarEst_cur.vel = othercars.car{idx_nearCar(i)}.vel;
                 
                 if any(in, 1)
@@ -72,6 +72,8 @@ else
                     pos_mycarEst = [pos_mycarEst; mycar_posEst];
                     observedcarEst = [observedcarEst; observedcarEst_cur];
                 end
+                
+
                 
             end
         end
@@ -85,12 +87,12 @@ else
                 continue
             end
             
-            if (othercars.car{idx}.pos(3) - theta_mycar2other*180/pi)*(mycar.pos(3) - othercars.car{idx}.pos(3)) <= 0
-                continue
-            end
+%             if (othercars.car{idx}.pos(3) - theta_mycar2other*180/pi)*(mycar.pos(3) - othercars.car{idx}.pos(3)) <= 0
+%                 continue
+%             end
             
             observedcarEst_cur.pos = update_pos(mycar.pos, mycar.vel, t);
-            in = inpolygon(observedcarEst_cur.pos(1), observedcarEst_cur.pos(2), est_squareX, est_squareY);
+            in = inpolygon(observedcarEst_cur.pos(1), observedcarEst_cur.pos(2), othercars.car{idx}.squareX, othercars.car{idx}.squareY);
             observedcarEst_cur.vel = mycar.vel;
             
             %----
@@ -103,7 +105,11 @@ else
             %----
         end
         
+
+        
     end
+    
+
 end
 
 end
@@ -111,11 +117,7 @@ end
 function est_mycar = get_nearMyCar(mycar, othercars, idx)
 
 est_mycar = [];
-DISTANCE = othercars.car{idx}.vel(1)*3;
-
-if othercars.car{idx}.pos(1) > mycar.pos(1)
-    return
-end
+DISTANCE = othercars.detect_length;
 
 pos = othercars.car{idx}.pos(1:2);
 diff= pos - mycar.pos(1:2);
@@ -128,7 +130,7 @@ end
 
 function idx_nearCar = get_nearCar(othercars,idx) % get the number of othercars in front of mycar and getting close to object car
 
-DISTANCE = othercars.car{idx}.vel(1)*3;
+DISTANCE = othercars.detect_length;
 
 mycar_pos = othercars.car{idx}.pos(1:2);
 nr_cars = othercars.n;
@@ -157,7 +159,7 @@ for i=1:nr_cars
 %         continue
 %     end
     
-    if othercars.car{i}.pos(1) - othercars.car{idx}.pos(1) < DISTANCE && othercars.car{i}.pos(1) - othercars.car{idx}.pos(1) > 0
+    if othercars.car{i}.pos(1) - othercars.car{idx}.pos(1) < DISTANCE
         pos = othercars.car{i}.pos(1:2);
         diff= pos - mycar_pos;
         

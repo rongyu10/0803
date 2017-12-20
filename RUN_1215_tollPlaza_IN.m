@@ -38,39 +38,22 @@ end
 othercars.step_TTC = sim.T;
 othercars.detect_rect_length = 30 * 10^3;
 othercars.detect_rect_sidewidth = 3.4 * 10^3;
-%load('othercars_0921');
+othercars.max_acceleration = 2.94 * 10^3;
+othercars.detect_length = 50 * 10^3;
+
 %---------------
+
+%load('othercars_0921');
 
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-105000 5250 0];
+ini_pos    = [-106000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 %---------------
 
-% SETTING OF TOLL ENTERING
-mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
-mycar.startlane = 2;
-mycar.goallane = 8;
-mycar.pos(2) = 8750 - 3500*(mycar.startlane-1);
-mycar.save.lane_idx = mycar.startlane;
-mycar.detect_length = 30 * 10^3;
-mycar.detect_sidewidth = 3.4 * 10^3;
-
-%mycar.squareX = zeros(1,13);
-%mycar.squareY = zeros(1,13);
-%mycar.detect_rect_length = 30*10^3;
-%mycar.detect_rect_sidewidth = 4.5*10^3;
-%---------------
-
-% setting of crossing mycar with othercar-----------------------
-MYCAR_AGGRESSIVE_MODE = 0; % mycar agressive mode when crossing with othercar (0:calm, 1:medium, 2:aggressive)
-mycar.x_start_detecting = 50*10^3;
-mycar.max_intersect_point = 60*10^3;
-mycar.max_time_dif_intersection = 2.0;
-% min_time_other_intersection = 1.0; % mycar must yield if othercar arrive intersect point within this value
-mycar.time_mergin_crossing = 2.0; % time interval of crossing
-% --------------------------------------------------------
+mycar      = init_mycar_toll(mycar);
+MYCAR_AGGRESSIVE_MODE = 1; % mycar agressive mode when crossing with othercar (0:calm, 1:medium, 2:aggressive)
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
 idm.v0 = 15000; % desired velocity
@@ -83,17 +66,16 @@ idm.l = 4000; % vehicle length
 idm.coolness = 0.99;
 %============================================================
 
-% INITIALIZE FIGURE
+% INITIALIZE FIGURE-----------
 figsz     = [1 4 8 4]/10;
 figtitle  = 'GUI-GUI CONTROL SIMULATOR at TOLL PLAZA';
 axespos   = [0.03, 0.02, 0.95, 0.84]; 
 fig       = get_fig(figsz, figtitle, axespos);
 set(gcf,'Color', [0.1, 0.25, 0.2] ); hold on;
 ms_update = 0; ms_plot = 0;
-
+%-----------------------------
 
 %-- FLAG INTERACTION ---------
-FLAG_INTERACTION = true;
 FLAG_LANECHANGE  = false;
 FLAG_UPDATE_RFS = false;
 %-----------------------------
@@ -105,7 +87,7 @@ time_plot_mycardec = 0;
 %-----------------------------------
 
 %--PLOTING MODE-------------
-PLOT_MYCAR_DETECTING_AREA = 0;
+PLOT_MYCAR_DETECTING_AREA = 1;
 %---------------------------
 
 % RUN
@@ -132,7 +114,7 @@ while sim.flag && ishandle(fig)
                 mycar.goallane = mycar.goallane + 1;
             end
         case 'space'
-            mycar.vel = [0 0];
+            mycar.vel = [0 0];  
         case {'1', '2', '3', '4', '5', '6'}
             nr_lane = str2num(key_pressed);
             mycar = set_mycar(mycar, get_posintrack(road.track{1}, 1, 0, nr_lane, 0), [ini_vel 0]);
@@ -168,7 +150,6 @@ while sim.flag && ishandle(fig)
             sim        = update_sim(sim);
             othercars = respawn_othercars_tollplaza(othercars,road);
             
-            
             % update speed and position of othercars
             othercars = calculate_velocity_othercars_tollPlaza_IN(othercars, sim, mycar, idm, laneChangePath);
             
@@ -202,38 +183,19 @@ while sim.flag && ishandle(fig)
                 fprintf(1, 'SUCCEEDED!! \n');
 %                 key_pressed = 'p';
 %                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
-%                 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
-%                 mycar.startlane = 3;
-%                 mycar.goallane = 8;
-%                 mycar.front_nr = 0; % carID in front of mycar
-%                 mycar.rear_nr = 0; % carID behind mycar
-%                 mycar.save.lane_idx = mycar.startlane;
-%                 FLAG_LANECHANGE = false;
                 sim.mode = 'QUIT';
-                clear update_control_mycar_merge_intelligent
             elseif is_insidetrack(myinfo) == 0 && (mycar.pos(2) < 0 || mycar.pos(2) > 10500) 
                 fprintf(2, 'OUTSIDE THE TRACK. \n');
                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
-                mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
-                mycar.startlane = 3;
-                mycar.goallane = 8;
-                mycar.front_nr = 0; % carID in front of mycar
-                mycar.rear_nr = 0; % carID behind mycar
-                mycar.save.lane_idx = mycar.startlane;
+                mycar = init_mycar_toll(mycar);
                 FLAG_LANECHANGE = false;
             end
             %if is_carcrashed(myinfo)
-            if is_carcrashed2(mycar) % mod by kumano
+            if is_carcrashed3(mycar, othercars) % mod by kumano
                 fprintf(2, 'COLLISION OCCURRED. \n');
                 mycar = init_mycar(get_posintrack(road.track{1}, 1, 0, 2, 0),ini_vel); % mod by kumano
-                mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
-                mycar.startlane = 3;
-                mycar.goallane = 8;
-                mycar.front_nr = 0; % carID in front of mycar
-                mycar.rear_nr = 0; % carID behind mycar
-                mycar.save.lane_idx = mycar.startlane;
+                mycar = init_mycar_toll(mycar);
                 FLAG_LANECHANGE = false;
-                clear update_control_mycar_merge_intelligent
             end
         case 'PAUSE'
             titlecol = 'c';
@@ -271,9 +233,6 @@ while sim.flag && ishandle(fig)
     plot_othercars(othercars, SIMPLECARSHAPE, REALCARSHAPE);
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
     plot_mycar_path_in_plaza(laneChangePath, mycar);
-    if PLOT_MYCAR_DETECTING_AREA
-        plot_mycar_detecting_area(mycar);
-    end
     %plot_mycar_TTC_detecting_area(est_squareX, est_squareY);
     
     %----

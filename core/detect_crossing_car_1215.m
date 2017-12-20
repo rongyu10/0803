@@ -28,12 +28,13 @@ else
         % if othercar is approaching
         if (mycar.pos(3) - theta_mycar2other*180/pi)*(othercars.car{idx_nearCar(i)}.pos(3) - mycar.pos(3)) >= 0
             
+            othercar_cur_sidepoint_each = get_sidepoint(othercars.car{idx_nearCar(i)}.pos, othercars.detect_rect_sidewidth);
+            
             % calculate crossing point
-            if mycar.pos(2) > othercars.car{idx_nearCar(i)}.pos(2) % if mycar exists over othercar
-                othercar_cur_sidepoint_each = get_sidepoint(othercars.car{idx_nearCar(i)}.pos, othercars.detect_rect_sidewidth);
+            if mycar.pos(2) > othercar_cur_sidepoint_each(2,2) + sin(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pos(1)- othercar_cur_sidepoint_each(2,1)) % if mycar exists over othercar
                 othercar_cur_sidepoint = othercar_cur_sidepoint_each(2,:);
                 for j = 1:201
-                    if mycar.pathTranslated(j,2) < othercar_cur_sidepoint(2) + sin(othercars.car{idx_nearCar(i)}.pos(3)*180/pi) * 175 * (j-1) / 200
+                    if mycar.pathTranslated(j,2) < othercar_cur_sidepoint(2) + sin(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * 175 * (j-1) / 200
                         if mycar.pathTranslated(j,1) > othercar_cur_sidepoint(1) % if invade point is front of othercar sidepoint
                             invade_degree = get_targetdegree(mycar.pathTranslated, j);
                             invadepoint = [mycar.pathTranslated(j,1), mycar.pathTranslated(j,2), invade_degree];
@@ -41,11 +42,10 @@ else
                         break;
                     end
                 end
-            else  % if mycar exists under othercar
-                othercar_cur_sidepoint_each = get_sidepoint(othercars.car{idx_nearCar(i)}.pos, othercars.detect_rect_sidewidth);
+            elseif mycar.pos(2) < othercar_cur_sidepoint_each(1,2) + sin(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pos(1) - othercar_cur_sidepoint_each(1,1))  % if mycar exists under othercar
                 othercar_cur_sidepoint = othercar_cur_sidepoint_each(1,:);
                 for j = 1:201
-                    if mycar.pathTranslated(j,2) > othercar_cur_sidepoint(2) + sin(othercars.car{idx_nearCar(i)}.pos(3)*180/pi) * 175 * (j-1) / 200
+                    if mycar.pathTranslated(j,2) > othercar_cur_sidepoint(2) + sin(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * 175 * (j-1) / 200
                         if mycar.pathTranslated(j,1) > othercar_cur_sidepoint(1) % if invade point is front of othercar sidepoint
                             invade_degree = get_targetdegree(mycar.pathTranslated, j);
                             invadepoint = [mycar.pathTranslated(j,1), mycar.pathTranslated(j,2), invade_degree];

@@ -3,9 +3,6 @@ function acceleration = calculate_acceleration_IDM(objectcar, frontcar, idm, rel
 
 
 A3 = norm(frontcar.pos(1:2) - objectcar.pos(1:2)) - idm.l;
-if A3 < idm.s0
-    A3 = idm.s0;
-end
 
 A2 = (idm.s0 + objectcar.vel(1)*idm.T + objectcar.vel(1) * (objectcar.vel(1) - frontcar.vel(1)*cos(rel_degree*pi/180))/2/sqrt(idm.a*idm.b))/A3;
 A1 = objectcar.vel(1)/idm.v0;
