@@ -25,8 +25,6 @@ else
             continue
         end
         
-        %             othercars_posEst = update_pos(othercars.car{idx_nearCar(i)}.pos, othercars.car{idx_nearCar(i)}.vel, t);
-        
         % detect the index(and so on) of othercars in mycar's detecting area---------------
         in = inpolygon(othercars.car{idx_nearCar(i)}.pos(1), othercars.car{idx_nearCar(i)}.pos(2), mycar.squareX, mycar.squareY);
         
@@ -79,7 +77,7 @@ end
 function idx_nearCar = get_nearCar(mycar, othercars) % get the number of othercars in front of mycar and close to mycar
 
 % DISTANCE = mycar.vel(1)*3;     % distance running in 3 seconds
-DISTANCE = mycar.detect_rect_length;
+DISTANCE = mycar.detect_length;
 mycar_pos = mycar.pos(1:2);
 nr_cars = othercars.n;
 

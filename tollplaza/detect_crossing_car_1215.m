@@ -73,7 +73,7 @@ else
                 arr_t_mycar = dist_section_mycar / mycar.vel(1);
                 arr_t_othercar = dist_section_othercar / othercars.car{idx_nearCar(i)}.vel(1);
                 
-                if isempty(idx_crossingcar) || othercars.car{idx_nearCar(i)}.pos(1) < othercars.car{idx_crossingcar}.pos(1)
+                if isempty(idx_crossingcar) && abs(arr_t_mycar - arr_t_othercar) < mycar.time_mergin_crossing
                     idx_crossingcar = idx_nearCar(i);
                 end
             end

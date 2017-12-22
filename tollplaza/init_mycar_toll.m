@@ -14,7 +14,6 @@ mycar.max_acceleration = 2.94 * 10^3;
 
 % setting of crossing mycar with othercar-----------------------
 mycar.x_start_detecting = 50*10^3;
-mycar.max_time_dif_intersection = 2;
-% min_time_other_intersection = 1.0; % mycar must yield if othercar arrive intersect point within this value
-mycar.time_mergin_crossing = 2; % time interval of crossing
+mycar.time_mergin_crossing = 2.0; % 自車と他車が交錯する時に取るべき通過時間差（マージン）
+mycar.maxtime_judge_front_or_back = 1.0; % 自車と他車の通過時間差がこれ以下なら譲るか譲らないかジャッジする
 % --------------------------------------------------------
