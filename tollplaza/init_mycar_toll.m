@@ -17,3 +17,7 @@ mycar.x_start_detecting = 50*10^3;
 mycar.time_mergin_crossing = 2.0; % 自車と他車が交錯する時に取るべき通過時間差（マージン）
 mycar.maxtime_judge_front_or_back = 1.0; % 自車と他車の通過時間差がこれ以下なら譲るか譲らないかジャッジする
 % --------------------------------------------------------
+
+% setting of following to othercar------------------------------
+mycar.time_detect_precedingcar = 1.0;
+% --------------------------------------------------------------

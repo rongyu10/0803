@@ -42,7 +42,7 @@ end
 % 交錯予測がされる他車がない場合、追従対象車を検出する
 [mycar.squareX, mycar.squareY] = make_detecting_rectangle_lengthfix(mycar, mycar.pos, laneChangePath, mycar.detect_length, mycar.detect_sidewidth);
 if isempty(idx_crossingcar)
-        [idx_precedingcar, rel_deg_precedingcar] = detect_preceding_car_rectangle(othercars, mycar);
+        [idx_precedingcar, rel_deg_precedingcar] = detect_preceding_car_rectangle(othercars, mycar, sim);
 end
 
 
@@ -170,9 +170,9 @@ end
 
 if ~isempty(idx_precedingcar)
     if mycar.acceleration < -mycar.max_acceleration || mycar.acceleration > mycar.max_acceleration
-        fprintf(2, '<Precede>mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
+        fprintf(2, '<Follow>mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
     else
-        fprintf(1, '<Precede>mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
+        fprintf(1, '<Follow>mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
     end
 end
 % -----------------------------------------------------------

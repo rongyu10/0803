@@ -1,4 +1,4 @@
-function [idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car_rectangle(othercars, mycar)
+function [idx_precedingcar, rel_degree_precedingcar] = detect_preceding_car_rectangle(othercars, mycar, sim)
 % detect preceding car of IDM by using forward rectangle (relative angle is smaller than 5 degree)
 
 
@@ -6,6 +6,11 @@ idx_nearCar = get_nearCar(mycar, othercars);
 % idx_nearCar = get_frontCar(mycar, othercars);
 idx_precedingcar = [];
 rel_degree_precedingcar = [];
+
+persistent iPrecede;
+if isempty(iPrecede)
+    iPrecede = 0;
+end
 
 if isempty(idx_nearCar)
     return
@@ -64,6 +69,15 @@ else
         %                 end
         %                 %------------------------------
         %             end
+    end
+    
+    if ~isempty(idx_precedingcar)
+        iPrecede = iPrecede + sim.T;
+        if iPrecede < mycar.time_detect_precedingcar
+            idx_precedingcar = [];
+        end
+    else
+        iPrecede = 0;
     end
     
     

@@ -1,4 +1,4 @@
-function mycar = calculate_velocity_mycar_tollPlaza_IN_DWA(mycar, sim, othercars, idm, laneChangePath, MYCAR_AGGRESSIVE_MODE)
+function mycar = calculate_velocity_mycar_tollPlaza_IN_DWA(mycar, sim, othercars, idm, laneChangePath)
 
 persistent idx_crossingcar;
 persistent idx_crossingcar_pre;
@@ -42,7 +42,7 @@ end
 % 交錯予測がされる他車がない場合、追従対象車を検出する
 [mycar.squareX, mycar.squareY] = make_detecting_rectangle_lengthfix(mycar, mycar.pos, laneChangePath, mycar.detect_length, mycar.detect_sidewidth);
 if isempty(idx_crossingcar)
-        [idx_precedingcar, rel_deg_precedingcar] = detect_preceding_car_rectangle(othercars, mycar);
+        [idx_precedingcar, rel_deg_precedingcar] = detect_preceding_car_rectangle(othercars, mycar, sim);
 end
 
 
@@ -162,17 +162,17 @@ end
 
 if ~isempty(idx_crossingcar)
     if mycar.acceleration < -mycar.max_acceleration || mycar.acceleration > mycar.max_acceleration
-        fprintf(2, 'mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
+        fprintf(2, '<Cross>mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
     else
-        fprintf(1, 'mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
+        fprintf(1, '<Cross>mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
     end
 end
 
 if ~isempty(idx_precedingcar)
     if mycar.acceleration < -mycar.max_acceleration || mycar.acceleration > mycar.max_acceleration
-        fprintf(2, 'mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
+        fprintf(2, '<Follow>mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
     else
-        fprintf(1, 'mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
+        fprintf(1, '<Follow>mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
     end
 end
 % -----------------------------------------------------------
