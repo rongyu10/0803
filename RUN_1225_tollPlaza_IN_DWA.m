@@ -154,7 +154,7 @@ while sim.flag && ishandle(fig)
             othercars = calculate_velocity_othercars_tollPlaza_IN(othercars, sim, mycar, idm, laneChangePath);
             
             % update speed and position of mycar
-            mycar = calculate_velocity_mycar_tollPlaza_IN_1215(mycar, sim, othercars, idm, laneChangePath, MYCAR_AGGRESSIVE_MODE);
+            mycar = calculate_velocity_mycar_tollPlaza_IN_DWA(mycar, sim, othercars, idm, laneChangePath, MYCAR_AGGRESSIVE_MODE);
             
             mycar = update_mycar(mycar, sim, othercars, FLAG_UPDATE_RFS);
             othercars = update_othercars(othercars, sim);

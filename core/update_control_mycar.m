@@ -1,47 +1,33 @@
-function mycar = update_control_mycar(mycar, sim, othercars, laneChangePath, lengthP)
-
+function mycar = update_control_mycar(mycar, sim, othercars,pathTranslated,ratioSpeed)
+% UPDATE MY CAR INFORMATION
 persistent first_flag
 if isempty(first_flag)
     first_flag = true;
 end
+%----Initial acceleration for lane changing----
+if first_flag
+    first_flag = false;
+    mycar.vel(1) = mycar.vel(1)*ratioSpeed;
+end
+%----------------------------------------------
 
-% UPDATE MY CAR INFORMATION
-    if mycar.flgPlaza == 0
-        mycar.pos ...
-            = update_pos(mycar.pos, mycar.vel, sim.T);
-        mycar.bd ...
-            = get_carshape(mycar.pos ...
-            , mycar.W, mycar.H);
-        if mycar.pos(1) > 100*10^3 && mycar.pos(1) < 275*10^3
-            mycar.flgPlaza = 1;
-            
-            ratioSpeed = lengthP{mycar.tolllane, 2}/(175*10^3);
-            mycar.vel(1) = mycar.vel(1)*ratioSpeed;
-            mycar.pathTranslated = laneChangePath{mycar.tolllane, 2};
-            
-        end
-    elseif mycar.flgPlaza == 1
-        %---- Control angular velocity: vel(2) --------
-        pos = predict_pos(mycar.pos, mycar.vel, sim.T);
-        targetDegree = get_tatgetTheta(pos,mycar.pathTranslated);
-        if targetDegree - mycar.pos(3) > 10
-            mycar.vel(2) = mycar.vel(2) + 10/sim.T;
-        elseif targetDegree - mycar.pos(3) < -10
-            mycar.vel(2) = mycar.vel(2) - 10/sim.T;
-        else
-            mycar.vel(2) = mycar.vel(2) + (targetDegree - mycar.pos(3))/sim.T;
-        end
-        %----------------------------------------------
-        
-        mycar.pos = update_pos(mycar.pos, mycar.vel, sim.T);
-        mycar.bd  = get_carshape(mycar.pos, mycar.W, mycar.H);
-        
-        if mycar.pos(1) > 275*10^3 && mycar.vel(1) > 10000
-            mycar.vel(1) = mycar.vel(1) - 200;
-        end
-        
-    end
-    mycar = update_rfs(mycar, othercars);
+%---- Control angular velocity: vel(2) --------
+pos = predict_pos(mycar.pos, mycar.vel, sim.T);
+targetDegree = get_tatgetTheta(pos,pathTranslated);
+if targetDegree - pos(3) > 1
+    mycar.vel(2) = mycar.vel(2) + 1/sim.T;
+elseif targetDegree - pos(3) < -1
+    mycar.vel(2) = mycar.vel(2) - 1/sim.T;
+else
+    mycar.vel(2) = mycar.vel(2) + (targetDegree - pos(3))/sim.T;
+end
+%----------------------------------------------
+
+% fprintf(1, 'mycar.pos(3) = [%4d] targetDegree = [%4d] mycar.vel(2) = [%4d] (targetDegree - pos(3))/sim.T = [%4d]\n', mycar.pos(3), targetDegree, mycar.vel(2), (targetDegree - pos(3))/sim.T);
+mycar.pos = update_pos(mycar.pos, mycar.vel, sim.T);
+mycar.bd  = get_carshape(mycar.pos, mycar.W, mycar.H);
+mycar = update_rfs(mycar, othercars);
+
 end
 
 function targetDegree = get_tatgetTheta(pos,path)

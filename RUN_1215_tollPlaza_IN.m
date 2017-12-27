@@ -47,7 +47,7 @@ othercars.detect_length = 50 * 10^3;
 
 %--- set mycar--
 ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-110000 5250 0];
+ini_pos    = [-99000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 %---------------

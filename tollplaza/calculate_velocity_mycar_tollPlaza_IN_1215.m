@@ -162,17 +162,17 @@ end
 
 if ~isempty(idx_crossingcar)
     if mycar.acceleration < -mycar.max_acceleration || mycar.acceleration > mycar.max_acceleration
-        fprintf(2, 'mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
+        fprintf(2, '<Cross>mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
     else
-        fprintf(1, 'mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
+        fprintf(1, '<Cross>mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
     end
 end
 
 if ~isempty(idx_precedingcar)
     if mycar.acceleration < -mycar.max_acceleration || mycar.acceleration > mycar.max_acceleration
-        fprintf(2, 'mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
+        fprintf(2, '<Precede>mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
     else
-        fprintf(1, 'mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
+        fprintf(1, '<Precede>mycar([%d, %d]) decelerate to car [%d] by IDM\n', mycar.pos(1), mycar.pos(2), idx_precedingcar);
     end
 end
 % -----------------------------------------------------------
