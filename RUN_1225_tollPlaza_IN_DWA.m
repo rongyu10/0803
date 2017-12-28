@@ -46,7 +46,7 @@ othercars.detect_length = 50 * 10^3;
 %load('othercars_0921');
 
 %--- set mycar--
-ini_vel    = [15000 0]; % 20000 mm/s = 72 km/h
+ini_vel    = [17500 0]; % 20000 mm/s = 72 km/h
 ini_pos    = [-110000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
@@ -56,7 +56,7 @@ mycar      = init_mycar_toll(mycar);
 MYCAR_AGGRESSIVE_MODE = 1; % mycar agressive mode when crossing with othercar (0:calm, 1:medium, 2:aggressive)
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
-idm.v0 = 15000; % desired velocity
+idm.v0 = 17500; % desired velocity
 idm.T = 1.5; % Safe time headway
 idm.a = 1000; % maximum acceleration
 idm.b = 2000; %desired deceleration
@@ -98,9 +98,9 @@ while sim.flag && ishandle(fig)
     switch key_pressed 
         case ''
         case {'leftarrow', 'semicolon'}
-            mycar.vel(1) = mycar.vel(1)-5000;
+            othercars.car{3}.vel(1) = othercars.car{3}.vel(1)-5000;
         case {'rightarrow', 'quote'}
-            mycar.vel(1) = mycar.vel(1)+5000;
+            othercars.car{3}.vel(1) = othercars.car{3}.vel(1)+5000;
         case {'uparrow', 'leftbracket'}
             % change the goal(target) lane
             %mycar.vel(1) = mycar.vel(1)+5000;
@@ -223,8 +223,10 @@ while sim.flag && ishandle(fig)
 %         , myinfo.left_fb_dists(1)/1000, myinfo.center_fb_dists(1)/1000 ...
 %         , myinfo.right_fb_dists(1)/1000 ...
 %         , traj.data.n);
-    strtemp = '[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS = %.1fMS] ';
-    titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot, ms_update + ms_plot);
+    strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS = %.1fMS] \n' ...
+        '[Car(3) VEL:%.1fKM/H]'];
+    titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot, ms_update + ms_plot ...
+        , othercars.car{3}.vel(1)/10000*36);
     titlefontsize = get_fontsize();
     
     axisinfo = plot_track_tollplaza(road, FILL_LANES);
@@ -233,7 +235,7 @@ while sim.flag && ishandle(fig)
     plot_othercars(othercars, SIMPLECARSHAPE, REALCARSHAPE);
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
     plot_mycar_path_in_plaza(laneChangePath, mycar);
-    plot_mycar_TTC_detecting_area(mycar.squareX, mycar.squareY);
+    plot_mycar_detecting_area(mycar);
     
     %----
     plot_title(titlestr, titlecol, titlefontsize);

@@ -1,12 +1,13 @@
 function mycar = calculate_velocity_mycar_tollPlaza_IN_DWA(mycar, sim, othercars, idm, laneChangePath)
 
 persistent idx_crossingcar;
-persistent idx_crossingcar_pre;
 mycar.acceleration = [];
-persistent FLAG_FRONT_OR_BACK;
-persistent acceleration_if_front;
-persistent acceleration_if_back;
 idx_precedingcar = [];
+
+% setting of DWA
+RangeDWA=[0 20000 2940*sim.T 10]; %[最低速度(mm/s)　最高速度(mm/s)　速度レンジ(m/s)　速度解像度(分割数)]
+ParamDWA=[1.0 3.0 1.0]; %[現在の速度を維持する項　他車との予測通過時間差の項　他車を急減速させない項]　
+
 
 % if entering the plaza
 if mycar.flgPlaza == 0 && mycar.pos(1) > 100*10^3
@@ -29,11 +30,8 @@ elseif mycar.flgPlaza == 1 % after entering plaza
 end
 
 
-
-
 % 交錯予測がされる他車を検出する
 if mycar.pos(1) > mycar.x_start_detecting
-    idx_crossingcar_pre = idx_crossingcar;
     [idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar, sidepoint, invadepoint] = detect_crossing_car_1215(othercars, mycar);
 end
 
@@ -46,85 +44,64 @@ if isempty(idx_crossingcar)
 end
 
 
-
 if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
     
-    % 交錯予測がされる他車より2秒早く交錯点に到達するための加速度を計算（自車が他車より先行する）
-    acceleration_if_front = 2*(dist_section_mycar - mycar.vel(1)*(arr_t_othercar - mycar.time_mergin_crossing)) / (arr_t_othercar - mycar.time_mergin_crossing)^2;
-    
-    % 交錯予測がされる他車より2秒遅く交錯点に到達するための加速度を計算（自車が他車に譲る）
-    acceleration_if_back = 2*(dist_section_mycar - mycar.vel(1)*(arr_t_othercar + mycar.time_mergin_crossing)) / (arr_t_othercar + mycar.time_mergin_crossing)^2;
-    
-    % 前ステップで「先行or譲る」判断をしていない or 前ステップと対象他車のインデックスが異なる場合、「先行or譲る」判断をする
-    if isempty(FLAG_FRONT_OR_BACK) || idx_crossingcar ~= idx_crossingcar_pre
-        
-        fprintf(2, 'acceleration_if_front = [%d], acceleration_if_back = [%d]\n', acceleration_if_front, acceleration_if_back);
-        
-        
-        if arr_t_mycar - arr_t_othercar > mycar.maxtime_judge_front_or_back % 自車が他車より一定時間以上遅く交錯点に到達することが予測されたら「譲る」判断をする
-            FLAG_FRONT_OR_BACK = 1;
-            
-        elseif arr_t_mycar - arr_t_othercar < -mycar.maxtime_judge_front_or_back % 自車が他車より一定時間以上早く交錯点に到達することが予測されたら「先行」判断をする
-            FLAG_FRONT_OR_BACK = 0;
-            
-        else % 自車と他車の通過時刻差が一定時間以内の場合、「先行or譲る」の判定を行う
-            switch MYCAR_AGGRESSIVE_MODE % 数字が大きいほどアグレッシブ（先行しやすい）判断をする
-                case 0
-                    if acceleration_if_back > -mycar.max_acceleration
-                        FLAG_FRONT_OR_BACK = 1;
-                    elseif acceleration_if_front < mycar.max_acceleration
-                        FLAG_FRONT_OR_BACK = 0;
-                    else
-                        if abs(acceleration_if_front) < abs(acceleration_if_back)
-                            FLAG_FRONT_OR_BACK = 0;
-                        else
-                            FLAG_FRONT_OR_BACK = 1;
-                        end
-                    end
-                case 1
-                    if abs(acceleration_if_front) < abs(acceleration_if_back)
-                        FLAG_FRONT_OR_BACK = 0;
-                    else
-                        FLAG_FRONT_OR_BACK = 1;
-                    end
-                case 2
-                    if acceleration_if_front < mycar.max_acceleration
-                        FLAG_FRONT_OR_BACK = 0;
-                    elseif acceleration_if_back > -mycar.max_acceleration
-                        FLAG_FRONT_OR_BACK = 1;
-                    else
-                        if abs(acceleration_if_front) < abs(acceleration_if_back)
-                            FLAG_FRONT_OR_BACK = 0;
-                        else
-                            FLAG_FRONT_OR_BACK = 1;
-                        end
-                    end
-            end
+    evalDWA = zeros(RangeDWA(4) + 1, 5);
+    for i = 1:RangeDWA(4) + 1
+        % 現在速度を維持する評価値を計算
+        evalDWA(i,1) = mycar.vel(1) - RangeDWA(3) + 2 * RangeDWA(3)/ RangeDWA(4) * (i - 1);
+        if evalDWA(i,1) < RangeDWA(1) || evalDWA(i,1) > RangeDWA(2)
+           continue
+        else
+           evalDWA(i,3) = ParamDWA(1) * (1 - abs(evalDWA(i,1) - mycar.vel(1))/RangeDWA(3));
         end
         
-        % 自車が先を行く判断をした時でも、他車を急減速させてしまうなら自車は一定減速度で減速
-        if FLAG_FRONT_OR_BACK == 0
-            dist_my2invadepoint = norm(invadepoint(1:2) - mycar.pos(1:2));
-            time_invadepoint = (-mycar.vel(1)+sqrt(mycar.vel(1)^2 + 2*acceleration_if_front*dist_my2invadepoint)) / acceleration_if_front;
-            other_futuresidepoint = update_pos([sidepoint othercars.car{idx_crossingcar}.pos(3)], othercars.car{idx_crossingcar}.vel, time_invadepoint);
+        % 他車に衝突しない評価値（他車との交点通過時間差）を計算
+        est_acceleration = (evalDWA(i,1) - mycar.vel(1)) / sim.T;
+        if est_acceleration ~= 0
+            est_arr_t_mycar = (-mycar.vel(1)+sqrt(mycar.vel(1)^2 + 2*est_acceleration*dist_section_mycar)) / est_acceleration;
+        else
+            est_arr_t_mycar = dist_section_mycar / evalDWA(i,1);
+        end
+        if abs(est_arr_t_mycar - arr_t_othercar) > mycar.time_mergin_crossing
+            evalDWA(i,4) = ParamDWA(2);
+        else
+            evalDWA(i,4) = ParamDWA(2) * abs(est_arr_t_mycar - arr_t_othercar) / mycar.time_mergin_crossing;
+        end
+        
+        % 他者を減速させない評価値（自車の交点通過予測時における他者との相対位置からIDMで評価）を計算
+        if est_arr_t_mycar > arr_t_othercar
+            evalDWA(i,5) = 0;
+        else
+            
+            other_futuresidepoint = update_pos([sidepoint othercars.car{idx_crossingcar}.pos(3)], othercars.car{idx_crossingcar}.vel, est_arr_t_mycar);
             othercar_future.pos = other_futuresidepoint;
             othercar_future.vel = othercars.car{idx_crossingcar}.vel;
             mycar_future.pos = invadepoint;
-            mycar_future.vel = mycar.vel;
-            acceleration = calculate_acceleration_IDM(othercar_future, mycar_future, idm, rel_deg_crossingcar);
-            if acceleration < -mycar.max_acceleration
-                FLAG_FRONT_OR_BACK = 1;
-                acceleration_if_back = -mycar.max_acceleration;
+            mycar_future.vel(1) = mycar.vel(1) + est_acceleration*est_arr_t_mycar;
+            mycar_future.vel(2) = mycar.vel(2);
+            est_other_accele = calculate_acceleration_IDM(othercar_future, mycar_future, idm, rel_deg_crossingcar);
+            
+            if est_other_accele > 0
+                evalDWA(i,5) = 0;
+            elseif est_other_accele > -mycar.max_acceleration
+                evalDWA(i,5) = ParamDWA(3) * est_other_accele/mycar.max_acceleration;
+            else
+                evalDWA(i,5) = -ParamDWA(3);
             end
+            
         end
+        
+        
+        % 評価値の合計を計算
+        evalDWA(i,2) = evalDWA(i,3) + evalDWA(i,4) + evalDWA(i,5);
     end
     
-    %「先行or譲る」判断結果により、自車の加速度を決定
-    if FLAG_FRONT_OR_BACK == 0
-        mycar.acceleration = acceleration_if_front;
-    else
-        mycar.acceleration = acceleration_if_back;
-    end
+    
+    
+    [~, idx] = max(evalDWA(:,2));
+    mycar.acceleration = (evalDWA(idx, 1) - mycar.vel(1)) / sim.T;
+    
     
 elseif ~isempty(idx_precedingcar) % 追従対象車が検出された場合
     mycar.acceleration = calculate_acceleration_IDM(mycar, othercars.car{idx_precedingcar}, idm, rel_deg_precedingcar);
@@ -139,11 +116,11 @@ end
 
 
 % 自車の加減速度が最大値以上なら最大値に設定
-if mycar.acceleration > mycar.max_acceleration
-    mycar.acceleration = mycar.max_acceleration;
-elseif mycar.acceleration < -mycar.max_acceleration
-    mycar.acceleration = -mycar.max_acceleration;
-end
+% if mycar.acceleration > mycar.max_acceleration
+%     mycar.acceleration = mycar.max_acceleration;
+% elseif mycar.acceleration < -mycar.max_acceleration
+%     mycar.acceleration = -mycar.max_acceleration;
+% end
 
 % 自車速度を更新
 mycar.vel(1) = mycar.vel(1) + mycar.acceleration*sim.T;
@@ -154,14 +131,14 @@ if mycar.vel(1) < 0
 end
 
 % コマンド出力-----------------------------------------------
-if mycar.acceleration < -mycar.max_acceleration || mycar.acceleration > mycar.max_acceleration
+if mycar.acceleration <= -mycar.max_acceleration || mycar.acceleration >= mycar.max_acceleration
     fprintf(2, 'mycar acceleration is [%d], velocity is [%d]\n', mycar.acceleration, mycar.vel(1));
 else
     fprintf(1, 'mycar acceleration is [%d], velocity is [%d]\n', mycar.acceleration, mycar.vel(1));
 end
 
 if ~isempty(idx_crossingcar)
-    if mycar.acceleration < -mycar.max_acceleration || mycar.acceleration > mycar.max_acceleration
+    if mycar.acceleration <= -mycar.max_acceleration || mycar.acceleration >= mycar.max_acceleration
         fprintf(2, '<Cross>mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
     else
         fprintf(1, '<Cross>mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);

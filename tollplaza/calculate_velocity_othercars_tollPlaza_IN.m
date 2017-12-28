@@ -23,16 +23,6 @@ for i = 1:othercars.n
         
         % 目標速度をゲートからの距離に応じて27km/h〜63km/hに設定
         idm.v0 = 7500 + 10000*(320*10^3 - othercars.car{i}.pos(1))/(220*10^3);
-
-%         if othercars.car{i}.pos(1) < 187.5*10^3
-%             idm.v0 = 15000;
-%             
-%         elseif othercars.car{i}.pos(1) < 275*10^3
-%             idm.v0 = 12500;
-%             
-%         elseif othercars.car{i}.pos(1) < 320*10^3
-%             idm.v0 = 10000;
-%         end
         
     end
     
@@ -65,9 +55,6 @@ for i = 1:othercars.n
                 deg_maxDecelerate = rel_degree;
             end
         end
-        
-
-        
         
         % --regulate acceleration and velocity ---------------------
 %         if othercars.car{i}.acceleration > othercars.max_acceleration

@@ -13,7 +13,7 @@ car_traj = zeros(pred_hor, 3);
 car_trajbd = cell(pred_hor, 1);
 for i = 1:pred_hor
     for j = 1:2
-        mycar.postemp  = update_pos(mycar.postemp, mycar.vel, 0.25);
+        mycar.postemp  = update_pos(mycar.postemp, mycar.vel, 0.1);
     end
     car_traj(i, :) = mycar.postemp;
     rate           = 0.8;
@@ -38,7 +38,7 @@ if first_flag
     first_flag = false;
     % LOAD CAR IMAGE
     if REALCARSHAPE % mod by kumano
-       [carimg, ~, cartr] = imread('carimg/redcar.png');  % car1
+       [carimg, ~, cartr] = imread('../../carimg/redcar.png');  % car1
        carrsz = imresize(carimg, rszwh);
        trrsz  = imresize(cartr, rszwh);
     end

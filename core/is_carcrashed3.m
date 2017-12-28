@@ -60,6 +60,9 @@ P = InterX(mycarBD, obstableBD);
 if isempty(P)
     flag = 0;
     return
+elseif mycar.pos(1)<0
+    flag = 0;
+    return   
 else
     flag = 1;
     return

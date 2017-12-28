@@ -1,4 +1,11 @@
-function ems = plot_axisinfo(axisinfo)
+function ems = plot_axisinfo(axisinfo,varargin)
+%
+%   unitX      = varargin{1}: Unit length for X-axis plot
+%   unitY      = varargin{2}; Unit length for Y-axis plot
+%   axis_diffX = varargin{3}; Location for X-axis plot
+%   axis_diffY = varargin{4}; Location for Y-axis plot
+
+
 persistent first_flag
 if isempty(first_flag)
     first_flag = true;
@@ -14,6 +21,28 @@ else
 end
 col = [0.7 0.9 0.7];
 
+%---------
+if (nargin == 5)
+   unitX    = varargin{1};
+   unitY    = varargin{2};
+   axis_diffX = varargin{3};
+   axis_diffY = varargin{4};
+elseif (nargin == 3)
+   unitX    = varargin{1};
+   unitY    = varargin{2};
+   axis_diffX = 1000;
+   axis_diffY = 1000;   
+else
+   unitX = 10;
+   unitY = 7;
+   axis_diffX = 1000;
+   axis_diffY = 1000;
+end
+
+strX = ['X ' num2str(unitX) 'm'];
+strY = ['Y ' num2str(unitY) 'm'];
+%---------
+
 iclk = clock;
 if first_flag
     first_flag = false;
@@ -22,9 +51,10 @@ if first_flag
         ymin = axisinfo(3);
         plot([xmin xmin], [ymin ymin + 10000], '-', 'LineWidth', 3, 'Color', col);
         plot([xmin xmin + 10000], [ymin ymin], '-', 'LineWidth', 3, 'Color', col);
-        text(xmin+8300, ymin-1000, 'X 10m', 'FontSize', fs, 'Color', col ...
+        text(xmin+8300, ymin-axis_diffX, strX, 'FontSize', fs, 'Color', col ...
             , 'HorizontalAlignment', 'Center')
-        h = text(xmin-1000, ymin+8000, 'Y 7m', 'FontSize', fs, 'Color', col ...
+        
+        h = text(xmin-axis_diffY, ymin+8000, strY, 'FontSize', fs, 'Color', col ...
             , 'HorizontalAlignment', 'Center');  % mod by kumano 'Y 10m' --> 'Y 7m'
         set(h, 'rotation', 90)
     end
