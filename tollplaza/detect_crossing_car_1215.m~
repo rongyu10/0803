@@ -62,9 +62,9 @@ else
                 
                 tmp_rel_deg_crossingcar = abs(othercars.car{idx_nearCar(i)}.pos(3) - atan(vy/vx)*180/pi); % 侵入時の相対角度
                 tmp_dist_section_mycar = norm(invadepoint(1:2) - mycar.pos(1:2)); % 自車の侵入点までの距離
-                tmp_dist_section_othercar = norm(invadepoint(1:2) - othercar_cur_sidepoint);
-                tmp_arr_t_mycar = tmp_dist_section_mycar / mycar.vel(1); % 自車の侵入点までの時間
-                tmp_arr_t_othercar = tmp_dist_section_othercar / othercars.car{idx_nearCar(i)}.vel(1); % 他車の侵入点までの時間
+                tmp_dist_section_othercar = norm(
+                tmp_arr_t_mycar = dist_section_mycar / mycar.vel(1); % 自車の侵入点までの時間
+                tmp_arr_t_othercar = dist_section_othercar / othercars.car{idx_nearCar(i)}.vel(1); % 他車の侵入点までの時間
                 
                 if abs(tmp_arr_t_mycar - tmp_arr_t_othercar) < mycar.time_mergin_crossing
                     idx_crossingcar = [idx_crossingcar; idx_nearCar(i)];

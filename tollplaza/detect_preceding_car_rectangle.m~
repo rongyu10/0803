@@ -20,13 +20,17 @@ else
     
     nr_cars = length(idx_nearCar);
     for i = 1:nr_cars
-        
-        rel_degree = mycar.pos(3) - othercars.car{idx_nearCar(i)}.pos(3);
-        if abs(rel_degree) > 5 % if the relative degree is over 5 degree
+        if ~isempty(find(idx_precedingcar == idx_nearCar(i), 1)) % if the target index is already detected
             continue
         end
         
-        % judge whether object othercar is in mycar's detecting area---------------
+        rel_degree = mycar.pos(3) - othercars.car{idx_nearCar(i)}.pos(3);
+        
+        if abs(rel_degree) > 5 % if the target index is already detected
+            continue
+        end
+        
+        % detect the index(and so on) of othercars in mycar's detecting area---------------
         in = inpolygon(othercars.car{idx_nearCar(i)}.pos(1), othercars.car{idx_nearCar(i)}.pos(2), mycar.squareX, mycar.squareY);
         
         if any(in, 1)

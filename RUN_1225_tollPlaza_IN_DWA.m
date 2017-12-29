@@ -1,5 +1,5 @@
  ccc
-%% MANUALLY COLLECT DRIVING DEMONSTRATIONS
+%% DRIVING SIMULATOR IN TOLL PLAZA
 ccc;
 addpath(genpath('./core'))
 addpath(genpath('./tollplaza'))
@@ -7,13 +7,13 @@ addpath(genpath('./bezier'))
 addpath(genpath('./intelligentDriverModel'))
 addpath(genpath('./turnSignal'))
 
-%--- set simulation
+%--- SET SIMULATION -----------------------------------------------------------------------------------------------
 road      = init_road_tollplaza_IN();
 dt = 0.1;
 sim       = init_sim(dt); % dt = 0.02 [sec]
-%------------------
+%------------------------------------------------------------------------------------------------------------------
 
-%-- MAKE LANECHANGE PATH-----------
+%-- MAKE LANECHANGE PATH-------------------------------------------------------------------------------------------
 dx = 175*10^3/3; % x-cood.interval of control points for bezier curve
 for i = 1:15 % i:start lane j:goal lane
     for j = 1:3
@@ -21,12 +21,12 @@ for i = 1:15 % i:start lane j:goal lane
         [laneChangePath{i,j}, lengthP{i,j}] = bezierCurve(ctlPt);
     end
 end
-%----------------------------------
+%------------------------------------------------------------------------------------------------------------------
 
-%--- set othercars
+%--- SET OTHERCARS -------------------------------------------------------------------------------------------------
 othercars  = init_othercars();
-nr_cars    = 46; % total number of cars (1st:20cars, 2nd:6cars, 3rd:20cars)
-othercars.npl = 20; % number of cars per lane (1st and 3rd lane)
+nr_cars    = 46; % total number of cars
+othercars.npl = 20; % number of cars per lane
 othercars  = addcars_tollplaza_IN_cross1lane2(othercars, road.track{1}, nr_cars);
 %othercars  = addcars_tollplaza_IN(othercars, road.track{1}, nr_cars);
 
@@ -40,20 +40,35 @@ othercars.detect_rect_length = 30 * 10^3;
 othercars.detect_rect_sidewidth = 3.4 * 10^3;
 othercars.max_acceleration = 2.94 * 10^3;
 othercars.detect_length = 50 * 10^3;
-
-%---------------
+%--------------------------------------------------------------------------------------------------------------------
 
 %load('othercars_0921');
 
-%--- set mycar--
+%---- SET MYCAR -----------------------------------------------------------------------------------------------------
 ini_vel    = [17500 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-110000 5250 0];
+ini_pos    = [-15000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
-%---------------
+mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
+mycar.startlane = 3;
+mycar.goallane = 8;
+mycar.pos(2) = 8750 - 3500*(mycar.startlane-1);
+mycar.save.lane_idx = mycar.startlane;
+mycar.detect_length = 50 * 10^3;
+mycar.detect_sidewidth = 3.4 * 10^3;
+mycar.max_acceleration = 2.94 * 10^3;
 
-mycar      = init_mycar_toll(mycar);
-MYCAR_AGGRESSIVE_MODE = 1; % mycar agressive mode when crossing with othercar (0:calm, 1:medium, 2:aggressive)
+% setting of crossing to othercar-------------------------
+mycar.x_start_detecting = 50*10^3; % 料金所プラザ内で交錯する他者を観測し始める地点（ｘ座標）
+mycar.time_mergin_crossing = 2.0; % 自車と他車が交錯する時に取るべき通過時間差（マージン）
+mycar.invadepoint = [];
+% --------------------------------------------------------
+
+% setting of following to othercar------------------------
+mycar.time_detect_precedingcar = 1.0;
+% --------------------------------------------------------
+% --------------------------------------------------------------------------------------------------------------------
+
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL--------------------
 idm.v0 = 17500; % desired velocity
@@ -64,7 +79,8 @@ idm.delta = 4; %acceleration exponent
 idm.s0 = 2000; % minimum distance
 idm.l = 4000; % vehicle length
 idm.coolness = 0.99;
-%============================================================
+%-----------------------------------------------------------
+
 
 % INITIALIZE FIGURE-----------
 figsz     = [1 4 8 4]/10;
@@ -75,10 +91,12 @@ set(gcf,'Color', [0.1, 0.25, 0.2] ); hold on;
 ms_update = 0; ms_plot = 0;
 %-----------------------------
 
+
 %-- FLAG INTERACTION ---------
 FLAG_LANECHANGE  = false;
 FLAG_UPDATE_RFS = false;
 %-----------------------------
+
 
 %--parameter for getting trajectory data
 plot_mycardec = [];
@@ -86,9 +104,12 @@ plot_othercardec = [];
 time_plot_mycardec = 0;
 %-----------------------------------
 
+
 %--PLOTING MODE-------------
 PLOT_MYCAR_DETECTING_AREA = 1;
 %---------------------------
+
+
 
 % RUN
 % INITIALIZE SAVER
@@ -98,9 +119,9 @@ while sim.flag && ishandle(fig)
     switch key_pressed 
         case ''
         case {'leftarrow', 'semicolon'}
-            othercars.car{3}.vel(1) = othercars.car{3}.vel(1)-5000;
+            othercars.car{2}.vel(1) = othercars.car{2}.vel(1)-5000;
         case {'rightarrow', 'quote'}
-            othercars.car{3}.vel(1) = othercars.car{3}.vel(1)+5000;
+            othercars.car{2}.vel(1) = othercars.car{2}.vel(1)+5000;
         case {'uparrow', 'leftbracket'}
             % change the goal(target) lane
             %mycar.vel(1) = mycar.vel(1)+5000;
@@ -224,9 +245,9 @@ while sim.flag && ishandle(fig)
 %         , myinfo.right_fb_dists(1)/1000 ...
 %         , traj.data.n);
     strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS = %.1fMS] \n' ...
-        '[Car(3) VEL:%.1fKM/H]'];
+        '[Car(2) VEL:%.1fKM/H]'];
     titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot, ms_update + ms_plot ...
-        , othercars.car{3}.vel(1)/10000*36);
+        , othercars.car{2}.vel(1)/10000*36);
     titlefontsize = get_fontsize();
     
     axisinfo = plot_track_tollplaza(road, FILL_LANES);
@@ -236,7 +257,9 @@ while sim.flag && ishandle(fig)
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
     plot_mycar_path_in_plaza(laneChangePath, mycar);
     plot_mycar_detecting_area(mycar);
-    
+    if ~isempty(mycar.invadepoint)
+        plot_invadepoint(mycar.invadepoint);
+    end
     %----
     plot_title(titlestr, titlecol, titlefontsize);
     drawnow;

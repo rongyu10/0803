@@ -6,7 +6,7 @@ idx_precedingcar = [];
 
 % setting of DWA
 RangeDWA=[0 20000 2940*sim.T 10]; %[最低速度(mm/s)　最高速度(mm/s)　速度レンジ(m/s)　速度解像度(分割数)]
-ParamDWA=[1 10 10]; %[現在の速度を維持する項　他車との予測通過時間差の項　他車を急減速させない項]　
+ParamDWA=[1.0 3.0 0.0]; %[現在の速度を維持する項　他車との予測通過時間差の項　他車を急減速させない項]　
 
 
 % if entering the plaza
@@ -32,7 +32,8 @@ end
 
 % 交錯予測がされる他車を検出する
 if mycar.pos(1) > mycar.x_start_detecting
-    [idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar, sidepoint, invadepoint] = detect_crossing_car_1215(othercars, mycar);
+    [idx_crossingcar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar, sidepoint, mycar.invadepoint] = detect_crossing_car_1215(othercars, mycar);
+    
 end
 
 
@@ -46,15 +47,19 @@ end
 
 if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
     
+    for
+    
+    
     evalDWA = zeros(RangeDWA(4) + 1, 5);
     for i = 1:RangeDWA(4) + 1
-        % 現在速度を維持する評価値を計算
+        
         evalDWA(i,1) = mycar.vel(1) - RangeDWA(3) + 2 * RangeDWA(3)/ RangeDWA(4) * (i - 1);
         if evalDWA(i,1) < RangeDWA(1) || evalDWA(i,1) > RangeDWA(2)
            continue
-        else
-           evalDWA(i,3) = ParamDWA(1) * (1 - abs(evalDWA(i,1) - mycar.vel(1))/RangeDWA(3));
         end
+        
+        % 現在速度を維持する評価値を計算
+        evalDWA(i,3) = ParamDWA(1) * (1 - abs(evalDWA(i,1) - mycar.vel(1))/RangeDWA(3));
         
         % 他車に衝突しない評価値（他車との交点通過時間差）を計算
         est_acceleration = (evalDWA(i,1) - mycar.vel(1)) / sim.T;
@@ -77,17 +82,17 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
             other_futuresidepoint = update_pos([sidepoint othercars.car{idx_crossingcar}.pos(3)], othercars.car{idx_crossingcar}.vel, est_arr_t_mycar);
             othercar_future.pos = other_futuresidepoint;
             othercar_future.vel = othercars.car{idx_crossingcar}.vel;
-            mycar_future.pos = invadepoint;
+            mycar_future.pos = mycar.invadepoint;
             mycar_future.vel(1) = mycar.vel(1) + est_acceleration*est_arr_t_mycar;
             mycar_future.vel(2) = mycar.vel(2);
             est_other_accele = calculate_acceleration_IDM(othercar_future, mycar_future, idm, rel_deg_crossingcar);
             
             if est_other_accele > 0
-                evalDWA(i,5) = ParamDWA(3);
-            elseif est_other_accele > -mycar.max_acceleration
-                evalDWA(i,5) = ParamDWA(3)*(mycar.max_acceleration + est_other_accele)/mycar.max_acceleration;
-            else
                 evalDWA(i,5) = 0;
+            elseif est_other_accele > -mycar.max_acceleration
+                evalDWA(i,5) = ParamDWA(3) * est_other_accele/mycar.max_acceleration;
+            else
+                evalDWA(i,5) = -ParamDWA(3);
             end
             
         end
@@ -97,10 +102,12 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
         evalDWA(i,2) = evalDWA(i,3) + evalDWA(i,4) + evalDWA(i,5);
     end
     
-    
-    
     [~, idx] = max(evalDWA(:,2));
-    mycar.acceleration = (evalDWA(idx, 1) - mycar.vel(1)) / sim.T;
+    
+    
+    
+    
+    mycar.acceleration = (evalDWA(idx,1) - mycar.vel(1)) / sim.T;
     
     
 elseif ~isempty(idx_precedingcar) % 追従対象車が検出された場合
@@ -114,14 +121,6 @@ else % 交錯対象も追従対象も検出されなかった場合
     acceleration_if_back = [];
 end
 
-
-% 自車の加減速度が最大値以上なら最大値に設定
-% if mycar.acceleration > mycar.max_acceleration
-%     mycar.acceleration = mycar.max_acceleration;
-% elseif mycar.acceleration < -mycar.max_acceleration
-%     mycar.acceleration = -mycar.max_acceleration;
-% end
-
 % 自車速度を更新
 mycar.vel(1) = mycar.vel(1) + mycar.acceleration*sim.T;
 
@@ -131,7 +130,7 @@ if mycar.vel(1) < 0
 end
 
 % コマンド出力-----------------------------------------------
-if mycar.acceleration < -mycar.max_acceleration || mycar.acceleration > mycar.max_acceleration
+if mycar.acceleration <= -mycar.max_acceleration || mycar.acceleration >= mycar.max_acceleration
     fprintf(2, 'mycar acceleration is [%d], velocity is [%d]\n', mycar.acceleration, mycar.vel(1));
 else
     fprintf(1, 'mycar acceleration is [%d], velocity is [%d]\n', mycar.acceleration, mycar.vel(1));
@@ -139,9 +138,9 @@ end
 
 if ~isempty(idx_crossingcar)
     if mycar.acceleration <= -mycar.max_acceleration || mycar.acceleration >= mycar.max_acceleration
-        fprintf(2, '<Cross>mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
+        fprintf(2, '<Cross>mycar[%d, %d] with car[%d] (-5:%.3f, -4:%.3f, -3:%.3f, -2:%.3f, -1:%.3f, 0:%.3f, 1:%.3f, 2:%.3f, 3:%.3f, 4:%.3f, 5:%.3f) \n', mycar.pos(1), mycar.pos(2), idx_crossingcar, evalDWA(1,2), evalDWA(2,2), evalDWA(3,2), evalDWA(4,2), evalDWA(5,2), evalDWA(6,2), evalDWA(7,2), evalDWA(8,2), evalDWA(9,2), evalDWA(10,2), evalDWA(11,2));
     else
-        fprintf(1, '<Cross>mycar([%d, %d]) decelerate to car [%d] (arr_t_mycar=[%d], arr_t_othercar=[%d], dist_section_mycar=[%d], reldegree = [%d])\n', mycar.pos(1), mycar.pos(2), idx_crossingcar, arr_t_mycar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar);
+        fprintf(1, '<Cross>mycar[%d, %d] with car[%d] (-5:%.3f, -4:%.3f, -3:%.3f, -2:%.3f, -1:%.3f, 0:%.3f, 1:%.3f, 2:%.3f, 3:%.3f, 4:%.3f, 5:%.3f) \n', mycar.pos(1), mycar.pos(2), idx_crossingcar, evalDWA(1,2), evalDWA(2,2), evalDWA(3,2), evalDWA(4,2), evalDWA(5,2), evalDWA(6,2), evalDWA(7,2), evalDWA(8,2), evalDWA(9,2), evalDWA(10,2), evalDWA(11,2));
     end
 end
 
