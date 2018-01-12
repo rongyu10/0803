@@ -8,7 +8,7 @@ for carid = 1:nr_cars
     
     laneidx= 1;
     tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-    x = (100-(carid-1)*80)*10^3;
+    x = (40-(carid-1)*10)*10^3;
     y = tmppos(2);
     carpos = [x y 0];
     othercars.car{carid}.goallane = 13;

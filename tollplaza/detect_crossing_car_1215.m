@@ -1,6 +1,6 @@
 function [idx_crossingcar, arr_t_othercar, dist_section_mycar, rel_deg_crossingcar, othercar_sidepoint, invadepoint] = detect_crossing_car_1215(othercars, mycar)
 
-idx_nearCar = get_nearCar(mycar, othercars); % 自車から半径30m以内の他車（複数）を特定する
+idx_nearCar = get_nearCar(mycar, othercars); % 自車から半径50m以内の他車（複数）を特定する
 idx_crossingcar = [];
 arr_t_mycar = [];
 arr_t_othercar = [];
@@ -28,24 +28,42 @@ else
         othercar_tmp_sidepoint_each = get_sidepoint(othercars.car{idx_nearCar(i)}.pos, othercars.detect_rect_sidewidth);
         if mycar.pos(2) > othercar_tmp_sidepoint_each(2,2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pos(1)- othercar_tmp_sidepoint_each(2,1)) % 自車が他車走行予定経路の上側にいる場合
             othercar_tmp_sidepoint = othercar_tmp_sidepoint_each(2,:);
+            
+            if mycar.pathTranslated(1,2) < othercar_tmp_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(1,1) - othercar_tmp_sidepoint(1))
+                break;
+            end
+            
             for j = 1:201
                 if mycar.pathTranslated(j,2) < othercar_tmp_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(j,1) - othercar_tmp_sidepoint(1))
-                    if mycar.pathTranslated(j,1) > othercar_tmp_sidepoint(1) % if invade point is front of othercar sidepoint
-                        invade_degree = get_targetdegree(mycar.pathTranslated, j);
+%                     if mycar.pathTranslated(j,1) > othercar_tmp_sidepoint(1) % if invade point is front of othercar sidepoint
+%                         invade_degree = get_targetdegree(mycar.pathTranslated, j);
+%                         tmp_invadepoint = [mycar.pathTranslated(j,1), mycar.pathTranslated(j,2), invade_degree];
+%                     end
+                    invade_degree = get_targetdegree(mycar.pathTranslated, j);
+                    if invade_degree <= othercars.car{idx_nearCar(i)}.pos(3)
                         tmp_invadepoint = [mycar.pathTranslated(j,1), mycar.pathTranslated(j,2), invade_degree];
+                        break;
                     end
-                    break;
                 end
             end
         elseif mycar.pos(2) < othercar_tmp_sidepoint_each(1,2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pos(1) - othercar_tmp_sidepoint_each(1,1))  % if mycar exists under othercar
             othercar_tmp_sidepoint = othercar_tmp_sidepoint_each(1,:);
+            
+            if mycar.pathTranslated(1,2) > othercar_tmp_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(1,1) - othercar_tmp_sidepoint(1))
+                break;
+            end
+            
             for j = 1:201
                 if mycar.pathTranslated(j,2) > othercar_tmp_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(j,1) - othercar_tmp_sidepoint(1))
-                    if mycar.pathTranslated(j,1) > othercar_tmp_sidepoint(1) % if invade point is front of othercar sidepoint
-                        invade_degree = get_targetdegree(mycar.pathTranslated, j);
+%                     if mycar.pathTranslated(j,1) > othercar_tmp_sidepoint(1) % if invade point is front of othercar sidepoint
+%                         invade_degree = get_targetdegree(mycar.pathTranslated, j);
+%                         tmp_invadepoint = [mycar.pathTranslated(j,1), mycar.pathTranslated(j,2), invade_degree];
+%                     end
+                    invade_degree = get_targetdegree(mycar.pathTranslated, j);
+                    if invade_degree >= othercars.car{idx_nearCar(i)}.pos(3)
                         tmp_invadepoint = [mycar.pathTranslated(j,1), mycar.pathTranslated(j,2), invade_degree];
+                        break;
                     end
-                    break;
                 end
             end
         end
@@ -63,7 +81,11 @@ else
             
             tmp_rel_deg_crossingcar = abs(othercars.car{idx_nearCar(i)}.pos(3) - atan(vy/vx)*180/pi); % 侵入時の相対角度
             tmp_dist_section_mycar = norm(tmp_invadepoint(1:2) - mycar.pos(1:2)); % 自車の侵入点までの距離
-            tmp_dist_section_othercar = norm(tmp_invadepoint(1:2) - othercar_tmp_sidepoint);
+            if tmp_invadepoint(1) > othercar_tmp_sidepoint(1)
+                tmp_dist_section_othercar = norm(tmp_invadepoint(1:2) - othercar_tmp_sidepoint);
+            else
+                tmp_dist_section_othercar = -norm(tmp_invadepoint(1:2) - othercar_tmp_sidepoint);
+            end
             tmp_arr_t_mycar = tmp_dist_section_mycar / mycar.vel(1); % 自車の侵入点までの時間
             tmp_arr_t_othercar = tmp_dist_section_othercar / othercars.car{idx_nearCar(i)}.vel(1); % 他車の侵入点までの時間
             

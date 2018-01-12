@@ -46,7 +46,7 @@ othercars.detect_length = 50 * 10^3;
 
 %---- SET MYCAR -----------------------------------------------------------------------------------------------------
 ini_vel    = [17500 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-15000 5250 0];
+ini_pos    = [-25000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
@@ -54,18 +54,18 @@ mycar.startlane = 3;
 mycar.goallane = 8;
 mycar.pos(2) = 8750 - 3500*(mycar.startlane-1);
 mycar.save.lane_idx = mycar.startlane;
-mycar.detect_length = 100 * 10^3;
+mycar.detect_length = 50 * 10^3;
 mycar.detect_sidewidth = 3.4 * 10^3;
 mycar.max_acceleration = 2.94 * 10^3;
 
 % setting of crossing to othercar-------------------------
 mycar.x_start_detecting = 50*10^3; % 料金所プラザ内で交錯する他者を観測し始める地点（ｘ座標）
-mycar.time_mergin_crossing = 2.0; % 自車と他車が交錯する時に取るべき通過時間差（マージン）
+mycar.time_mergin_crossing = 1.0; % 自車と他車が交錯する時に取るべき通過時間差（マージン）
 mycar.invadepoint = [];
 % --------------------------------------------------------
 
 % setting of following to othercar------------------------
-mycar.time_detect_precedingcar = 1.0;
+mycar.time_detect_precedingcar = 0.1;
 % --------------------------------------------------------
 % --------------------------------------------------------------------------------------------------------------------
 
