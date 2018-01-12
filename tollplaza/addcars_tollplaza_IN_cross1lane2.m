@@ -8,16 +8,10 @@ for carid = 1:nr_cars
     
     laneidx= 1;
     tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-    x = (40-(carid-1)*80)*10^3;
+    x = (100-(carid-1)*80)*10^3;
     y = tmppos(2);
     carpos = [x y 0];
     othercars.car{carid}.goallane = 13;
-    
-%     if othercars.car{carid}.goallane <= 5
-%         othercars.car{carid}.crossflg = 0;
-%     else
-%         othercars.car{carid}.crossflg = 1;
-%     end
     
     othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
     othercars.car{carid}.flgIDM = 0; % 0:before controlling by IDM ,1:velocity control by IDM (both are on condition in the plaza)

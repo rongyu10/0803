@@ -22,9 +22,9 @@ else
     for i = 1:nr_cars
         
         rel_degree = mycar.pos(3) - othercars.car{idx_nearCar(i)}.pos(3);
-        if abs(rel_degree) > 5 % if the relative degree is over 5 degree
-            continue
-        end
+%         if abs(rel_degree) > 5 % if the relative degree is over 5 degree
+%             continue
+%         end
         
         % judge whether object othercar is in mycar's detecting area---------------
         in = inpolygon(othercars.car{idx_nearCar(i)}.pos(1), othercars.car{idx_nearCar(i)}.pos(2), mycar.squareX, mycar.squareY);

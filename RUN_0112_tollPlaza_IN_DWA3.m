@@ -54,7 +54,7 @@ mycar.startlane = 3;
 mycar.goallane = 8;
 mycar.pos(2) = 8750 - 3500*(mycar.startlane-1);
 mycar.save.lane_idx = mycar.startlane;
-mycar.detect_length = 50 * 10^3;
+mycar.detect_length = 100 * 10^3;
 mycar.detect_sidewidth = 3.4 * 10^3;
 mycar.max_acceleration = 2.94 * 10^3;
 
@@ -177,7 +177,7 @@ while sim.flag && ishandle(fig)
             othercars = calculate_velocity_othercars_tollPlaza_IN(othercars, sim, mycar, idm, laneChangePath);
             
             % update speed and position of mycar
-            mycar = calculate_velocity_mycar_tollPlaza_IN_DWA(mycar, sim, othercars, idm, laneChangePath);
+            mycar = calculate_velocity_mycar_tollPlaza_IN_DWA3(mycar, sim, othercars, idm, laneChangePath);
             
             mycar = update_mycar(mycar, sim, othercars, FLAG_UPDATE_RFS);
             othercars = update_othercars(othercars, sim);

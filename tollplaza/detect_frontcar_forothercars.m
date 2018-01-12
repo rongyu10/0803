@@ -73,8 +73,6 @@ else
                     observedcarEst = [observedcarEst; observedcarEst_cur];
                 end
                 
-
-                
             end
         end
         
@@ -140,24 +138,6 @@ for i=1:nr_cars
     if i == idx % if calculation target is myself
         continue
     end
-    
-%     if othercars.car{idx}.pos(1) > othercars.car{i}.pos(1)
-%         continue
-%     end
-%     
-%     if (othercars.car{idx}.pos(2) - othercars.car{i}.pos(2)) * (othercars.car{idx}.pos(3) - othercars.car{i}.pos(3)) > 0 && (othercars.car{idx}.goallane ~= othercars.car{i}.goallane) % if both cars head to opposite direction(eliminate same goallane)
-%         continue
-%     end
-% 
-%     pos = othercars.car{i}.pos(1:2);
-%     diff= pos - mycar_pos;
-%     if norm(diff) < DISTANCE
-%       idx_nearCar= [idx_nearCar;i];
-%     end
-
-%     if othercars.car{i}.pos(1) - othercars.car{idx}.pos(1) < 0
-%         continue
-%     end
     
     if othercars.car{i}.pos(1) - othercars.car{idx}.pos(1) < DISTANCE
         pos = othercars.car{i}.pos(1:2);
