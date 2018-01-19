@@ -36,13 +36,14 @@ if fist_flag
         end
         if SIMPLECARSHAPE
             
-            if i==15
-            h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), 'k');
-            elseif i==14
-            h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), 'r');
-            else
+%             if i==15
+%             h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), 'k');
+%             elseif i==14
+%             h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), 'r');
+%             else
+%             h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), col);
+%             end
             h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), col);
-            end
             %h.carsbd{i} = plot(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2) ...
             %    , 'Color', 'k', 'LineWidth', 1);
             %[h1, h2, h3] = plot_arrow(othercars.car{i}.pos(1:2) ...

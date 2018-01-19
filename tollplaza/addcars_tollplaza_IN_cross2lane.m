@@ -1,4 +1,4 @@
-function othercars = addcars_tollplaza_IN_cross1lane2(othercars, track, nr_cars)
+function othercars = addcars_tollplaza_IN_cross2lane(othercars, track, nr_cars)
 % ADD CARS IN RANDOM POSTIONS
 % VERBOSE = 0;
 
@@ -6,10 +6,19 @@ function othercars = addcars_tollplaza_IN_cross1lane2(othercars, track, nr_cars)
 
 for carid = 1:nr_cars
     
-    laneidx= 1;
-    tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-    x = (40-(carid-1)*40)*10^3;
-    y = tmppos(2);
+    
+    if carid <= 10
+        laneidx= 1;
+        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
+        x = (40-(carid-1)*30)*10^3;
+        y = tmppos(2);
+    else
+        laneidx= 2;
+        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
+        x = (30-(carid-10-1)*30)*10^3;
+        y = tmppos(2);
+    end
+        
     carpos = [x y 0];
     othercars.car{carid}.goallane = 13;
     

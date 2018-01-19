@@ -7,7 +7,7 @@ arr_t_othercar = [];
 dist_section_mycar = [];
 rel_deg_crossingcar = [];
 othercar_sidepoint = [];
-tmp_invadepoint = [];
+
 invadepoint = [];
 
 if isempty(idx_nearCar)
@@ -18,6 +18,7 @@ else
     
     % 自車から半径50m以内の全ての他車について
     for i = 1:nr_cars
+        tmp_invadepoint = [];
         
         % 自車から見た他車の角度（グローバル座標）を求める
         [theta_mycar2other,~] = cart2pol(othercars.car{idx_nearCar(i)}.pos(1) - mycar.pos(1), othercars.car{idx_nearCar(i)}.pos(2) - mycar.pos(2));
@@ -25,17 +26,17 @@ else
         % if (mycar.pos(3) - theta_mycar2other*180/pi)*(othercars.car{idx_nearCar(i)}.pos(3) - mycar.pos(3)) >= 0 % 他車が自車方向に向かって走行している場合
         
         % 自車が他車走行領域に侵入する時の侵入点を求める
-        othercar_tmp_sidepoint_each = get_sidepoint(othercars.car{idx_nearCar(i)}.pos, othercars.detect_rect_sidewidth);
-        if mycar.pos(2) > othercar_tmp_sidepoint_each(2,2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pos(1)- othercar_tmp_sidepoint_each(2,1)) % 自車が他車走行予定経路の上側にいる場合
-            othercar_tmp_sidepoint = othercar_tmp_sidepoint_each(2,:);
+        tmp_othercar_sidepoint_each = get_sidepoint(othercars.car{idx_nearCar(i)}.pos, mycar.othercars_travel_area_side);
+        if mycar.pos(2) > tmp_othercar_sidepoint_each(2,2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pos(1)- tmp_othercar_sidepoint_each(2,1)) % 自車が他車走行予定経路の上側にいる場合
+            tmp_othercar_sidepoint = tmp_othercar_sidepoint_each(2,:);
             
-            if mycar.pathTranslated(1,2) < othercar_tmp_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(1,1) - othercar_tmp_sidepoint(1))
+            if mycar.pathTranslated(1,2) < tmp_othercar_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(1,1) - tmp_othercar_sidepoint(1))
                 break;
             end
             
             for j = 1:201
-                if mycar.pathTranslated(j,2) < othercar_tmp_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(j,1) - othercar_tmp_sidepoint(1))
-%                     if mycar.pathTranslated(j,1) > othercar_tmp_sidepoint(1) % if invade point is front of othercar sidepoint
+                if mycar.pathTranslated(j,2) < tmp_othercar_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(j,1) - tmp_othercar_sidepoint(1))
+%                     if mycar.pathTranslated(j,1) > tmp_othercar_sidepoint(1) % if invade point is front of othercar sidepoint
 %                         invade_degree = get_targetdegree(mycar.pathTranslated, j);
 %                         tmp_invadepoint = [mycar.pathTranslated(j,1), mycar.pathTranslated(j,2), invade_degree];
 %                     end
@@ -46,16 +47,16 @@ else
                     end
                 end
             end
-        elseif mycar.pos(2) < othercar_tmp_sidepoint_each(1,2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pos(1) - othercar_tmp_sidepoint_each(1,1))  % if mycar exists under othercar
-            othercar_tmp_sidepoint = othercar_tmp_sidepoint_each(1,:);
+        elseif mycar.pos(2) < tmp_othercar_sidepoint_each(1,2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pos(1) - tmp_othercar_sidepoint_each(1,1))  % if mycar exists under othercar
+            tmp_othercar_sidepoint = tmp_othercar_sidepoint_each(1,:);
             
-            if mycar.pathTranslated(1,2) > othercar_tmp_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(1,1) - othercar_tmp_sidepoint(1))
+            if mycar.pathTranslated(1,2) > tmp_othercar_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(1,1) - tmp_othercar_sidepoint(1))
                 break;
             end
             
             for j = 1:201
-                if mycar.pathTranslated(j,2) > othercar_tmp_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(j,1) - othercar_tmp_sidepoint(1))
-%                     if mycar.pathTranslated(j,1) > othercar_tmp_sidepoint(1) % if invade point is front of othercar sidepoint
+                if mycar.pathTranslated(j,2) > tmp_othercar_sidepoint(2) + tan(othercars.car{idx_nearCar(i)}.pos(3)*pi/180) * (mycar.pathTranslated(j,1) - tmp_othercar_sidepoint(1))
+%                     if mycar.pathTranslated(j,1) > tmp_othercar_sidepoint(1) % if invade point is front of othercar sidepoint
 %                         invade_degree = get_targetdegree(mycar.pathTranslated, j);
 %                         tmp_invadepoint = [mycar.pathTranslated(j,1), mycar.pathTranslated(j,2), invade_degree];
 %                     end
@@ -81,10 +82,10 @@ else
             
             tmp_rel_deg_crossingcar = abs(othercars.car{idx_nearCar(i)}.pos(3) - atan(vy/vx)*180/pi); % 侵入時の相対角度
             tmp_dist_section_mycar = norm(tmp_invadepoint(1:2) - mycar.pos(1:2)); % 自車の侵入点までの距離
-            if tmp_invadepoint(1) > othercar_tmp_sidepoint(1)
-                tmp_dist_section_othercar = norm(tmp_invadepoint(1:2) - othercar_tmp_sidepoint);
+            if tmp_invadepoint(1) > tmp_othercar_sidepoint(1)
+                tmp_dist_section_othercar = norm(tmp_invadepoint(1:2) - tmp_othercar_sidepoint);
             else
-                tmp_dist_section_othercar = -norm(tmp_invadepoint(1:2) - othercar_tmp_sidepoint);
+                tmp_dist_section_othercar = -norm(tmp_invadepoint(1:2) - tmp_othercar_sidepoint);
             end
             tmp_arr_t_mycar = tmp_dist_section_mycar / mycar.vel(1); % 自車の侵入点までの時間
             tmp_arr_t_othercar = tmp_dist_section_othercar / othercars.car{idx_nearCar(i)}.vel(1); % 他車の侵入点までの時間
@@ -93,7 +94,7 @@ else
             arr_t_othercar = [arr_t_othercar; tmp_arr_t_othercar];
             dist_section_mycar = [dist_section_mycar; tmp_dist_section_mycar];
             rel_deg_crossingcar = [rel_deg_crossingcar; tmp_rel_deg_crossingcar];
-            othercar_sidepoint = [othercar_sidepoint; othercar_tmp_sidepoint];
+            othercar_sidepoint = [othercar_sidepoint; tmp_othercar_sidepoint];
             invadepoint = [invadepoint; tmp_invadepoint];
             
         end

@@ -82,9 +82,9 @@ for i = 1:othercars.n
                 fprintf(2, 'car[%d](%6.0f, %4.0f) decelerate([%4.0f]) to mycar (observed time = [%1.2f], reldegree = [%2.1f]). Mycar position is [%6.0f, %4.0f].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, t_maxDecelerate, deg_maxDecelerate, mycar.pos(1), mycar.pos(2));
             end
         elseif idx_maxDecelerate ~= 0
-            if othercars.car{i}.acceleration < -othercars.max_acceleration
-                fprintf(2, 'car[%d](%6.0f, %4.0f) decelerate([%4.0f]) to car[%d] (observed time = [%1.2f], reldegree = [%2.1f]). Mycar position is [%6.0f, %4.0f].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, idx_maxDecelerate, t_maxDecelerate, deg_maxDecelerate, mycar.pos(1), mycar.pos(2));
-            end
+%             if othercars.car{i}.acceleration < -othercars.max_acceleration
+%                 fprintf(2, 'car[%d](%6.0f, %4.0f) decelerate([%4.0f]) to car[%d] (observed time = [%1.2f], reldegree = [%2.1f]). Mycar position is [%6.0f, %4.0f].\n', i, othercars.car{i}.pos(1), othercars.car{i}.pos(2), othercars.car{i}.acceleration, idx_maxDecelerate, t_maxDecelerate, deg_maxDecelerate, mycar.pos(1), mycar.pos(2));
+%             end
         end
 
     else
