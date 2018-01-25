@@ -6,12 +6,12 @@ function othercars = addcars_tollplaza_IN_cross1lane2(othercars, track, nr_cars)
 
 for carid = 1:nr_cars
     
-    laneidx= 1;
+    laneidx= 2;
     tmppos = get_posintrack(track, 1, 0, laneidx, 0);
     x = (40-(carid-1)*40)*10^3;
     y = tmppos(2);
     carpos = [x y 0];
-    othercars.car{carid}.goallane = 13;
+    othercars.car{carid}.goallane = 14;
     
     othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
     othercars.car{carid}.flgIDM = 0; % 0:before controlling by IDM ,1:velocity control by IDM (both are on condition in the plaza)

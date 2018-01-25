@@ -168,9 +168,9 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
     end
     fprintf(1, '\n');
     
-    fprintf(2, '現在速度維持項：(');
+    fprintf(1, '現在速度維持項：(');
     for i=1:RangeDWA(4)+1
-        fprintf(2, '[%d:% .3f] ', i, evalDWA(i,3));
+        fprintf(1, '[%d:% .3f] ', i, evalDWA(i,3));
     end
     fprintf(1, '\n');
     
@@ -192,9 +192,9 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
     end
     fprintf(1, '\n');
     
-    fprintf(2, '他車との距離項：(');
+    fprintf(1, '他車との距離項：(');
     for i=1:RangeDWA(4)+1
-        fprintf(2, '[%d:% .3f] ', i, evalDWA(i,4));
+        fprintf(1, '[%d:% .3f] ', i, evalDWA(i,4));
     end
     fprintf(1, '\n');
     
@@ -210,9 +210,9 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
     end
     fprintf(1, '\n');
     
-    fprintf(2, '上記３つの合計：(');
+    fprintf(1, '上記３つの合計：(');
     for i=1:RangeDWA(4)+1
-        fprintf(2, '[%d:% .3f] ', i, evalDWA(i,2));
+        fprintf(1, '[%d:% .3f] ', i, evalDWA(i,2));
     end
     fprintf(1, '\n');
     

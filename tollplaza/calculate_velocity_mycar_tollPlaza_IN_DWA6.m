@@ -1,4 +1,4 @@
-function mycar = calculate_velocity_mycar_tollPlaza_IN_DWA5(mycar, sim, othercars, idm, laneChangePath, RangeDWA, ParamDWA)
+function mycar = calculate_velocity_mycar_tollPlaza_IN_DWA6(mycar, sim, othercars, idm, laneChangePath, RangeDWA, ParamDWA)
 
 persistent idx_crossingcar;
 mycar.acceleration = [];
@@ -60,7 +60,6 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
         end
         
         flg_notEval = 0;
-        iFrontcar = [];
         iRearcar = [];
         iNearcar = [];
         est_arr_t_mycar = zeros(nr_cars);
@@ -95,13 +94,11 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
                 end
             end
             
-            if ~isempty(iRearcar)
-                evalDWA(i,9) = idx_crossingcar(iRearcar);
-                evalDWA(i,10) = arr_t_othercar(iRearcar) - est_arr_t_mycar(iRearcar);
-            end
+            
             
             % 自車の交点通過予測時における後方車の予測減速度を計算し、急減速なら評価しない
             if ~isempty(iRearcar)
+                
                 other_futuresidepoint = update_pos([sidepoint(iRearcar,:) othercars.car{idx_crossingcar(iRearcar)}.pos(3)], othercars.car{idx_crossingcar(iRearcar)}.vel, est_arr_t_mycar(iRearcar));
                 othercar_future.pos = other_futuresidepoint;
                 othercar_future.vel = othercars.car{idx_crossingcar(iRearcar)}.vel;
@@ -111,14 +108,26 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
                 est_other_accele = calculate_acceleration_IDM(othercar_future, mycar_future, idm, rel_deg_crossingcar(iRearcar));
                 
                 if est_other_accele < - mycar.let_othercar_decele
+                    flg_notEval = 1;
                     continue
                 end
             end
             
         end
         
-        if isempty(iNearcar)
-            flg_notEval = 1;
+        if ~isempty(iRearcar)
+            evalDWA(i,9) = idx_crossingcar(iRearcar);
+            evalDWA(i,10) = arr_t_othercar(iRearcar) - est_arr_t_mycar(iRearcar);
+        end
+        
+        if ~isempty(iNearcar)
+            if abs(est_arr_t_mycar(iNearcar) - arr_t_othercar(iNearcar)) * othercars.car{idx_crossingcar(iNearcar)}.vel(1) < 5*10^3
+                continue
+            end
+        end
+        
+        if flg_notEval == 1
+            continue
         end
         
         % 現在速度を維持する評価値を計算
@@ -133,13 +142,9 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
             else
                 evalDWA(i,8) = ParamDWA(2) * (1 - exp(-4*(((est_arr_t_mycar(iNearcar) - arr_t_othercar(iNearcar))/mycar.time_margin_crossing)^2)));
             end
-        end
-        
-        if flg_notEval == 1
+        else
             evalDWA(i,8) = ParamDWA(2);
         end
-        
-        
         
         if ~isempty(iNearcar)
             evalDWA(i,6) = idx_crossingcar(iNearcar);
@@ -169,9 +174,9 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
     end
     fprintf(1, '\n');
     
-    fprintf(2, '現在速度維持項：(');
+    fprintf(1, '現在速度維持項：(');
     for i=1:RangeDWA(4)+1
-        fprintf(2, '[%d:% .3f] ', i, evalDWA(i,3));
+        fprintf(1, '[%d:% .3f] ', i, evalDWA(i,3));
     end
     fprintf(1, '\n');
     
@@ -193,9 +198,9 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
     end
     fprintf(1, '\n');
     
-    fprintf(2, '他車との距離項：(');
+    fprintf(1, '他車との距離項：(');
     for i=1:RangeDWA(4)+1
-        fprintf(2, '[%d:% .3f] ', i, evalDWA(i,4));
+        fprintf(1, '[%d:% .3f] ', i, evalDWA(i,4));
     end
     fprintf(1, '\n');
     
@@ -211,9 +216,9 @@ if ~isempty(idx_crossingcar) % 交錯対象車が検出された場合
     end
     fprintf(1, '\n');
     
-    fprintf(2, '上記３つの合計：(');
+    fprintf(1, '上記３つの合計：(');
     for i=1:RangeDWA(4)+1
-        fprintf(2, '[%d:% .3f] ', i, evalDWA(i,2));
+        fprintf(1, '[%d:% .3f] ', i, evalDWA(i,2));
     end
     fprintf(1, '\n');
     

@@ -6,6 +6,7 @@
 %   ・最高速度を上回る
 %   ・最低速度を下回る
 %   ・他車を急減速させる
+%   ・他車と衝突する
 % ●評価関数（以下の３つの和）
 %　　第1項：自車の現在速度を維持
 %　　第2項：自車走行軌道と他車走行軌道の交点通過時間のマージンを取る（全他車で最も近いものを評価）
@@ -49,7 +50,7 @@ for i = 1:nr_cars
 end
 othercars.step_TTC = sim.T;
 othercars.detect_rect_length = 30 * 10^3;
-othercars.detect_rect_sidewidth = 2.0 * 10^3;
+othercars.detect_rect_sidewidth = 3.4 * 10^3;
 othercars.max_acceleration = 2.94 * 10^3;
 othercars.detect_length = 50 * 10^3;
 %--------------------------------------------------------------------------------------------------------------------
@@ -58,7 +59,7 @@ othercars.detect_length = 50 * 10^3;
 
 %---- SET MYCAR -----------------------------------------------------------------------------------------------------
 ini_vel    = [17500 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-40000 5250 0];
+ini_pos    = [-20000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
@@ -74,7 +75,7 @@ mycar.max_acceleration = 2.94 * 10^3;
 mycar.x_start_detecting = 50*10^3; % 料金所プラザ内で交錯する他者を観測し始める地点（ｘ座標）
 mycar.time_margin_crossing = 2.0; % 自車と他車が交錯する時に取るべき通過時間差（マージン）
 mycar.invadepoint = [];
-mycar.othercars_travel_area_side = 0.1 * 10^3;
+mycar.othercars_travel_area_side = 3.4 * 10^3;
 % --------------------------------------------------------
 
 % setting of DWA -----------------------------------------
@@ -181,6 +182,10 @@ while sim.flag && ishandle(fig)
             if idx_rear~=0
                 othercars.car{idx_rear}.vel(1) = othercars.car{idx_rear}.vel(1) - 2000;
             end
+        case 'x'
+            mycar.vel(2) = mycar.vel(2) - 5;
+        case 'c'
+            mycar.vel(2) = mycar.vel(2) + 5;
         otherwise 
             fprintf(2, 'KEY[%s] UNDEFINED. \n', key_pressed);
     end
@@ -198,7 +203,7 @@ while sim.flag && ishandle(fig)
             othercars = calculate_velocity_othercars_tollPlaza_IN(othercars, sim, mycar, idm, laneChangePath);
             
             % update speed and position of mycar
-            mycar = calculate_velocity_mycar_tollPlaza_IN_DWA5(mycar, sim, othercars, idm, laneChangePath, RangeDWA, ParamDWA);
+            mycar = calculate_velocity_mycar_tollPlaza_IN_DWA6(mycar, sim, othercars, idm, laneChangePath, RangeDWA, ParamDWA);
             
             mycar = update_mycar(mycar, sim, othercars, FLAG_UPDATE_RFS);
             othercars = update_othercars(othercars, sim);

@@ -10,12 +10,12 @@ for carid = 1:nr_cars
     if carid <= 10
         laneidx= 1;
         tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-        x = (40-(carid-1)*30)*10^3;
+        x = (40-(carid-1)*40)*10^3;
         y = tmppos(2);
     else
         laneidx= 2;
         tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-        x = (30-(carid-10-1)*30)*10^3;
+        x = (30-(carid-10-1)*40)*10^3;
         y = tmppos(2);
     end
         
