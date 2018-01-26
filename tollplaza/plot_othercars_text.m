@@ -36,20 +36,9 @@ if fist_flag
         end
         if SIMPLECARSHAPE
             
-%             if i==15
-%             h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), 'k');
-%             elseif i==14
-%             h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), 'r');
-%             else
-%             h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), col);
-%             end
             h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), col);
             h.text{i}= text(othercars.car{i}.pos(1), othercars.car{i}.pos(2), num2str(i), 'HorizontalAlignment', 'center', 'FontSize', 7);
-            %h.carsbd{i} = plot(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2) ...
-            %    , 'Color', 'k', 'LineWidth', 1);
-            %[h1, h2, h3] = plot_arrow(othercars.car{i}.pos(1:2) ...
-            %    , 2000, othercars.car{i}.pos(3), 'w', 3);
-            %h.carsarrow{i} = [h1 h2 h3];
+            
         end
         if REALCARSHAPE
             carpos = othercars.car{i}.pos;
@@ -68,7 +57,9 @@ else
     %for i = 1:othercars.MAX_NRCAR
         if SIMPLECARSHAPE
             h.carsfill{i}.Vertices = othercars.car{i}.bd;
-            h.text{i}.Position     = [othercars.car{i}.pos(1), othercars.car{i}.pos(2), 0];
+            if othercars.car{i}.pos(1) > 0
+                h.text{i}.Position     = [othercars.car{i}.pos(1), othercars.car{i}.pos(2), 0];
+            end
             %h.carsbd{i}.XData = othercars.car{i}.bd(:, 1);
             %h.carsbd{i}.YData = othercars.car{i}.bd(:, 2);
             %[x1, y1, x2, y2, x3, y3] = get_arrow(othercars.car{i}.pos, 2000 ...

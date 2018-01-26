@@ -8,47 +8,63 @@ for carid = 1:nr_cars
     
     laneidx= 1;
     tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-    x = (240-(carid-1)*10)*10^3;
+    x = (240-(carid-1)*20)*10^3;
     y = tmppos(2);
-    
+    carpos = [x y 0];
     othercars.car{carid}.goallane = 13;
     othercars.car{carid}.time_TTC = 0.0;
     othercars.car{carid}.pathTranslated = laneChangePath{othercars.car{carid}.goallane, laneidx};
     
-    if x < track.xmax
+    if carpos(1) < track.xmax
         othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
-        carpos = [x y 0];
     else
         othercars.car{carid}.flgPlaza = 1; % 0:on straight lane ,1:on plaza lane
-        [~,idx]=min(abs(othercars.car{carid}.pathTranslated(:,1) - x));
-        
-        nData = size(othercars.car{carid}.pathTranslated,1);
-        
-        if idx~=nData
-            vx= othercars.car{carid}.pathTranslated(idx+1,1)-othercars.car{carid}.pathTranslated(idx,1);
-            vy= othercars.car{carid}.pathTranslated(idx+1,2)-othercars.car{carid}.pathTranslated(idx,2);
-        else
-            vx= othercars.car{carid}.pathTranslated(idx,1)-othercars.car{carid}.pathTranslated(idx-1,1);
-            vy= othercars.car{carid}.pathTranslated(idx,2)-othercars.car{carid}.pathTranslated(idx-1,2);
-        end
-        
-        carpos = [othercars.car{carid}.pathTranslated(idx,1) othercars.car{carid}.pathTranslated(idx,2) atan(vy/vx)*180/pi];
+        dist=bsxfun(@hypot,Path(:,1)-pos(1),Path(:,2)-pos(2));
+    [~,idx]=min(dist);
+    othercars.car{othercars.n}.pos(1:2) = Path(idx,:);
+    
+    if idx~=nData
+        vx= path(idx+1,1)-path(idx,1);
+        vy= path(idx+1,2)-path(idx,2);
+    else
+        vx= path(idx,1)-path(idx-1,1);
+        vy= path(idx,2)-path(idx-1,2);
+    end
+    
+    othercars.car{othercars.n}.pos(3) = atan(vy/vx)*180/pi;
     end
     othercars.car{carid}.flgIDM = 0; % 0:before controlling by IDM ,1:velocity control by IDM (both are on condition in the plaza)
     othercars.car{carid}.angry = 0;
     segidx = 1;
-    othercars = add_othercars(othercars, carpos, [17500 0], 'normal',1, laneidx, segidx); % 10000 mm/s = 36 km/h
+    othercars = add_othercars(othercars, carpos, [17500 0], 'normal',1, laneidx, segidx, laneChangePath); % 10000 mm/s = 36 km/h
 end
 
 end
 
 
-function othercars = add_othercars(othercars, pos, vel, ctrlmode, track_idx,lane_idx,seg_idx)
+function othercars = add_othercars(othercars, pos, vel, ctrlmode, track_idx,lane_idx,seg_idx, Path)
 if nargin == 3
     ctrlmode = 'normal';
 end
 othercars.n = othercars.n + 1;
 
+if othercars.car{othercars.n}.flgPlaza == 0
+    othercars.car{othercars.n}.pos = pos;
+else
+    dist=bsxfun(@hypot,Path(:,1)-pos(1),Path(:,2)-pos(2));
+    [~,idx]=min(dist);
+    othercars.car{othercars.n}.pos(1:2) = Path(idx,:);
+    
+    if idx~=nData
+        vx= path(idx+1,1)-path(idx,1);
+        vy= path(idx+1,2)-path(idx,2);
+    else
+        vx= path(idx,1)-path(idx-1,1);
+        vy= path(idx,2)-path(idx-1,2);
+    end
+    
+    othercars.car{othercars.n}.pos(3) = atan(vy/vx)*180/pi;
+end
 othercars.car{othercars.n}.pos = pos;
 othercars.car{othercars.n}.vel = vel;
 othercars.car{othercars.n}.ctrlmode = ctrlmode;

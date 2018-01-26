@@ -1,63 +1,59 @@
-function othercars = addcars_tollplaza_IN(othercars, track, nr_cars)
+function othercars = addcars_tollplaza_IN(othercars, track, nr_cars, laneChangePath)
 % ADD CARS IN RANDOM POSTIONS
-VERBOSE = 0;
+%VERBOSE = 0;
 
 for carid = 1:nr_cars
     if carid <= othercars.npl
        laneidx= 1;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       x = (120-carid*40+20*rand)*10^3; 
+       x = (120-carid*80+20*rand)*10^3; 
        y = tmppos(2);
-       carpos = [x y 0];
        othercars.car{carid}.goallane = randi(15);
-       %othercars.car{carid}.goallane = randi(6);
-       if othercars.car{carid}.goallane <= 5
-           othercars.car{carid}.crossflg = 0;
-       else
-           othercars.car{carid}.crossflg = 1;
-       end
-    elseif carid <= othercars.npl + 6
+       
+    elseif carid <= othercars.npl * 2
        laneidx= 2;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       if carid <= othercars.npl + 6
-           x = (120-(carid-othercars.npl)*40+20*rand)*10^3;
-       end
+       x = (100-(carid-othercars.npl)*80+20*rand)*10^3;
        y = tmppos(2);
-       carpos = [x y 0];
        othercars.car{carid}.goallane = randi(15);
-       %othercars.car{carid}.goallane = 8;
-       if othercars.car{carid}.goallane >= 6 && othercars.car{carid}.goallane <= 10
-           othercars.car{carid}.crossflg = 0;
-       else
-           othercars.car{carid}.crossflg = 1;
-       end 
+       
     else
        laneidx= 3;
        tmppos = get_posintrack(track, 1, 0, laneidx, 0);
-       x = (120-(carid-(othercars.npl + 6))*40+20*rand)*10^3;
+       x = (80-(carid-(othercars.npl*2))*80+20*rand)*10^3;
        y = tmppos(2);
-       carpos = [x y 0];
-       %othercars.car{carid}.goallane = 1;
        othercars.car{carid}.goallane = randi(15);
-       if othercars.car{carid}.goallane >= 11
-           othercars.car{carid}.crossflg = 0;
-       else
-           othercars.car{carid}.crossflg = 1;
-       end
+      
     end
-%     if carid >=10 && carid <= 12
-%         othercars.car{carid}.goallane = 7;
-%     end
     
-%     if carid == 36
-%         othercars.car{carid}.goallane = 1;
-%     end
+    othercars.car{carid}.time_TTC = 0.0;
+    othercars.car{carid}.pathTranslated = laneChangePath{othercars.car{carid}.goallane, laneidx};
+    
+    if x < track.xmax
+        othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
+        carpos = [x y 0];
+    else
+        othercars.car{carid}.flgPlaza = 1; % 0:on straight lane ,1:on plaza lane
+        [~,idx]=min(abs(othercars.car{carid}.pathTranslated(:,1) - x));
+        
+        nData = size(othercars.car{carid}.pathTranslated,1);
+        
+        if idx~=nData
+            vx= othercars.car{carid}.pathTranslated(idx+1,1)-othercars.car{carid}.pathTranslated(idx,1);
+            vy= othercars.car{carid}.pathTranslated(idx+1,2)-othercars.car{carid}.pathTranslated(idx,2);
+        else
+            vx= othercars.car{carid}.pathTranslated(idx,1)-othercars.car{carid}.pathTranslated(idx-1,1);
+            vy= othercars.car{carid}.pathTranslated(idx,2)-othercars.car{carid}.pathTranslated(idx-1,2);
+        end
+        
+        carpos = [othercars.car{carid}.pathTranslated(idx,1) othercars.car{carid}.pathTranslated(idx,2) atan(vy/vx)*180/pi];
+    end
     
     othercars.car{carid}.flgPlaza = 0; % 0:on straight lane ,1:on plaza lane
     othercars.car{carid}.flgIDM = 0; % 0:before controlling by IDM ,1:velocity control by IDM (both are on condition in the plaza)
     othercars.car{carid}.angry = 0;
     segidx = 1;
-    othercars = add_othercars(othercars, carpos, [15000 0], 'normal',1, laneidx, segidx); % 10000 mm/s = 36 km/h
+    othercars = add_othercars(othercars, carpos, [17500 0], 'normal',1, laneidx, segidx); % 10000 mm/s = 36 km/h
 end
 
 end
