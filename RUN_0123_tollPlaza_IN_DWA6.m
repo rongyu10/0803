@@ -60,7 +60,7 @@ mycar.startlane = 3;
 mycar.goallane = 8;
 mycar.pos(2) = 8750 - 3500*(mycar.startlane-1);
 mycar.save.lane_idx = mycar.startlane;
-mycar.detect_length = 50 * 10^3;
+mycar.detect_length = 100 * 10^3;
 mycar.detect_sidewidth = 3.4 * 10^3;
 mycar.max_acceleration = 2.94 * 10^3;
 

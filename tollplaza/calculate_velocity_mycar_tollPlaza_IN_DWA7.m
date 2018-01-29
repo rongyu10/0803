@@ -1,4 +1,4 @@
-function mycar = calculate_velocity_mycar_tollPlaza_IN_DWA6(mycar, sim, othercars, idm, laneChangePath, RangeDWA, ParamDWA)
+function mycar = calculate_velocity_mycar_tollPlaza_IN_DWA7(mycar, sim, othercars, idm, laneChangePath, RangeDWA, ParamDWA)
 
 persistent idx_crossingcar;
 mycar.acceleration = [];

@@ -6,7 +6,7 @@
 %   ・最高速度を上回る
 %   ・最低速度を下回る
 %   ・他車を急減速させる
-%   ・他車と衝突する
+%   ・他車と衝突する（交点にたどり着かない場合でも他車と接近する場合も除く）
 % ●評価関数（以下の３つの和）
 %　　第1項：自車の現在速度を維持
 %　　第2項：自車走行軌道と他車走行軌道の交点通過時間のマージンを取る（全他車で最も近いものを評価）
@@ -52,7 +52,7 @@ othercars.detect_length = 50 * 10^3;
 
 %---- SET MYCAR -----------------------------------------------------------------------------------------------------
 ini_vel    = [17500 0]; % 20000 mm/s = 72 km/h
-ini_pos    = [-40000 5250 0];
+ini_pos    = [-25000 5250 0];
 mycar      = init_mycar(ini_pos, ini_vel);
 myinfo     = get_trackinfo_tollplaza(road, mycar.pos, othercars);
 mycar.flgPlaza = 0; % 0:before entering plaza, 1:after entering plaza
@@ -60,7 +60,7 @@ mycar.startlane = 3;
 mycar.goallane = 8;
 mycar.pos(2) = 8750 - 3500*(mycar.startlane-1);
 mycar.save.lane_idx = mycar.startlane;
-mycar.detect_length = 50 * 10^3;
+mycar.detect_length = 100 * 10^3;
 mycar.detect_sidewidth = 3.4 * 10^3;
 mycar.max_acceleration = 2.94 * 10^3;
 
@@ -73,7 +73,7 @@ mycar.othercars_travel_area_side = 3.4 * 10^3;
 
 % setting of DWA -----------------------------------------
 RangeDWA=[0 20000 mycar.max_acceleration*sim.T 40]; %[最低速度(mm/s)　最高速度(mm/s)　速度レンジ(m/s)　速度解像度(分割数)]
-ParamDWA=[1.0 1.0 1.0]; %[現在の速度を維持する項　前方車との予測通過時間差の項　後方車を急減速させない項]　
+ParamDWA=[1.0 1.5 1.0]; %[現在の速度を維持する項　前方車との予測通過時間差の項　後方車を急減速させない項]　
 mycar.let_othercar_decele = 2.94 * 10^3; % 他車に与える減速度の許容値
 % --------------------------------------------------------
 
@@ -132,12 +132,12 @@ while sim.flag && ishandle(fig)
     switch key_pressed 
         case ''
         case {'leftarrow', 'semicolon'}
-            %othercars.car{2}.vel(1) = othercars.car{2}.vel(1)-5000;
-            mycar.vel(1) = mycar.vel(1) - 5000;
+            othercars.car{2}.vel(1) = othercars.car{2}.vel(1)-5000;
+            %mycar.vel(1) = mycar.vel(1) - 5000;
             fprintf(2, 'MANUAL: car[2] decelerate\n');
         case {'rightarrow', 'quote'}
-            %othercars.car{2}.vel(1) = othercars.car{2}.vel(1)+5000;
-            mycar.vel(1) = mycar.vel(1) + 5000;
+            othercars.car{2}.vel(1) = othercars.car{2}.vel(1)+5000;
+            %mycar.vel(1) = mycar.vel(1) + 5000;
             fprintf(2, 'MANUAL: car[2] accelerate\n');
         case {'uparrow', 'leftbracket'}
             % change the goal(target) lane
@@ -196,7 +196,7 @@ while sim.flag && ishandle(fig)
             othercars = calculate_velocity_othercars_tollPlaza_IN(othercars, sim, mycar, idm, laneChangePath);
             
             % update speed and position of mycar
-            mycar = calculate_velocity_mycar_tollPlaza_IN_DWA6(mycar, sim, othercars, idm, laneChangePath, RangeDWA, ParamDWA);
+            mycar = calculate_velocity_mycar_tollPlaza_IN_DWA7(mycar, sim, othercars, idm, laneChangePath, RangeDWA, ParamDWA);
             
             mycar = update_mycar(mycar, sim, othercars, FLAG_UPDATE_RFS);
             othercars = update_othercars(othercars, sim);
@@ -254,22 +254,23 @@ while sim.flag && ishandle(fig)
 %         , traj.data.n);
     strtemp = ['[%.1fSEC][UPDATE:%.1fMS+PLOT:%.1fMS = %.1fMS] \n' ...
         '[Mycar VEL:%5.0fMM/S = %.1fKM/H] \n' ...
-        '[Car(3) VEL:%5.0fMM/S = %.1fKM/H, DISTtoCar(2) is %5.0fMM, THWtoCar(2) is %1.2fSEC]'];
+        '[Car(21) VEL:%5.0fMM/S = %.1fKM/H, DISTtoCar(20) is %5.0fMM, THWtoCar(20) is %1.2fSEC]'];
     titlestr = sprintf(strtemp, sim.sec, ms_update, ms_plot, ms_update + ms_plot ...
         , mycar.vel(1), mycar.vel(1)/10000*36 ...
-        , othercars.car{3}.vel(1), othercars.car{3}.vel(1)/10000*36, norm(othercars.car{2}.pos(1:2) - othercars.car{3}.pos(1:2)), norm(othercars.car{2}.pos(1:2) - othercars.car{3}.pos(1:2))/othercars.car{3}.vel(1));
+        , othercars.car{21}.vel(1), othercars.car{21}.vel(1)/10000*36, norm(othercars.car{20}.pos(1:2) - othercars.car{21}.pos(1:2)), norm(othercars.car{2}.pos(1:2) - othercars.car{3}.pos(1:2))/othercars.car{3}.vel(1));
     titlefontsize = get_fontsize();
     
     axisinfo = plot_track_tollplaza(road, FILL_LANES);
     plot_axisinfo_tollplaza(axisinfo);
     plot_arrow_selectlane_IN(mycar.goallane);
-    plot_othercars_text(othercars, SIMPLECARSHAPE, REALCARSHAPE);
+    
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, REALCARSHAPE, PLOT_RFS);
     plot_mycar_path_in_plaza(laneChangePath, mycar);
     plot_mycar_detecting_area(mycar);
     if ~isempty(mycar.invadepoint)
         plot_invadepoint(mycar.invadepoint);
     end
+    plot_othercars_text(othercars, SIMPLECARSHAPE, REALCARSHAPE);
     %----
     plot_title(titlestr, titlecol, titlefontsize);
     drawnow;
